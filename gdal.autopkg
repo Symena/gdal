@@ -1,0 +1,38 @@
+nuget {
+  nuspec {
+    id = gdal-symena;
+    version: 0.0.1;
+    title: "GDAL Library, Symena Edition";
+    authors: {Various};
+    owners: {};
+    licenseUrl: "http://trac.osgeo.org/gdal/wiki/FAQGeneral#WhatlicensedoesGDALOGRuse";
+    projectUrl: "http://www.gdal.org/";
+    iconUrl: "http://www.gdal.org/gdalicon.png";
+    requireLicenseAcceptance: false;
+    description: @"A library for reading and writing a multitude of geospatial
+        information formats. This NuGet package is created by Symena.";
+    releaseNotes: @"Initial release.";
+    copyright: Copyright 2015;
+    tags: { native, gdal };
+  };
+
+  files {
+  	include: { "buildd\include\*" };
+
+  	[debug] {
+  	  lib: buildd\lib\gdal_i.lib;
+  	  symbols: buildd\bin\gdal200.pdb;
+  	  bin: buildd\bin\gdal200.dll;
+  	};
+
+  	[release] {
+  	  lib: buildo\lib\gdal_i.lib;
+  	  symbols: buildo\bin\gdal200.pdb;
+  	  bin: buildo\bin\gdal200.dll;
+  	};
+  };
+
+  targets {
+    Defines += HAS_GDAL;
+  };
+}
