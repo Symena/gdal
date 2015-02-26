@@ -12,3 +12,10 @@ echo Building release variant
 nmake -f makefile.vc MSVC_VER=1800 WITH_PDB=1 WIN64=YES GDAL_HOME=%1\gdal\buildo
 nmake -f makefile.vc MSVC_VER=1800 WITH_PDB=1 WIN64=YES GDAL_HOME=%1\gdal\buildo devinstall
 copy %1\gdal\gdal\gdal200.pdb %1\gdal\buildo\bin\
+
+echo Building NuGet packages
+cd ..
+PowerShell.exe -Command Write-NuGetPackage .\gdal.autopkg
+
+echo Publishing NuGet packages
+nuget push -Source http://sbuild01:8080/nuget/Default -ApiKey Admin:Admin *.nupkg
