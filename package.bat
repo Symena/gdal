@@ -1,6 +1,5 @@
 
 @echo Building NuGet packages
-cd ..
 PowerShell.exe -Command Write-NuGetPackage -Verbose .\gdal.autopkg
 
 @echo Publishing NuGet packages
