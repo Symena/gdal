@@ -1,7 +1,7 @@
 nuget {
   nuspec {
     id = gdal-symena;
-    version: 2.0.0;
+    version: 2.0.1;
     title: "GDAL Library, Symena Edition";
     authors: {Various};
     owners: {};
@@ -19,16 +19,28 @@ nuget {
   files {
   	include: { "buildd\include\*" };
 
-  	[debug] {
-  	  lib: buildd\lib\gdal_i.lib;
-  	  symbols: buildd\bin\gdal200.pdb;
-  	  bin: buildd\bin\gdal200.dll;
+  	[x64,debug] {
+  	  lib: buildd64\lib\gdal_i.lib;
+  	  symbols: buildd64\bin\gdal200.pdb;
+  	  bin: buildd64\bin\gdal200.dll;
   	};
 
-  	[release] {
-  	  lib: buildo\lib\gdal_i.lib;
-  	  symbols: buildo\bin\gdal200.pdb;
-  	  bin: buildo\bin\gdal200.dll;
+  	[x64,release] {
+  	  lib: buildo64\lib\gdal_i.lib;
+  	  symbols: buildo64\bin\gdal200.pdb;
+  	  bin: buildo64\bin\gdal200.dll;
+  	};
+
+  	[x86,debug] {
+  	  lib: buildd32\lib\gdal_i.lib;
+  	  symbols: buildd32\bin\gdal200.pdb;
+  	  bin: buildd32\bin\gdal200.dll;
+  	};
+
+  	[x86,release] {
+  	  lib: buildo32\lib\gdal_i.lib;
+  	  symbols: buildo32\bin\gdal200.pdb;
+  	  bin: buildo32\bin\gdal200.dll;
   	};
   };
 

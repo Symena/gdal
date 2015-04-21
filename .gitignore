@@ -1,3 +1,5 @@
-buildd/
-buildo/
+buildd32/
+buildo32/
+buildd64/
+buildo64/
 *.nupkg
