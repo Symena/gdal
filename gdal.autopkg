@@ -1,7 +1,7 @@
 nuget {
   nuspec {
     id = gdal-symena;
-    version: 2.0.1;
+    version: 2.0.0;
     title: "GDAL Library, Symena Edition";
     authors: {Various};
     owners: {};
@@ -17,7 +17,7 @@ nuget {
   };
 
   files {
-  	include: { "buildd\include\*" };
+  	include: { "buildd64\include\*" };
 
   	[x64,debug] {
   	  lib: buildd64\lib\gdal_i.lib;
