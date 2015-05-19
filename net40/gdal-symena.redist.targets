@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="gdal-symena_redist_x86;gdal-symena_redist_x64">
+  <Target Name="gdal-symena_redist_x86" AfterTargets="AfterBuild" Condition="'$(Platform.ToLower())' == 'x86'">
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)../../\build\native\bin\Win32\$(Configuration)\gdal200.dll" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="gdal-symena_redist_x64" AfterTargets="AfterBuild" Condition="'$(Platform.ToLower())' == 'x64'">
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)../../\build\native\bin\x64\$(Configuration)\gdal200.dll" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

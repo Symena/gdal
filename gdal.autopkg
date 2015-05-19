@@ -51,6 +51,15 @@ nuget {
   	  symbols: buildo32\bin\gdal200.pdb;
   	  bin: buildo32\bin\gdal200.dll;
   	};
+    
+	net40 += {
+        #output {
+            package = redist;
+        };
+		"net40\gdal-symena.redist.targets";
+        #destination : {\build\net40};
+    };
+    
   };
 
   targets {

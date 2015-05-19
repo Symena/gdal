@@ -10,3 +10,4 @@ gdal/frmts/jpeg/libjpeg12/*.h
 gdal/gcore/Version.res
 gdal/gdal200.dll
 gdal/port/cpl_config.h
+*.nupkg
