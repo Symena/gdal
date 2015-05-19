@@ -1,0 +1,12 @@
+syntax: glob
+build*
+*.obj
+*.exe
+*.lib
+*.pdb
+*.exp
+gdal/frmts/jpeg/libjpeg12/*.c
+gdal/frmts/jpeg/libjpeg12/*.h
+gdal/gcore/Version.res
+gdal/gdal200.dll
+gdal/port/cpl_config.h
