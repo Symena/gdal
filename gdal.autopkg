@@ -10,59 +10,63 @@ nuget {
     iconUrl: "http://www.gdal.org/gdalicon.png";
     requireLicenseAcceptance: false;
     description: @"A library for reading and writing a multitude of geospatial
-        information formats. This NuGet package is created by Symena.";
+information formats. This NuGet package is created by Symena.";
     releaseNotes: @"Initial release.";
     copyright: Copyright 2015;
-    tags: { native, gdal };
+    tags: { gdal };
   };
 
   files {
-  	include: { "buildd64\include\*" };
+    include: { "buildd64\include\*" };
 
-  	source: {
-  	  "gdal\**\*.cpp",
-  	  "gdal\**\*.c",
-  	  "gdal\**\*.h",
-  	  "gdal\**\*.hpp",
-  	  "gdal\**\*.inc",
-  	  "gdal\**\*.y"
-  	};
+    source: {
+      "gdal\**\*.cpp",
+      "gdal\**\*.c",
+      "gdal\**\*.h",
+      "gdal\**\*.hpp",
+      "gdal\**\*.inc",
+      "gdal\**\*.y"
+    };
 
-  	[x64,debug] {
-  	  lib: buildd64\lib\gdal_i.lib;
-  	  symbols: buildd64\bin\gdal200.pdb;
-  	  bin: buildd64\bin\gdal200.dll;
-  	};
+    [x64,debug] {
+      lib: buildd64\lib\gdal_i.lib;
+      symbols: buildd64\bin\gdal200.pdb;
+      bin: buildd64\bin\gdal200.dll;
+    };
 
-  	[x64,release] {
-  	  lib: buildo64\lib\gdal_i.lib;
-  	  symbols: buildo64\bin\gdal200.pdb;
-  	  bin: buildo64\bin\gdal200.dll;
-  	};
+    [x64,release] {
+      lib: buildo64\lib\gdal_i.lib;
+      symbols: buildo64\bin\gdal200.pdb;
+      bin: buildo64\bin\gdal200.dll;
+    };
 
-  	[x86,debug] {
-  	  lib: buildd32\lib\gdal_i.lib;
-  	  symbols: buildd32\bin\gdal200.pdb;
-  	  bin: buildd32\bin\gdal200.dll;
-  	};
+    [x86,debug] {
+      lib: buildd32\lib\gdal_i.lib;
+      symbols: buildd32\bin\gdal200.pdb;
+      bin: buildd32\bin\gdal200.dll;
+    };
 
-  	[x86,release] {
-  	  lib: buildo32\lib\gdal_i.lib;
-  	  symbols: buildo32\bin\gdal200.pdb;
-  	  bin: buildo32\bin\gdal200.dll;
-  	};
-    
-	net40 += {
-        #output {
-            package = redist;
-        };
-		"net40\gdal-symena.redist.targets";
-        #destination : {\build\net40};
+    [x86,release] {
+      lib: buildo32\lib\gdal_i.lib;
+      symbols: buildo32\bin\gdal200.pdb;
+      bin: buildo32\bin\gdal200.dll;
     };
     
+    net40 += {
+      #output { package = redist; };
+      "net40\gdal-symena.redist.targets";
+      #destination : { \build\net40 };
+    };
   };
 
   targets {
     Defines += HAS_GDAL;
+
+    // define GDAL_LIB as absolute path to the .lib file (using forward slashes instead of backslashes)
+    [x64,debug]   { Defines += @"GDAL_LIB=""$(MSBuildThisFileDirectory.Replace('\', '/'))lib/x64/Debug/gdal_i.lib"""; };
+    [x64,release] { Defines += @"GDAL_LIB=""$(MSBuildThisFileDirectory.Replace('\', '/'))lib/x64/Release/gdal_i.lib"""; };
+
+    [x86,debug]   { Defines += @"GDAL_LIB=""$(MSBuildThisFileDirectory.Replace('\', '/'))lib/Win32/Debug/gdal_i.lib"""; };
+    [x86,release] { Defines += @"GDAL_LIB=""$(MSBuildThisFileDirectory.Replace('\', '/'))lib/Win32/Release/gdal_i.lib"""; };
   };
 }
