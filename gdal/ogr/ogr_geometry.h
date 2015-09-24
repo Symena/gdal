@@ -642,7 +642,7 @@ class CPL_DLL OGRCurveCollection
 
   public:
                 OGRCurveCollection();
-               ~OGRCurveCollection() noexcept;
+               ~OGRCurveCollection();
 
     void            empty(OGRGeometry* poGeom);
     OGRBoolean      IsEmpty() const;
@@ -838,7 +838,7 @@ class CPL_DLL OGRCurvePolygon : public OGRSurface
 
   public:
                 OGRCurvePolygon();
-    virtual    ~OGRCurvePolygon() noexcept;
+    virtual    ~OGRCurvePolygon();
 
     // Non standard (OGRGeometry).
     virtual const char *getGeometryName() const;
