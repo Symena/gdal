@@ -6,7 +6,7 @@ default:	build
 	xcopy /D  /Y $(ARCHITECTURE)\$(CONFIGURATION)\*.obj ..\o
 
 build:
-	@echo $(CONFIGURATION) $(ARCHITECTURE)
+	nuget restore index.sln
 	msbuild index.sln /t:Rebuild /p:Configuration=$(CONFIGURATION);Platform=$(ARCHITECTURE) /m:6
 	
 clean:
