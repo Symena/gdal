@@ -28,3 +28,4 @@ nmake -f makefile.vc MSVC_VER=1900 DEBUG=1 GDAL_HOME=%repodir%\buildd32 clean
 nmake -f makefile.vc MSVC_VER=1900 WITH_PDB=1 GDAL_HOME=%repodir%\buildo32
 nmake -f makefile.vc MSVC_VER=1900 WITH_PDB=1 GDAL_HOME=%repodir%\buildo32 devinstall
 copy gdal200.pdb ..\buildo32\bin\
+nmake -f makefile.vc MSVC_VER=1900 WITH_PDB=1 GDAL_HOME=%repodir%\buildo32 clean
