@@ -740,4 +740,25 @@ EXTERNAL_LIBS =	$(OGDILIB) $(XERCES_LIB) $(EXPAT_LIB) $(OCI_LIB) $(PG_LIB) \
 	$(MRSID_LIDAR_LIB) $(LIBKML_LIBS) $(SOSI_LIBS) $(PDF_LIB_LINK) $(LZMA_LIBS) \
 	$(LIBICONV_LIBRARY) $(WEBP_LIBS) $(FGDB_LIB_LINK) $(FREEXL_LIBS) $(GTA_LIBS) \
 	$(INGRES_LIB) $(LIBXML2_LIB) $(PCRE_LIB) ws2_32.lib legacy_stdio_definitions.lib
-		
+
+	
+# Determine set architecture and configuration in the symena way to build
+# index support with msbuild
+!IFDEF DEBUG
+CONFIGURATION=Debug
+LIBPART=-gd
+!ELSE
+CONFIGURATION=Release
+!ENDIF
+
+!IFDEF WIN64
+ARCHITECTURE=x64
+!ELSE
+ARCHITECTURE=Win32
+!ENDIF	
+
+# Additional library dependencies for index
+LINKER_FLAGS = /LIBPATH:$(GDAL_HOME)\..\gdal\frmts\index\packages\ $(LINKER_FLAGS)
+EXTERNAL_LIBS = boost-filesystem-symena.1.59.0.1\build\native\lib\$(ARCHITECTURE)\$(CONFIGURATION)\v140\libboost_filesystem-vc140-mt$(LIBPART)-1_59.lib $(EXTERNAL_LIBS)
+EXTERNAL_LIBS = boost-system-symena.1.59.0.1\build\native\lib\$(ARCHITECTURE)\$(CONFIGURATION)\v140\libboost_system-vc140-mt$(LIBPART)-1_59.lib $(EXTERNAL_LIBS)
+
