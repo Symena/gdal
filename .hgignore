@@ -11,3 +11,9 @@ gdal/gcore/Version.res
 gdal/gdal200.dll
 gdal/port/cpl_config.h
 *.nupkg
+Win32*
+x64*
+*.sdf
+*.opensdf
+*.suo
+*.user
