@@ -350,6 +350,10 @@ void CPL_STDCALL GDALAllRegister()
     GDALRegister_MAP();
 #endif
 
+#ifdef FRMT_index
+	GDALRegister_INDEX();
+#endif
+
 /* -------------------------------------------------------------------- */
 /*      Put raw formats at the end of the list. These drivers support   */
 /*      various ASCII-header labeled formats, so the driver could be    */
