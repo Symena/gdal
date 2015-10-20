@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\boost-headers-symena.1.59.0.1\build\native\boost-headers-symena.props" Condition="Exists('..\packages\boost-headers-symena.1.59.0.1\build\native\boost-headers-symena.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -159,7 +160,13 @@
     <ClInclude Include="IndexDataset.h" />
     <ClInclude Include="IndexRegister.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\boost-headers-symena.1.59.0.1\build\native\boost-headers-symena.targets" Condition="Exists('..\packages\boost-headers-symena.1.59.0.1\build\native\boost-headers-symena.targets')" />
+    <Import Project="..\packages\boost-system-symena.1.59.0.1\build\native\boost-system-symena.targets" Condition="Exists('..\packages\boost-system-symena.1.59.0.1\build\native\boost-system-symena.targets')" />
+    <Import Project="..\packages\boost-filesystem-symena.1.59.0.1\build\native\boost-filesystem-symena.targets" Condition="Exists('..\packages\boost-filesystem-symena.1.59.0.1\build\native\boost-filesystem-symena.targets')" />
   </ImportGroup>
 </Project>
