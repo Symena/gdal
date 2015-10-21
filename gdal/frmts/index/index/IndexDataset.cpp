@@ -19,3 +19,20 @@ GDALDataset* IndexDataset::Open(GDALOpenInfo* openInfo)
 
 	return nullptr;
 }
+
+bool IndexDataset::Identify(const boost::filesystem::path& file, std::istream& header)
+{
+	if(file.filename() != "index.txt")
+		return false;
+
+	try
+	{
+		IndexLine l(header);
+	}
+	catch(const std::runtime_error&)
+	{
+		return false;
+	}
+
+	return true;
+}
