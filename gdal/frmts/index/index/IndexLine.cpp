@@ -5,27 +5,16 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 
-IndexLine::IndexLine(std::istream& indexFile)
+IndexLine::IndexLine(const std::string& line, IndexWarnings& warnings)
 {
-	checkStreamValidity(indexFile);
+	initializeMembers(line);
 
-	initializeMembers(indexFile);
-
-	checkMembers();
+	checkMembers(warnings);
 }
 
-void IndexLine::checkStreamValidity(const std::istream& indexFile)
+void IndexLine::initializeMembers(const std::string& line)
 {
-	if (!indexFile)
-		throw std::runtime_error("Stream to index file is not valid");
-}
-
-void IndexLine::initializeMembers(std::istream& indexFile)
-{
-	std::string line;
-	std::getline(indexFile, line);
-
-	boost::char_separator<char> delim(" \t");
+	boost::char_separator<char> delim(" \t\r");
 	boost::tokenizer<boost::char_separator<char>> tokens(line, delim);
 
 	const auto nrOfTokens = std::distance(tokens.begin(), tokens.end());
@@ -46,10 +35,8 @@ void IndexLine::initializeMembers(std::istream& indexFile)
 			case 3: northMin = boost::lexical_cast<int>(token); break;
 			case 4: northMax = boost::lexical_cast<int>(token); break;
 			case 5: pixelSquareSize = boost::lexical_cast<int>(token); break;
-			default:
-				throw std::logic_error("More tokens than should be possible");
+			default: throw std::logic_error("More tokens than should be possible");
 			}
-
 		}
 		catch (const boost::bad_lexical_cast&)
 		{
@@ -60,14 +47,25 @@ void IndexLine::initializeMembers(std::istream& indexFile)
 	}
 }
 
-void IndexLine::checkMembers()
+void IndexLine::checkMembers(IndexWarnings& warnings)
 {
 	if (pixelSquareSize < 1)
-		throw std::runtime_error("Only non-negative pixel sizes are supported");
+	{
+		warnings.add("Pixel size '%d' is not > 0", pixelSquareSize);
+		consistent = false;
+	}
+	else
+	{
+		if ((eastMax - eastMin) % pixelSquareSize != 0)
+		{
+			warnings.add("Easting distance is not a multiple of the pixel size");
+			consistent = false;
+		}
 
-	if ((eastMax - eastMin) % pixelSquareSize != 0)
-		throw std::runtime_error("Easting values are not a multiple of the pixel size");
-
-	if ((northMax - northMin) % pixelSquareSize != 0)
-		throw std::runtime_error("Northing values are not a multiple of the pixel size");
+		if ((northMax - northMin) % pixelSquareSize != 0)
+		{
+			warnings.add("Northing distance is not a multiple of the pixel size");
+			consistent = false;
+		}
+	}
 }

@@ -1,8 +1,11 @@
 #pragma once
 
 #include <iosfwd>
+#include <string>
 
 #include <boost/filesystem/path.hpp>
+
+#include "IndexWarnings.h"
 
 class IndexLine
 {
@@ -14,8 +17,10 @@ class IndexLine
 	int northMax = 0;
 	int pixelSquareSize = 0;
 
+	bool consistent = true;
+
 public:
-	IndexLine(std::istream& indexFile);
+	explicit IndexLine(const std::string& line, IndexWarnings& warnings);
 
 	const boost::filesystem::path& getTilePath() const { return path; }
 
@@ -26,8 +31,9 @@ public:
 
 	int getPixelSquareSize() const { return pixelSquareSize; }
 
+	bool isConsistent() const { return consistent; }
+
 private:
-	void checkStreamValidity(const std::istream& indexFile);
-	void initializeMembers(std::istream& indexFile);
-	void checkMembers();
+	void initializeMembers(const std::string& line);
+	void checkMembers(IndexWarnings& warnings);
 };

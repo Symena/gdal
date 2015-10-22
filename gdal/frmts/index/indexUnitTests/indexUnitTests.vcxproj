@@ -156,6 +156,7 @@
   <ItemGroup>
     <ClCompile Include="IndexDatasetTests.cpp" />
     <ClCompile Include="IndexLineTests.cpp" />
+    <ClCompile Include="IndexWarningsTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\index\index.vcxproj">
