@@ -15,12 +15,10 @@ void CPL_DLL GDALRegister_INDEX()
 
 		poDriver->SetDescription("INDEX");
 		poDriver->SetMetadataItem(GDAL_DCAP_RASTER, "YES");
-		poDriver->SetMetadataItem(GDAL_DMD_LONGNAME,
-								  "Asset Index Files");
-		poDriver->SetMetadataItem(GDAL_DCAP_VIRTUALIO, "YES");
+		poDriver->SetMetadataItem(GDAL_DMD_LONGNAME, "Asset Index Files for height or clutter data");
+// 		poDriver->SetMetadataItem(GDAL_DCAP_VIRTUALIO, "YES"); does not seem necessary at the moment
 
 		poDriver->pfnOpen = IndexDataset::Open;
-		poDriver->pfnIdentify = nullptr;
 		
 		GetGDALDriverManager()->RegisterDriver(poDriver);
 	}
