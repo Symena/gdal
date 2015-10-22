@@ -3,10 +3,13 @@
 #include "gdal_pam.h"
 
 #include <iosfwd>
+#include <vector>
 
 #include <boost/filesystem/path.hpp>
 
 #include "IndexWarnings.h"
+
+class IndexLine;
 
 class IndexDataset: public GDALPamDataset
 {
@@ -17,4 +20,10 @@ public:
 	static GDALDataset* Open(GDALOpenInfo* openInfo);
 
 	static bool Identify(const boost::filesystem::path& file, std::istream& header);
+
+private:
+	void setRasterSizes(const std::vector<IndexLine>& lines);
+
+	void setDefaultRasterSize();
+	void filterUnusableLines(std::vector<IndexLine>& lines, int targetPixelSquareSize);
 };

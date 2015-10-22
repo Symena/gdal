@@ -3,17 +3,93 @@
 #include <iostream>
 #include <sstream>
 #include <memory>
+#include <cassert>
 
 #include <boost/filesystem.hpp>
+#include <boost/range/algorithm.hpp>
 
 #include "IndexLine.h"
 #include "IndexWarnings.h"
 #include "IndexWarningsReporter.h"
 
+struct membuf: public std::streambuf
+{
+	membuf(char* begin, size_t size)
+	{
+		this->setg(begin, begin, begin + size);
+	}
+};
+
+GDALDataset* IndexDataset::Open(GDALOpenInfo* openInfo)
+{
+	if (openInfo->pszFilename == nullptr || openInfo->pabyHeader == nullptr || openInfo->fpL == nullptr)
+		return nullptr;
+
+	if (!openInfo->bStatOK)
+		return nullptr;
+
+	if (openInfo->eAccess != GA_ReadOnly)
+	{
+		CPLError(CE_Failure, CPLE_NotSupported, "The Index driver only supports readonly access to existing datasets.\n");
+		return nullptr;
+	}
+
+	const boost::filesystem::path indexFile = openInfo->pszFilename;
+
+	membuf sbuf(reinterpret_cast<char*>(openInfo->pabyHeader), openInfo->nHeaderBytes);
+	std::istream header(&sbuf);
+
+	if (!Identify(indexFile, header))
+		return nullptr;
+
+	IndexWarnings warnings;
+	IndexWarningsReporter warningsReporter(warnings);
+
+	std::unique_ptr<IndexDataset> dataSet;
+
+	try
+	{
+		IndexWarningsContext context(warnings, boost::filesystem::absolute(indexFile).string() + ": ");
+		dataSet = std::make_unique<IndexDataset>(indexFile, warnings);
+	}
+	catch (const std::runtime_error& e)
+	{
+		CPLError(CE_Failure, CPLE_AppDefined, "Reading index file %s failed: %s", openInfo->pszFilename, e.what());
+		return nullptr;
+	}
+
+	//TODO: create band information
+
+
+	dataSet->SetDescription(openInfo->pszFilename);
+	dataSet->TryLoadXML();
+
+	return dataSet.release();
+}
+
+bool IndexDataset::Identify(const boost::filesystem::path& file, std::istream& header)
+{
+	if (file.filename() != "index.txt")
+		return false;
+
+	try
+	{
+		std::string line;
+		std::getline(header, line);
+
+		IndexLine l(line, IndexWarnings());
+	}
+	catch (const std::runtime_error&)
+	{
+		return false;
+	}
+
+	return true;
+}
+
 IndexDataset::IndexDataset(const boost::filesystem::path& indexFile, IndexWarnings& warnings) 
 	: IndexDataset(std::ifstream(indexFile.string()), warnings)
 {}
-
 
 IndexDataset::IndexDataset(std::istream& indexFile, IndexWarnings& warnings)
 {
@@ -23,6 +99,7 @@ IndexDataset::IndexDataset(std::istream& indexFile, IndexWarnings& warnings)
 	std::vector<IndexLine> lines;
 
 	size_t readLines = 0;
+	int bestPixelSquareSize = std::numeric_limits<int>::max();
 	while(indexFile.good())
 	{
 		std::string line;
@@ -34,82 +111,60 @@ IndexDataset::IndexDataset(std::istream& indexFile, IndexWarnings& warnings)
 			continue;
 
 		lines.emplace_back(line, warnings);
+
+		const auto& readLine = lines.back();
+		if(readLine.isConsistent())
+			bestPixelSquareSize = std::min(bestPixelSquareSize, readLine.getPixelSquareSize());
 	}
 
-	std::cout << "Read "<<lines.size()<<" lines from index file\n";
+	filterUnusableLines(lines, bestPixelSquareSize);
+
+	setRasterSizes(lines);
 }
 
-struct membuf : public std::streambuf
+void IndexDataset::setRasterSizes(const std::vector<IndexLine>& lines)
 {
-	membuf(char* begin, size_t size)
+	if(lines.empty())
 	{
-		this->setg(begin, begin, begin + size);
-	}
-};
-
-GDALDataset* IndexDataset::Open(GDALOpenInfo* openInfo)
-{
-	if(openInfo->pszFilename == nullptr || openInfo->pabyHeader == nullptr || openInfo->fpL == nullptr)
-		return nullptr;
-
-	if(!openInfo->bStatOK)
-		return nullptr;
-
-	if (openInfo->eAccess != GA_ReadOnly)
-	{
-		CPLError(CE_Failure, CPLE_NotSupported, "The Index driver only supports readonly access to existing datasets.\n");
-		return nullptr;
+		setDefaultRasterSize();
+		return;
 	}
 
-	const boost::filesystem::path indexFile = openInfo->pszFilename;
-	
-	membuf sbuf(reinterpret_cast<char*>(openInfo->pabyHeader), openInfo->nHeaderBytes);
-	std::istream header(&sbuf);
+	const auto& firstLine = lines.front();
 
-	if (!Identify(indexFile, header))
-		return nullptr;
+	int eastMin = firstLine.getTileEastMin();
+	int eastMax = firstLine.getTileEastMax();
+	int northMin = firstLine.getTileNorthMin();
+	int northMax = firstLine.getTileNorthMax();
 
-	IndexWarnings warnings;
-	IndexWarningsReporter warningsReporter(warnings);
-
-	std::unique_ptr<IndexDataset> dataSet; 
-	
-	try
+	for(const auto& line : lines)
 	{
-		IndexWarningsContext context(warnings, boost::filesystem::absolute(indexFile).string()+": ");
-		dataSet = std::make_unique<IndexDataset>(indexFile, warnings);
-	}
-	catch (const std::runtime_error& e)
-	{
-		CPLError(CE_Failure, CPLE_AppDefined, "Reading index file %s failed: %s", openInfo->pszFilename, e.what());
-		return nullptr;
+		assert(line.isConsistent());
+
+		eastMin = std::min(eastMin, line.getTileEastMin());
+		eastMax = std::max(eastMax, line.getTileEastMax());
+		northMin = std::min(northMin, line.getTileNorthMin());
+		northMax = std::max(northMax, line.getTileNorthMax());
 	}
 
-	//TODO: create band information
-		
-
-	dataSet->SetDescription(openInfo->pszFilename);
-	dataSet->TryLoadXML();
-
-	return dataSet.release();
+	nRasterXSize = (eastMax - eastMin) / firstLine.getPixelSquareSize();
+	nRasterYSize = (northMax - northMin) / firstLine.getPixelSquareSize();
 }
 
-bool IndexDataset::Identify(const boost::filesystem::path& file, std::istream& header)
+void IndexDataset::setDefaultRasterSize()
 {
-	if(file.filename() != "index.txt")
-		return false;
+	nRasterXSize = 0;
+	nRasterYSize = 0;
+}
 
-	try
-	{
-		std::string line;
-		std::getline(header, line);
+void IndexDataset::filterUnusableLines(std::vector<IndexLine>& lines, int targetPixelSquareSize)
+{
+	std::vector<IndexLine> usableLines;
+	usableLines.reserve(lines.size());
 
-		IndexLine l(line, IndexWarnings());
-	}
-	catch(const std::runtime_error&)
-	{
-		return false;
-	}
+	for(const auto& line : lines)
+		if(line.isConsistent() && line.getPixelSquareSize() == targetPixelSquareSize)
+			usableLines.push_back(line);
 
-	return true;
+	std::swap(lines, usableLines);
 }
