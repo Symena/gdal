@@ -11,6 +11,7 @@
 #include "IndexLine.h"
 #include "IndexWarnings.h"
 #include "IndexWarningsReporter.h"
+#include "IndexRasterBand.h"
 
 struct membuf: public std::streambuf
 {
@@ -57,9 +58,6 @@ GDALDataset* IndexDataset::Open(GDALOpenInfo* openInfo)
 		CPLError(CE_Failure, CPLE_AppDefined, "Reading index file %s failed: %s", openInfo->pszFilename, e.what());
 		return nullptr;
 	}
-
-	//TODO: create band information
-
 
 	dataSet->SetDescription(openInfo->pszFilename);
 	dataSet->TryLoadXML();
@@ -120,6 +118,8 @@ IndexDataset::IndexDataset(std::istream& indexFile, IndexWarnings& warnings)
 	filterUnusableLines(lines, bestPixelSquareSize);
 
 	setRasterSizes(lines);
+
+	SetBand(1, new IndexRasterBand(this, lines.front()));
 }
 
 void IndexDataset::setRasterSizes(const std::vector<IndexLine>& lines)

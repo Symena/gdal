@@ -159,12 +159,14 @@
   <ItemGroup>
     <ClCompile Include="IndexDataset.cpp" />
     <ClCompile Include="IndexLine.cpp" />
+    <ClCompile Include="IndexRasterBand.cpp" />
     <ClCompile Include="IndexRegister.cpp" />
     <ClCompile Include="IndexWarnings.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IndexDataset.h" />
     <ClInclude Include="IndexLine.h" />
+    <ClInclude Include="IndexRasterBand.h" />
     <ClInclude Include="IndexRegister.h" />
     <ClInclude Include="IndexWarningsReporter.h" />
     <ClInclude Include="IndexWarnings.h" />
