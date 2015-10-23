@@ -154,6 +154,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="IndexBlocksTests.cpp" />
     <ClCompile Include="IndexDatasetTests.cpp" />
     <ClCompile Include="IndexLineTests.cpp" />
     <ClCompile Include="IndexWarningsTests.cpp" />

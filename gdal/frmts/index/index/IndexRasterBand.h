@@ -3,16 +3,16 @@
 #include <boost/filesystem/path.hpp>
 
 #include "gdal_pam.h"
-#include "IndexDataset.h"
 
-class IndexLine;
+#include "IndexDataset.h"
+#include "IndexBlocks.h"
 
 class IndexRasterBand: public GDALPamRasterBand
 {
-	boost::filesystem::path referencedFile;
+	IndexBlocks blocks;
 
 public:
-	IndexRasterBand(IndexDataset* owningDataSet, const IndexLine& line);
+	IndexRasterBand(IndexDataset* owningDataSet, IndexBlocks blocks);
 	
 	virtual CPLErr IReadBlock(int nBlockXOff, int nBlockYOff, void* pImage) override;
 };

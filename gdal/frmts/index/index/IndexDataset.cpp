@@ -12,6 +12,7 @@
 #include "IndexWarnings.h"
 #include "IndexWarningsReporter.h"
 #include "IndexRasterBand.h"
+#include "IndexBlocks.h"
 
 struct membuf: public std::streambuf
 {
@@ -119,7 +120,7 @@ IndexDataset::IndexDataset(std::istream& indexFile, IndexWarnings& warnings)
 
 	setRasterSizes(lines);
 
-	SetBand(1, new IndexRasterBand(this, lines.front()));
+	SetBand(1, new IndexRasterBand(this, IndexBlocks(lines)));
 }
 
 void IndexDataset::setRasterSizes(const std::vector<IndexLine>& lines)

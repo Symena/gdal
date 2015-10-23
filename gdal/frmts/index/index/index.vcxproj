@@ -157,6 +157,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="IndexBlocks.cpp" />
     <ClCompile Include="IndexDataset.cpp" />
     <ClCompile Include="IndexLine.cpp" />
     <ClCompile Include="IndexRasterBand.cpp" />
@@ -164,6 +165,7 @@
     <ClCompile Include="IndexWarnings.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="IndexBlocks.h" />
     <ClInclude Include="IndexDataset.h" />
     <ClInclude Include="IndexLine.h" />
     <ClInclude Include="IndexRasterBand.h" />
