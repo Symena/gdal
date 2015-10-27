@@ -42,9 +42,16 @@ public:
 	}
 };
 
-TEST_F(IndexBlocksTests, accessingAnUnavailableBlockGivesEmptyOptional)
+TEST_F(IndexBlocksTests, accessingAnUnavailableBlockGivesEmptyOptional_noBlocksPresent)
 {
 	EXPECT_FALSE(hasBlock(0,0));
+}
+
+TEST_F(IndexBlocksTests, accessingAnUnavailableBlockGivesEmptyOptional_otherBlocksPresent)
+{
+	addLine(0, 1, 0, 1);
+
+	EXPECT_FALSE(hasBlock(1,0));
 }
 
 TEST_F(IndexBlocksTests, buildsSuccessfullyFromSingleLine)
@@ -77,7 +84,7 @@ TEST_F(IndexBlocksTests, blocksWithLowerEastingHaveLowerBlockIndex)
 	EXPECT_EQ("right", getBlock(1, 0).getFile());
 }
 
-TEST_F(IndexBlocksTests, recognizesHoleAsMissingTile)
+TEST_F(IndexBlocksTests, recognizesHoleAsMissingTile_X)
 {
 	addLine(0, 1, 0, 1);
 	addLine(2, 3, 0, 1);
@@ -85,4 +92,32 @@ TEST_F(IndexBlocksTests, recognizesHoleAsMissingTile)
 	EXPECT_TRUE(hasBlock(0, 0));
 	EXPECT_FALSE(hasBlock(1, 0));
 	EXPECT_TRUE(hasBlock(2, 0));
+}
+
+TEST_F(IndexBlocksTests, recognizesHoleAsMissingTile_Y)
+{
+	addLine(0, 1, 0, 1);
+	addLine(0, 1, 2, 3);
+
+	EXPECT_TRUE(hasBlock(0, 0));
+	EXPECT_FALSE(hasBlock(0, 1));
+	EXPECT_TRUE(hasBlock(0, 2));
+}
+
+//TODO: ragged tests
+
+TEST_F(IndexBlocksTests, throwsIfNoLineHasMaximumSize_XGrows)
+{
+	addLine(0, 1, 0, 10);
+	addLine(1, 11, 10, 11);
+
+	EXPECT_THROW(getBlocks(), std::runtime_error);
+}
+
+TEST_F(IndexBlocksTests, throwsIfNoLineHasMaximumSize_YGrows)
+{
+	addLine(0, 10, 0, 1);
+	addLine(10, 11, 0, 10);
+
+	EXPECT_THROW(getBlocks(), std::runtime_error);
 }
