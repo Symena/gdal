@@ -113,3 +113,8 @@ CPLErr IndexRasterBand::IReadBlock(int nBlockXOff, int nBlockYOff, void* pImage)
 	return CE_None;
 }
 
+GDALColorInterp IndexRasterBand::GetColorInterpretation()
+{
+	return GCI_GrayIndex;
+}
+

@@ -15,4 +15,8 @@ public:
 	IndexRasterBand(IndexDataset* owningDataSet, IndexBlocks blocks);
 	
 	virtual CPLErr IReadBlock(int nBlockXOff, int nBlockYOff, void* pImage) override;
+
+	virtual GDALColorInterp GetColorInterpretation() override;
+
+
 };
