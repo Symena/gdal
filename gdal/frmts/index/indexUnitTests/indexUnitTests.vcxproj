@@ -157,12 +157,16 @@
     <ClCompile Include="IndexBlocksTests.cpp" />
     <ClCompile Include="IndexDatasetTests.cpp" />
     <ClCompile Include="IndexLineTests.cpp" />
+    <ClCompile Include="IndexRasterBandTests.cpp" />
     <ClCompile Include="IndexWarningsTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\index\index.vcxproj">
       <Project>{7cdc6946-464f-4559-81bd-19edf2272452}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="IndexBlocksBuilder.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -43,7 +43,7 @@ class IndexBlocks
 	size_t nrBlocksY;
 
 public:
-	IndexBlocks(const std::vector<IndexLine>& lines);
+	explicit IndexBlocks(const std::vector<IndexLine>& lines);
 
 	boost::optional<const IndexBlock&> getBlock(int blockXOffset, int blockYOffset) const;
 	const std::vector<std::int16_t>& getUndefBlockLine() const { return undefBlockline; }
