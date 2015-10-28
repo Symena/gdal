@@ -8,6 +8,7 @@
 #include <boost/filesystem/path.hpp>
 
 #include "IndexWarnings.h"
+#include "IndexBlocks.h"
 
 class IndexLine;
 
@@ -22,7 +23,7 @@ public:
 	static bool Identify(const boost::filesystem::path& file, std::istream& header);
 
 private:
-	void setRasterSizes(const std::vector<IndexLine>& lines);
+	void setRasterSizes(const IndexBlocks& blocks);
 
 	void setDefaultRasterSize();
 	void filterUnusableLines(std::vector<IndexLine>& lines, int targetPixelSquareSize);

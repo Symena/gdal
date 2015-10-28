@@ -45,7 +45,7 @@ TEST_F(IndexDatasetTests, rasterSizeFromSingleTile)
 	EXPECT_EQ(2, data.GetRasterYSize());
 }
 
-TEST_F(IndexDatasetTests, rasterSizeFromMultipleTiles)
+TEST_F(IndexDatasetTests, rasterSizeFromMultipleFullTiles)
 {
 	addTile(0, 1, 0, 2, 1);
 	addTile(-1, 0, 4, 6, 1);
@@ -55,6 +55,18 @@ TEST_F(IndexDatasetTests, rasterSizeFromMultipleTiles)
 
 	EXPECT_EQ(5, data.GetRasterXSize());
 	EXPECT_EQ(14, data.GetRasterYSize());
+}
+
+TEST_F(IndexDatasetTests, rasterSizeFromPartialTiles)
+{
+	addTile(0, 2, 0, 2, 1);
+	addTile(0, 2, 2, 3, 1);
+	addTile(-1, 0, 0, 2, 1);
+
+	auto& data = getData();
+
+	EXPECT_EQ(4, data.GetRasterXSize());
+	EXPECT_EQ(4, data.GetRasterYSize());
 }
 
 TEST_F(IndexDatasetTests, rasterSizeSkipsInconsistentFirstTile)

@@ -104,6 +104,28 @@ TEST_F(IndexBlocksTests, recognizesHoleAsMissingTile_Y)
 	EXPECT_TRUE(hasBlock(0, 2));
 }
 
+TEST_F(IndexBlocksTests, holeRecognitionWorksWithNonUnitBlockSizes_X)
+{
+	setPixelSize(3);
+	addLine(3, 9, 0, 3);
+	addLine(15, 21, 0, 3);
+
+	EXPECT_TRUE(hasBlock(0, 0));
+	EXPECT_FALSE(hasBlock(1, 0));
+	EXPECT_TRUE(hasBlock(2, 0));
+}
+
+TEST_F(IndexBlocksTests, holeRecognitionWorksWithNonUnitBlockSizes_Y)
+{
+	setPixelSize(3);
+	addLine(0, 3, 3, 9);
+	addLine(0, 3, 15, 21);
+
+	EXPECT_TRUE(hasBlock(0, 0));
+	EXPECT_FALSE(hasBlock(0, 1));
+	EXPECT_TRUE(hasBlock(0, 2));
+}
+
 //TODO: ragged tests
 
 TEST_F(IndexBlocksTests, throwsIfNoLineHasMaximumSize_XGrows)
@@ -120,4 +142,92 @@ TEST_F(IndexBlocksTests, throwsIfNoLineHasMaximumSize_YGrows)
 	addLine(10, 11, 0, 10);
 
 	EXPECT_THROW(getBlocks(), std::runtime_error);
+}
+
+TEST_F(IndexBlocksTests, supportsPartialTileRightSide)
+{
+	setPixelSize(2);
+
+	addLine(0, 4, 0, 2);
+	addLine(4, 6, 0, 2);
+
+	EXPECT_TRUE(hasBlock(0, 0));
+	EXPECT_TRUE(hasBlock(1, 0));
+
+	auto block = getBlock(1, 0);
+
+	EXPECT_EQ(0, block.getOffsetInBlockX());
+	EXPECT_EQ(0, block.getOffsetInBlockY());
+}
+
+TEST_F(IndexBlocksTests, supportsPartialTileLeftSide)
+{
+	setPixelSize(2);
+
+	addLine(0, 2, 0, 2);
+	addLine(2, 6, 0, 2);
+
+	EXPECT_TRUE(hasBlock(0, 0));
+	EXPECT_TRUE(hasBlock(1, 0));
+
+	auto block = getBlock(0, 0);
+
+	EXPECT_EQ(1, block.getOffsetInBlockX());
+	EXPECT_EQ(0, block.getOffsetInBlockY());
+}
+
+TEST_F(IndexBlocksTests, supportsPartialTileUpperSide)
+{
+	setPixelSize(2);
+
+	addLine(0, 2, 0, 4);
+	addLine(0, 2, 4, 6);
+
+	EXPECT_TRUE(hasBlock(0, 0));
+	EXPECT_TRUE(hasBlock(0, 1));
+
+	auto block = getBlock(0, 0);
+
+	EXPECT_EQ(0, block.getOffsetInBlockX());
+	EXPECT_EQ(1, block.getOffsetInBlockY());
+}
+
+TEST_F(IndexBlocksTests, supportsPartialTileLowerSide)
+{
+	setPixelSize(2);
+
+	addLine(0, 2, 0, 2);
+	addLine(0, 2, 2, 6);
+
+	EXPECT_TRUE(hasBlock(0, 0));
+	EXPECT_TRUE(hasBlock(0, 1));
+
+	auto block = getBlock(0, 1);
+
+	EXPECT_EQ(0, block.getOffsetInBlockX());
+	EXPECT_EQ(0, block.getOffsetInBlockY());
+}
+
+//todo: partial tile in corners tests
+
+TEST_F(IndexBlocksTests, reservesUndefValueVector)
+{
+	addLine(0, 10, 0, 20);
+
+	auto undefLine = getBlocks().getUndefBlockLine();
+
+	EXPECT_EQ(10, undefLine.size());
+	EXPECT_EQ(-3624, undefLine.at(4));
+}
+
+TEST_F(IndexBlocksTests, undefValueVectorHasCorrectByteOrder)
+{
+	addLine(0, 10, 0, 20);
+
+	auto undefLine = getBlocks().getUndefBlockLine();
+
+	const std::uint8_t* data = reinterpret_cast<std::uint8_t*>(undefLine.data());
+
+	EXPECT_EQ(0xD8, *data);
+	EXPECT_EQ(0xF1, *(data + 1));
 }

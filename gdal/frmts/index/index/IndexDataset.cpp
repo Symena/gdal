@@ -118,38 +118,17 @@ IndexDataset::IndexDataset(std::istream& indexFile, IndexWarnings& warnings)
 
 	filterUnusableLines(lines, bestPixelSquareSize);
 
-	setRasterSizes(lines);
+	auto blocks = IndexBlocks(lines);
 
-	SetBand(1, new IndexRasterBand(this, IndexBlocks(lines)));
+	setRasterSizes(blocks);
+
+	SetBand(1, new IndexRasterBand(this, std::move(blocks)));
 }
 
-void IndexDataset::setRasterSizes(const std::vector<IndexLine>& lines)
+void IndexDataset::setRasterSizes(const IndexBlocks& blocks)
 {
-	if(lines.empty())
-	{
-		setDefaultRasterSize();
-		return;
-	}
-
-	const auto& firstLine = lines.front();
-
-	int eastMin = firstLine.getTileEastMin();
-	int eastMax = firstLine.getTileEastMax();
-	int northMin = firstLine.getTileNorthMin();
-	int northMax = firstLine.getTileNorthMax();
-
-	for(const auto& line : lines)
-	{
-		assert(line.isConsistent());
-
-		eastMin = std::min(eastMin, line.getTileEastMin());
-		eastMax = std::max(eastMax, line.getTileEastMax());
-		northMin = std::min(northMin, line.getTileNorthMin());
-		northMax = std::max(northMax, line.getTileNorthMax());
-	}
-
-	nRasterXSize = (eastMax - eastMin) / firstLine.getPixelSquareSize();
-	nRasterYSize = (northMax - northMin) / firstLine.getPixelSquareSize();
+	nRasterXSize = static_cast<int>(blocks.getNrBlocksX()*blocks.getBlockXSize());
+	nRasterYSize = static_cast<int>(blocks.getNrBlocksY()*blocks.getBlockYSize());
 }
 
 void IndexDataset::setDefaultRasterSize()
