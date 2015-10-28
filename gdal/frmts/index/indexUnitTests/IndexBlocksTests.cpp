@@ -226,9 +226,7 @@ TEST_F(IndexBlocksTests, undefValueVectorHasCorrectByteOrder)
 	EXPECT_EQ(0xF1, *(data + 1));
 }
 
-//TODO: "offset" file tests
-
-TEST_F(IndexBlocksTests, supportsOffsetBlocks)
+TEST_F(IndexBlocksTests, supportsOverlappingBlocks)
 {
 	setPixelSize(50);
 
@@ -237,4 +235,17 @@ TEST_F(IndexBlocksTests, supportsOffsetBlocks)
 
 	EXPECT_TRUE(hasBlock(0, 0));
 	EXPECT_TRUE(hasBlock(0, 1));
+}
+
+TEST_F(IndexBlocksTests, supportsOverlappingBlocks_east)
+{
+	setPixelSize(10);
+
+	addBlock(0, 10, 0, 10);
+	addBlock(9, 19, 0, 10);
+	addBlock(18, 28, 0, 10);
+
+	EXPECT_TRUE(hasBlock(0, 0));
+	EXPECT_TRUE(hasBlock(1, 0));
+	EXPECT_TRUE(hasBlock(2, 0));
 }
