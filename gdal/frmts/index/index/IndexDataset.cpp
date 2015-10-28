@@ -63,6 +63,8 @@ GDALDataset* IndexDataset::Open(GDALOpenInfo* openInfo)
 	dataSet->SetDescription(openInfo->pszFilename);
 	dataSet->TryLoadXML();
 
+	dataSet->oOvManager.Initialize(dataSet.get(), openInfo->pszFilename);
+
 	return dataSet.release();
 }
 
