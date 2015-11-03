@@ -288,9 +288,18 @@ TEST_F(IndexTileWriterTests, canWriteMultipleFullSourcesToDestination)
 	EXPECT_EQ(vec({5,6,7,8}), getDestinationBuffer());
 }
 
-//TODO: multiple writes test
+TEST_F(IndexTileWriterTests, canWriteMultiplePartialSourcesToDestination)
+{
+	write({{0,0},{1,1}}, {1});
+	write({{1,0},{2,1}}, {2});
+	write({{0,1},{1,2}}, {3});
+	write({{1,1},{2,2}}, {4});
+
+	EXPECT_EQ(vec({3,4,1,2}), getDestinationBuffer());
+}
+
 //empty space has -9999
-//transparency and z order
+//transparency and z order (multi full with some holes)
 //block alignment
 //endian-conversion
 //use warning system
