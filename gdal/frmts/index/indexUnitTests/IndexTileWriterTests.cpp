@@ -293,3 +293,4 @@ TEST_F(IndexTileWriterTests, canWriteMultipleFullSourcesToDestination)
 //transparency and z order
 //block alignment
 //endian-conversion
+//use warning system

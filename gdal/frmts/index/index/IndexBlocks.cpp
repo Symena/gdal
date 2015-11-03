@@ -1,5 +1,8 @@
 #include "IndexBlocks.h"
 
+#include <boost/geometry/algorithms/intersection.hpp>
+#include <boost/endian/conversion.hpp>
+
 static_assert(std::is_move_constructible<IndexBlocks>::value, "IndexBlocks should be move constructible");
 static_assert(std::is_move_assignable<IndexBlocks>::value, "IndexBlocks should be move assignable");
 
@@ -21,14 +24,7 @@ IndexBlocks::IndexBlocks(const std::vector<IndexLine>& lines)
 		const int xRasterSize = getXRasterSize(line);
 		const int yRasterSize = getYRasterSize(line);
 
-		const bool blockExtendsX = xRasterSize > blockXSize;
-		const bool blockExtendsY = yRasterSize > blockYSize;
-
-		const bool blockHasLessX = xRasterSize < blockXSize;
-		const bool blockHasLessY = yRasterSize < blockYSize;
-
-		if ((blockExtendsX && blockHasLessY) || (blockHasLessX && blockExtendsY))
-			throw std::runtime_error("Sizes of blocks do not match up");
+		const auto& file = line.getTilePath();
 
 		if (xRasterSize >= blockXSize && yRasterSize >= blockYSize)
 		{
@@ -36,76 +32,78 @@ IndexBlocks::IndexBlocks(const std::vector<IndexLine>& lines)
 			blockYSize = yRasterSize;
 			referenceLine = &line;
 		}
-	}
 
-	std::vector<std::pair<const IndexLine&, IndexBlock>> unsortedBlocks;
+		auto block = IndexBlock(xRasterSize, yRasterSize, file);
 
-	for (const auto& line : lines)
-	{
-		const auto& file = line.getTilePath();
-		const int xRasterSize = getXRasterSize(line);
-		const int yRasterSize = getYRasterSize(line);
+		auto lowerLeft = MapPoint(line.getTileEastMin(), line.getTileNorthMin());
+		auto upperRight = MapPoint(line.getTileEastMax(), line.getTileNorthMax());
 
-		auto offsetInBlockX = line.getTileEastMin() < referenceLine->getTileEastMin() ? blockXSize - xRasterSize : 0;
-		auto offsetInBlockY = line.getTileNorthMin() > referenceLine->getTileNorthMin() ? blockYSize - yRasterSize : 0;
-
-		unsortedBlocks.emplace_back(line, IndexBlock(xRasterSize, yRasterSize, offsetInBlockX, offsetInBlockY, file));
-	}
-	
-	for (const auto& lineWithBlock : unsortedBlocks)
-	{
-		const auto& line = lineWithBlock.first;
-		const auto& block = lineWithBlock.second;
-
-		auto xblockIndex = (line.getTileEastMin() - referenceLine->getTileEastMin()) / (blockXSize * referenceLine->getPixelSquareSize());
-		if (xblockIndex <= 0 && (line.getTileEastMax() - line.getTileEastMin()) / referenceLine->getPixelSquareSize() < blockXSize)
-			--xblockIndex;
-
-		auto& blocksWithSameMinEasting = blocks[xblockIndex];
-
-		auto yblockIndex = ((line.getTileNorthMin() - referenceLine->getTileNorthMin()) / (blockYSize * referenceLine->getPixelSquareSize()));
-		
-		//partial block below reference line
-		if (yblockIndex <= 0 && (line.getTileNorthMax() - line.getTileNorthMin()) / referenceLine->getPixelSquareSize() < blockYSize)
-			--yblockIndex;
-
-		const auto ret = blocksWithSameMinEasting.insert(std::make_pair(-yblockIndex, block)); //negative y block index, because gdal starts in the upper left corner
-
-		if (!ret.second)
-			throw std::logic_error("Multiple tiles at the same coordinates");
+		blockIndex.insert(std::make_pair(MapBox(lowerLeft, upperRight), block));
 	}
 
 	if(!lines.empty())
 	{
-		static const std::int16_t ASSET_MAGIC_CONSTANT_FOR_UNDEFINED_HEIGHTS = -3624; //swapped bytes of -9999
+		static const std::int16_t ASSET_MAGIC_CONSTANT_FOR_UNDEFINED_VALUES = boost::endian::native_to_big(static_cast<std::int16_t>(-9999));
 		
-		undefBlockline.resize(blockXSize, ASSET_MAGIC_CONSTANT_FOR_UNDEFINED_HEIGHTS);
+		undefBlockline.resize(blockXSize, ASSET_MAGIC_CONSTANT_FOR_UNDEFINED_VALUES);
 	}
 
-	setNrOfBlocks();
+	if (referenceLine)
+	{
+		boundingBox = blockIndex.bounds();
+
+		auto blockXMeter = referenceLine->getPixelSquareSize() * blockXSize;
+		auto blockYMeter = referenceLine->getPixelSquareSize() * blockYSize;
+
+		auto boxWidth = width(boundingBox);
+		auto boxHeight = height(boundingBox);
+
+		nrBlocksX = boxWidth / blockXMeter;
+		nrBlocksY = boxHeight / blockYMeter;
+
+		if (boxWidth % blockXMeter != 0)
+			++nrBlocksX;
+
+		if (boxHeight % blockYMeter != 0)
+			++nrBlocksY;
+
+		pixelSquareSize = referenceLine->getPixelSquareSize();
+	}
 }
 
-boost::optional<const IndexBlock&> IndexBlocks::getBlock(int blockXOffset, int blockYOffset) const
+MapBox IndexBlocks::getBlockBox(int blockXOffset, int blockYOffset) const
 {
-	if(blocks.empty())
-		return {};
+	int xLowerLeft = boundingBox.min_corner().get<0>() + blockXOffset * blockXSize * pixelSquareSize;
+	int xUpperRight = xLowerLeft + blockXSize * pixelSquareSize;
+	int yUpperRight = boundingBox.max_corner().get<1>() - blockYOffset * blockYSize * pixelSquareSize;
+	int yLowerLeft = yUpperRight - blockYSize * pixelSquareSize;
 
-	auto minEast = blocks.cbegin()->first;
-	auto requestedEastIndex = blockXOffset + minEast;
+	auto lowerLeft = MapPoint(xLowerLeft, yLowerLeft);
+	auto upperRight = MapPoint(xUpperRight, yUpperRight);
 
-	auto eastIt = blocks.find(requestedEastIndex);
-	if(eastIt == blocks.cend())
-		return {};
+	return MapBox(lowerLeft, upperRight);
+}
 
-	const auto& blocksWithTargetEasting = eastIt->second;
-	auto minNorth = blocksWithTargetEasting.cbegin()->first; //TODO: ensure that minNorth is the same across all or store min during load
-	auto requestedNorthIndex = blockYOffset + minNorth;
+std::vector<IndexBlocks::MapTile> IndexBlocks::getIntersectingMapTiles(int blockXOffset, int blockYOffset) const
+{
+	auto targetBox = getBlockBox(blockXOffset, blockYOffset);
 
-	auto northIt = blocksWithTargetEasting.find(requestedNorthIndex);	
-	if(northIt == eastIt->second.cend())
-		return {};
+	std::vector<IndexBlocks::MapTile> resultBlocks;
 
-	return northIt->second;
+	auto isNotOnlyBorderMatch = [&targetBox](const MapTile& entry)
+	{
+		MapBox intersectionBox;
+		boost::geometry::intersection(entry.first, targetBox, intersectionBox);
+
+		auto intersectionArea = boost::geometry::area(intersectionBox);
+
+		return intersectionArea != 0;
+	};
+
+	blockIndex.query(boost::geometry::index::intersects(targetBox)
+					 && boost::geometry::index::satisfies(isNotOnlyBorderMatch), std::back_inserter(resultBlocks));
+
+	return resultBlocks;
 }
 
 int IndexBlocks::getBlockXSize() const
@@ -126,30 +124,4 @@ size_t IndexBlocks::getNrBlocksX() const
 size_t IndexBlocks::getNrBlocksY() const
 {
 	return nrBlocksY;
-}
-
-void IndexBlocks::setNrOfBlocks()
-{
-	if(blocks.empty())
-	{
-		nrBlocksX = 0;
-		nrBlocksY = 0;
-
-		return;
-	}
-
-	nrBlocksX = blocks.crbegin()->first - blocks.cbegin()->first + 1;
-	
-	int minBlockIndex = std::numeric_limits<int>::max();
-	int maxBlockIndex = std::numeric_limits<int>::min();
-
-	for(const auto& blocksWithSameEasting : blocks)
-	{
-		assert(!blocksWithSameEasting.second.empty());
-
-		minBlockIndex = std::min(minBlockIndex, blocksWithSameEasting.second.cbegin()->first);
-		maxBlockIndex = std::max(maxBlockIndex, blocksWithSameEasting.second.crbegin()->first);
-	}
-
-	nrBlocksY = maxBlockIndex - minBlockIndex + 1;
 }

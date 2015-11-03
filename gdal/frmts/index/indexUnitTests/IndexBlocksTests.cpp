@@ -27,12 +27,14 @@ public:
 
 	bool hasBlock(int xBlockOffset, int yBlockOffset)
 	{
-		return getBlocks().getBlock(xBlockOffset, yBlockOffset).is_initialized();
+		return !getBlocks().getIntersectingMapTiles(xBlockOffset, yBlockOffset).empty();
 	}
 
 	IndexBlock getBlock(int xBlockOffset, int yBlockOffset)
 	{
-		return getBlocks().getBlock(xBlockOffset, yBlockOffset).get();
+		auto blockEntry = getBlocks().getIntersectingMapTiles(xBlockOffset, yBlockOffset).at(0);
+
+		return blockEntry.second;
 	}
 };
 
@@ -122,53 +124,6 @@ TEST_F(IndexBlocksTests, holeRecognitionWorksWithNonUnitBlockSizes_Y)
 
 //TODO: ragged tests
 
-TEST_F(IndexBlocksTests, throwsIfNoLineHasMaximumSize_XGrows)
-{
-	addBlock(0, 1, 0, 10);
-	addBlock(1, 11, 10, 11);
-
-	EXPECT_THROW(getBlocks(), std::runtime_error);
-}
-
-TEST_F(IndexBlocksTests, throwsIfNoLineHasMaximumSize_YGrows)
-{
-	addBlock(0, 10, 0, 1);
-	addBlock(10, 11, 0, 10);
-
-	EXPECT_THROW(getBlocks(), std::runtime_error);
-}
-
-TEST_F(IndexBlocksTests, supportsPartialTileRightSide)
-{
-	setPixelSize(2);
-
-	addBlock(0, 4, 0, 2);
-	addBlock(4, 6, 0, 2);
-
-	EXPECT_TRUE(hasBlock(0, 0));
-	EXPECT_TRUE(hasBlock(1, 0));
-
-	auto block = getBlock(1, 0);
-
-	EXPECT_EQ(0, block.getOffsetInBlockX());
-	EXPECT_EQ(0, block.getOffsetInBlockY());
-}
-
-TEST_F(IndexBlocksTests, supportsPartialTileLeftSide)
-{
-	setPixelSize(2);
-
-	addBlock(0, 2, 0, 2);
-	addBlock(2, 6, 0, 2);
-
-	EXPECT_TRUE(hasBlock(0, 0));
-	EXPECT_TRUE(hasBlock(1, 0));
-
-	auto block = getBlock(0, 0);
-
-	EXPECT_EQ(1, block.getOffsetInBlockX());
-	EXPECT_EQ(0, block.getOffsetInBlockY());
-}
 
 TEST_F(IndexBlocksTests, supportsPartialTileUpperSide)
 {
@@ -179,11 +134,6 @@ TEST_F(IndexBlocksTests, supportsPartialTileUpperSide)
 
 	EXPECT_TRUE(hasBlock(0, 0));
 	EXPECT_TRUE(hasBlock(0, 1));
-
-	auto block = getBlock(0, 0);
-
-	EXPECT_EQ(0, block.getOffsetInBlockX());
-	EXPECT_EQ(1, block.getOffsetInBlockY());
 }
 
 TEST_F(IndexBlocksTests, supportsPartialTileLowerSide)
@@ -195,11 +145,6 @@ TEST_F(IndexBlocksTests, supportsPartialTileLowerSide)
 
 	EXPECT_TRUE(hasBlock(0, 0));
 	EXPECT_TRUE(hasBlock(0, 1));
-
-	auto block = getBlock(0, 1);
-
-	EXPECT_EQ(0, block.getOffsetInBlockX());
-	EXPECT_EQ(0, block.getOffsetInBlockY());
 }
 
 //todo: partial tile in corners tests
@@ -241,11 +186,32 @@ TEST_F(IndexBlocksTests, supportsOverlappingBlocks_east)
 {
 	setPixelSize(10);
 
-	addBlock(0, 10, 0, 10);
-	addBlock(9, 19, 0, 10);
-	addBlock(18, 28, 0, 10);
+	addBlock(0, 100, 0, 10);
+	addBlock(90, 190, 0, 10);
+	addBlock(180, 280, 0, 10);
 
 	EXPECT_TRUE(hasBlock(0, 0));
 	EXPECT_TRUE(hasBlock(1, 0));
 	EXPECT_TRUE(hasBlock(2, 0));
+
+// 	EXPECT_EQ(9, getBlocks().getBlockXSize());
+// 	EXPECT_EQ(9, getBlock(2,0).getRasterSizeX());
 }
+
+TEST_F(IndexBlocksTests, supportsOverlappingBlocks_north)
+{
+	setPixelSize(10);
+
+	addBlock(0, 10, 0, 100);
+	addBlock(0, 10, 90, 190);
+	addBlock(0, 10, 180, 280);
+
+	EXPECT_TRUE(hasBlock(0, 0));
+	EXPECT_TRUE(hasBlock(0, 1));
+	EXPECT_TRUE(hasBlock(0, 2));
+
+// 	EXPECT_EQ(9, getBlocks().getBlockYSize());
+// 	EXPECT_EQ(9, getBlock(0,2).getRasterSizeY());
+}
+
+//TODO: partial tiles with overlap
