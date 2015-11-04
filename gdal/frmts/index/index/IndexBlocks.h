@@ -1,30 +1,32 @@
 #pragma once
 
 #include <vector>
+#include <memory>
 
 #include <boost/geometry/index/rtree.hpp>
 
 #include "IndexLine.h"
 #include "IndexGeometry.h"
+#include "IndexStreamSource.h"
 
 class IndexBlock
 {
 	int rasterSizeX;
 	int rasterSizeY;
 
-	boost::filesystem::path file;
+	std::shared_ptr<IndexStreamSource> dataStream;
 
 public:
-	IndexBlock(int rasterSizeX, int rasterSizeY, const boost::filesystem::path& file)
+	IndexBlock(int rasterSizeX, int rasterSizeY, std::shared_ptr<IndexStreamSource> dataStream)
 		: rasterSizeX(rasterSizeX)
 		, rasterSizeY(rasterSizeY)
-		, file(file)
+		, dataStream(std::move(dataStream))
 	{}
 
 	int getRasterSizeX() const { return rasterSizeX; }
 	int getRasterSizeY() const { return rasterSizeY; }
 
-	const boost::filesystem::path& getFile() const { return file; }
+	std::unique_ptr<std::istream> getData() const {return dataStream->getStream();}
 };
 
 class IndexBlocks

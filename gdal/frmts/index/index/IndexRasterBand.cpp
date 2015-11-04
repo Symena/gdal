@@ -43,27 +43,9 @@ CPLErr IndexRasterBand::IReadBlock(int nBlockXOff, int nBlockYOff, void* pImage)
 	{
 		const auto& accessedTile = touchedTile.second;
 
-		const auto& blockFile = accessedTile.getFile();
+		auto dataFile = accessedTile.getData();
 
-		std::ifstream dataFile(blockFile.string(), std::ios::binary);
-
-		if (!dataFile)
-		{
-			//TODO: write unknown value here
-			CPLError(CE_Warning, CPLE_AppDefined, ("Could not open tile file " + boost::filesystem::absolute(blockFile).string()).c_str());
-			return CE_None;
-		}
-
-		auto actualFileSize = boost::filesystem::file_size(blockFile);
-		auto expectedFileSize = sizeof(std::int16_t) * accessedTile.getRasterSizeX() * accessedTile.getRasterSizeY();
-
-		if (actualFileSize != expectedFileSize)
-		{
-			CPLError(CE_Failure, CPLE_AppDefined, (boost::filesystem::absolute(blockFile).string() + " has unexpected size").c_str());
-			return CE_Failure;
-		}
-
-		writer.write(dataFile, touchedTile.first);
+		writer.write(*dataFile, touchedTile.first);
 	}
 
 	//TODO: swap bytes

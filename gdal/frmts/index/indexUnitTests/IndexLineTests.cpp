@@ -20,28 +20,28 @@ TEST_F(IndexLineTests, parsesFilenameWithoutExtension)
 {
 	auto line = getLine("file 0 0 0 0 1");
 
-	EXPECT_EQ("file", line.getTilePath());
+	EXPECT_EQ("file", line.getTileDataSource()->getStreamDescription());
 }
 
 TEST_F(IndexLineTests, parsesFilenameWithExtension)
 {
 	auto line = getLine("file.ext 0 0 0 0 1");
 
-	EXPECT_EQ("file.ext", line.getTilePath());
+	EXPECT_EQ("file.ext", line.getTileDataSource()->getStreamDescription());
 }
 
 TEST_F(IndexLineTests, parsesRelativePathBackslash)
 {
 	auto line = getLine(R"(path\to\file 0 0 0 0 1)");
 
-	EXPECT_EQ("path/to/file", line.getTilePath());
+	EXPECT_EQ("path\\to\\file", line.getTileDataSource()->getStreamDescription());
 }
 
 TEST_F(IndexLineTests, parsesRelativePathForwardSlash)
 {
 	auto line = getLine(R"(path/to/file 0 0 0 0 1)");
 
-	EXPECT_EQ("path/to/file", line.getTilePath());
+	EXPECT_EQ("path/to/file", line.getTileDataSource()->getStreamDescription());
 }
 
 TEST_F(IndexLineTests, parsesWithTabsAndMultipleSpacesAsSeparators)
@@ -77,7 +77,7 @@ TEST_F(IndexLineTests, readsAllValues)
 {
 	const auto& line = getLine("file 5 6 3 4 1");
 
-	EXPECT_EQ("file", line.getTilePath());
+	EXPECT_EQ("file", line.getTileDataSource()->getStreamDescription());
 	EXPECT_EQ(5, line.getTileEastMin());
 	EXPECT_EQ(6, line.getTileEastMax());
 	EXPECT_EQ(3, line.getTileNorthMin());

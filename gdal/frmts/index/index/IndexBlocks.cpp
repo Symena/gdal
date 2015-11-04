@@ -24,8 +24,6 @@ IndexBlocks::IndexBlocks(const std::vector<IndexLine>& lines)
 		const int xRasterSize = getXRasterSize(line);
 		const int yRasterSize = getYRasterSize(line);
 
-		const auto& file = line.getTilePath();
-
 		if (xRasterSize >= blockXSize && yRasterSize >= blockYSize)
 		{
 			blockXSize = xRasterSize;
@@ -33,7 +31,7 @@ IndexBlocks::IndexBlocks(const std::vector<IndexLine>& lines)
 			referenceLine = &line;
 		}
 
-		auto block = IndexBlock(xRasterSize, yRasterSize, file);
+		auto block = IndexBlock(xRasterSize, yRasterSize, line.getTileDataSource());
 
 		auto lowerLeft = MapPoint(line.getTileEastMin(), line.getTileNorthMin());
 		auto upperRight = MapPoint(line.getTileEastMax(), line.getTileNorthMax());

@@ -2,27 +2,35 @@
 
 #include <iosfwd>
 #include <string>
-
-#include <boost/filesystem/path.hpp>
+#include <memory>
 
 #include "IndexWarnings.h"
+#include "IndexStreamSource.h"
 
 class IndexLine
-{
-	boost::filesystem::path path;
-	
+{	
 	int eastMin = 0;
 	int eastMax = 0;
 	int northMin = 0;
 	int northMax = 0;
 	int pixelSquareSize = 0;
 
+	std::shared_ptr<IndexStreamSource> dataSource;
+
 	bool consistent = true;
 
 public:
-	explicit IndexLine(const std::string& line, IndexWarnings& warnings);
+	IndexLine(const std::string& line, IndexWarnings& warnings);
+	IndexLine(int eastMin, int eastMax, int northMin, int northMax, int pixelSquareSize, std::shared_ptr<IndexStreamSource> dataSource)
+		: eastMin(eastMin)
+		, eastMax(eastMax)
+		, northMin(northMin)
+		, northMax(northMax)
+		, pixelSquareSize(pixelSquareSize)
+		, dataSource(std::move(dataSource))
+	{}
 
-	const boost::filesystem::path& getTilePath() const { return path; }
+	const std::shared_ptr<IndexStreamSource>& getTileDataSource() const { return dataSource; }
 
 	int getTileEastMin() const { return eastMin; }
 	int getTileEastMax() const { return eastMax; }

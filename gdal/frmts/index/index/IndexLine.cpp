@@ -22,6 +22,8 @@ void IndexLine::initializeMembers(const std::string& line)
 	if (nrOfTokens != 6)
 		throw std::runtime_error("Found " + boost::lexical_cast<std::string>(nrOfTokens) + " tokens, expected 6");
 
+	boost::filesystem::path path;
+
 	int tokenCount = 0;
 	for (const auto& token : tokens)
 	{
@@ -44,6 +46,15 @@ void IndexLine::initializeMembers(const std::string& line)
 		}
 
 		++tokenCount;
+	}
+
+	if(pixelSquareSize != 0)
+	{
+		const auto dataWidth = (eastMax - eastMin) / pixelSquareSize;
+		const auto dataHeight = (northMax - northMin) / pixelSquareSize;
+		const auto expectedFileSize = dataWidth * dataHeight * sizeof(std::int16_t);
+
+		dataSource = std::make_shared<IndexFileStreamSource>(path, expectedFileSize);
 	}
 }
 
