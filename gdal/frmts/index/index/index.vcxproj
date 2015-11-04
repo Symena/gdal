@@ -162,6 +162,7 @@
     <ClCompile Include="IndexLine.cpp" />
     <ClCompile Include="IndexRasterBand.cpp" />
     <ClCompile Include="IndexRegister.cpp" />
+    <ClCompile Include="IndexStreamSource.cpp" />
     <ClCompile Include="IndexTileWriter.cpp" />
     <ClCompile Include="IndexWarnings.cpp" />
   </ItemGroup>
@@ -172,6 +173,7 @@
     <ClInclude Include="IndexLine.h" />
     <ClInclude Include="IndexRasterBand.h" />
     <ClInclude Include="IndexRegister.h" />
+    <ClInclude Include="IndexStreamSource.h" />
     <ClInclude Include="IndexTileWriter.h" />
     <ClInclude Include="IndexWarningsReporter.h" />
     <ClInclude Include="IndexWarnings.h" />
