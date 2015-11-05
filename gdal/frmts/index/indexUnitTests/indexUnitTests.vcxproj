@@ -155,6 +155,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="IndexBlocksTests.cpp" />
+    <ClCompile Include="IndexClutterCodesTests.cpp" />
     <ClCompile Include="IndexDatasetTests.cpp" />
     <ClCompile Include="IndexLineTests.cpp" />
     <ClCompile Include="IndexRasterBandTests.cpp" />
