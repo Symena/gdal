@@ -2,6 +2,7 @@
 
 #include <boost/geometry/algorithms/intersection.hpp>
 #include <boost/endian/conversion.hpp>
+#include <boost/range/algorithm/sort.hpp>
 
 static_assert(std::is_move_constructible<IndexBlocks>::value, "IndexBlocks should be move constructible");
 static_assert(std::is_move_assignable<IndexBlocks>::value, "IndexBlocks should be move assignable");
@@ -99,6 +100,9 @@ std::vector<IndexBlocks::MapTile> IndexBlocks::getIntersectingMapTiles(int block
 
 	blockIndex.query(boost::geometry::index::intersects(targetBox)
 					 && boost::geometry::index::satisfies(isNotOnlyBorderMatch), std::back_inserter(resultBlocks));
+
+	boost::range::sort(resultBlocks,
+					   [](const auto& tile1, const auto& tile2) { return tile1.second.getIndex() < tile2.second.getIndex(); });
 
 	return resultBlocks;
 }

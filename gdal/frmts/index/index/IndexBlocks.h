@@ -31,7 +31,7 @@ public:
 
 	int getIndex() const { return index; }
 
-	std::unique_ptr<std::istream> getData() const {return dataStream->getStream();}
+	std::unique_ptr<std::istream> getData(IndexWarnings& warnings) const {return dataStream->getStream(warnings);}
 };
 
 class IndexBlocks

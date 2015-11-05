@@ -7,20 +7,22 @@
 #include "IndexLine.h"
 #include "IndexTileWriter.h"
 #include "IndexConstants.h"
+#include "IndexWarnings.h"
+#include "IndexWarningsReporter.h"
 
 #include <boost/iostreams/stream.hpp>
 #include <boost/iostreams/device/array.hpp>
 #include <boost/endian/conversion.hpp>
-#include <boost/range/algorithm/sort.hpp>
 
 namespace {
-void writeTile(IndexTileWriter& writer, const IndexBlocks::MapTile& tileInformation)
+void writeTile(IndexTileWriter& writer, const IndexBlocks::MapTile& tileInformation, IndexWarnings& warnings)
 {
 	const auto& accessedTile = tileInformation.second;
 
-	auto dataFile = accessedTile.getData();
+	auto dataFile = accessedTile.getData(warnings);
 
-	writer.write(*dataFile, tileInformation.first);
+	if(dataFile)
+		writer.write(*dataFile, tileInformation.first);
 }
 }
 
@@ -42,54 +44,101 @@ IndexRasterBand::IndexRasterBand(IndexDataset* owningDataSet, IndexBlocks blocks
 CPLErr IndexRasterBand::IReadBlock(int nBlockXOff, int nBlockYOff, void* pImage)
 {
 	typedef boost::iostreams::basic_array<char> Device;
+	boost::iostreams::stream<Device> outputStream(static_cast<char*>(pImage), sizeof(std::int16_t) * blocks.getBlockXSize() * blocks.getBlockYSize());
 
-	char* imageBuffer = static_cast<char*>(pImage);
-	boost::iostreams::stream<Device> outputStream(imageBuffer, sizeof(std::int16_t) * blocks.getBlockXSize() * blocks.getBlockYSize());
+	auto outputData = static_cast<std::int16_t*>(pImage);
 
-	auto intersectingTiles = blocks.getIntersectingMapTiles(nBlockXOff, nBlockYOff);
-
-	if(intersectingTiles.empty())
-		fillBlockWithUndefLittleEndian(outputStream);
-	else
-	{
-		auto requestedBlock = blocks.getBlockBox(nBlockXOff, nBlockYOff);
-
-		IndexTileWriter writer(outputStream, requestedBlock, blocks.getPixelSquareSize());
-
-		if(intersectingTiles.size() == 1 && boost::geometry::equals(intersectingTiles.front().first, requestedBlock))
-		{
-			auto dataFile = intersectingTiles.front().second.getData();
-			outputStream << dataFile->rdbuf();
-		}
-		else
-		{
-			fillBlockWithUndefBigEndian(outputStream);
-
-			boost::range::sort(intersectingTiles, 
-							   [](const auto& tile1, const auto& tile2){ return tile1.second.getIndex() < tile2.second.getIndex(); });
-
-			for (const auto& touchedTile : intersectingTiles)
-				writeTile(writer, touchedTile);
-		}
-
-		convertToNativeByteOrder(pImage);
-	}
-
+	IReadBock(nBlockXOff, nBlockYOff, outputStream, outputData);
+	
 	return CE_None;
 }
 
-void IndexRasterBand::convertToNativeByteOrder(void* pImage)
+void IndexRasterBand::IReadBock(int nBlockXOff, int nBlockYOff, std::ostream& outputStream, std::int16_t* outputData)
 {
-	std::int16_t* imageValues = static_cast<std::int16_t*>(pImage);
+	IndexWarnings warnings;
+	IndexWarningsReporter warningsReporter(warnings);
+
+	IndexWarningsContext blockContext(warnings, "Reading block (%1%,%2%): ", nBlockXOff, nBlockYOff);
+
+	try
+	{
+		readTilesIntoBlock(nBlockXOff, nBlockYOff, outputStream, outputData, warnings);
+	}
+	catch (const std::exception& e)
+	{
+		fillBlockWithUndefLittleEndianForException(outputStream);
+
+		warnings.add("%3%", nBlockXOff, nBlockYOff, e.what());
+	}
+	catch(...)
+	{
+		fillBlockWithUndefLittleEndianForException(outputStream);
+
+		warnings.add("Unknown exception", nBlockXOff, nBlockYOff);
+	}
+}
+
+void IndexRasterBand::readTilesIntoBlock(int nBlockXOff, int nBlockYOff, std::ostream& outputStream, std::int16_t* outputData, IndexWarnings& warnings)
+{
+	auto intersectingTiles = blocks.getIntersectingMapTiles(nBlockXOff, nBlockYOff);
+
+	if (intersectingTiles.empty())
+		fillBlockWithUndefLittleEndian(outputStream);
+	else
+	{
+		readIntersectingTilesIntoBlock(outputStream, intersectingTiles, blocks.getBlockBox(nBlockXOff, nBlockYOff), warnings);
+
+		convertToNativeByteOrder(outputData);
+	}
+}
+
+bool IndexRasterBand::singleTileMatchesBlockPerfectly(const std::vector<IndexBlocks::MapTile>& intersectingTiles, const MapBox& requestedBlock)
+{
+	return intersectingTiles.size() == 1 && boost::geometry::equals(intersectingTiles.front().first, requestedBlock);
+}
+
+void IndexRasterBand::convertToNativeByteOrder(std::int16_t* outputData)
+{
 	const size_t writtenValues = blocks.getBlockXSize() * blocks.getBlockYSize();
 
 	for (size_t i = 0; i < writtenValues; ++i)
-		boost::endian::big_to_native_inplace(*(imageValues++));
+		boost::endian::big_to_native_inplace(*(outputData++));
 }
 
-GDALColorInterp IndexRasterBand::GetColorInterpretation()
+void IndexRasterBand::readIntersectingTilesIntoBlock(std::ostream& outputStream, const std::vector<IndexBlocks::MapTile>& intersectingTiles, const MapBox& requestedBlock, IndexWarnings& warnings)
 {
-	return GCI_GrayIndex;
+	IndexTileWriter writer(outputStream, requestedBlock, blocks.getPixelSquareSize());
+
+	if (singleTileMatchesBlockPerfectly(intersectingTiles, requestedBlock))
+		readSingleTileIntoBlock(outputStream, intersectingTiles.front().second, warnings);
+	else
+		readMultipleTilesIntoBlock(outputStream, writer, intersectingTiles, warnings);
+}
+
+void IndexRasterBand::readSingleTileIntoBlock(std::ostream& outputStream, const IndexBlock& tile, IndexWarnings& warnings)
+{
+	auto dataFile = tile.getData(warnings);
+
+	if (dataFile)
+		outputStream << dataFile->rdbuf();
+	else
+		fillBlockWithUndefBigEndian(outputStream);
+}
+
+void IndexRasterBand::readMultipleTilesIntoBlock(std::ostream& outputStream, IndexTileWriter& writer, const std::vector<IndexBlocks::MapTile>& intersectingTiles, IndexWarnings& warnings)
+{
+	fillBlockWithUndefBigEndian(outputStream);
+
+	for (const auto& touchedTile : intersectingTiles)
+		writeTile(writer, touchedTile, warnings);
+}
+
+void IndexRasterBand::fillBlockWithUndefLittleEndianForException(std::ostream& outputStream)
+{
+	outputStream.clear();
+	outputStream.seekp(std::ios::beg, 0);
+
+	fillBlockWithUndefLittleEndian(outputStream);
 }
 
 void IndexRasterBand::fillBlockWithUndefLittleEndian(std::ostream& outputStream)
@@ -108,12 +157,7 @@ void IndexRasterBand::fillBlock(std::ostream& outputStream, const std::vector<st
 		outputStream.write(reinterpret_cast<const char*>(lineData.data()), lineData.size()*sizeof(std::int16_t));
 }
 
-bool IndexRasterBand::tileCoversBlockCompletely(const MapBox& tileBox, const MapBox& blockBox)
+GDALColorInterp IndexRasterBand::GetColorInterpretation()
 {
-	MapBox intersectionBox;
-
-	boost::geometry::intersection(tileBox, blockBox, intersectionBox);
-
-	return boost::geometry::equals(intersectionBox, blockBox);
+	return GCI_GrayIndex;
 }
-

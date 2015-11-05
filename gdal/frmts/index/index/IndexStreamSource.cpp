@@ -6,21 +6,30 @@
 
 #include <cpl_error.h>
 
-std::unique_ptr<std::istream> IndexFileStreamSource::getStream() const
+std::unique_ptr<std::istream> IndexFileStreamSource::getStream(IndexWarnings& warnings) const 
 {
+	if(!boost::filesystem::exists(path))
+	{
+		warnings.add("File %1% could not be found", boost::filesystem::absolute(path));
+
+		return {};
+	}
+
 	auto actualFileSize = boost::filesystem::file_size(path);
 
 	if (actualFileSize != expectedFileSize)
 	{
-		CPLError(CE_Failure, CPLE_AppDefined, (boost::filesystem::absolute(path).string() + " has unexpected size").c_str());
-		return{};
+		warnings.add("File %1% has a size of %2% bytes, but should have %3% bytes, it will not be used", boost::filesystem::absolute(path), actualFileSize, expectedFileSize);
+
+		return {};
 	}
 
 	auto dataFile = std::make_unique<std::ifstream>(path.string(), std::ios::binary);
 
 	if (!(*dataFile))
 	{
-		CPLError(CE_Warning, CPLE_AppDefined, ("Could not open tile file " + boost::filesystem::absolute(path).string()).c_str());
+		warnings.add("Could not open file %1%", boost::filesystem::absolute(path));
+
 		return {};
 	}
 

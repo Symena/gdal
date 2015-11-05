@@ -5,9 +5,11 @@
 
 #include <boost/filesystem/path.hpp>
 
+#include "IndexWarnings.h"
+
 struct IndexStreamSource
 {
-	virtual std::unique_ptr<std::istream> getStream() const = 0;
+	virtual std::unique_ptr<std::istream> getStream(IndexWarnings& warnings) const = 0;
 	virtual std::string getStreamDescription() const = 0;
 };
 
@@ -22,6 +24,6 @@ public:
 		, expectedFileSize(expectedFileSize)
 	{}
 
-	virtual std::unique_ptr<std::istream> getStream() const override;
+	virtual std::unique_ptr<std::istream> getStream(IndexWarnings& warnings) const override;
 	virtual std::string getStreamDescription() const override;
 };

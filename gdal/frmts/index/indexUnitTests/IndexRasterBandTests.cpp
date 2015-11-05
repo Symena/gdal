@@ -185,3 +185,13 @@ TEST_F(IndexRasterBandTests, alignsBlocksToReferenceBlock_Y)
 
 	EXPECT_EQ(expectedData, getBlock(0, 0));
 }
+
+TEST_F(IndexRasterBandTests, fillsValuesWithUnknownInPresenceOfExceptions)
+{
+	getBlockBuilder()
+		.addTile().from(0,0).to(1,1).withData({}); //not enough data causes an exception
+
+	auto expectedData = vec{-9999};
+
+	EXPECT_EQ(expectedData, getBlock(0,0));
+}

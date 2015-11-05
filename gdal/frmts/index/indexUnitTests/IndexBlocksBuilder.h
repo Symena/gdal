@@ -22,7 +22,7 @@ public:
 		: entries(std::move(entries))
 	{}
 
-	virtual std::unique_ptr<std::istream> getStream() const override
+	virtual std::unique_ptr<std::istream> getStream(IndexWarnings& /*warnings*/) const override
 	{
 		typedef boost::iostreams::basic_array<char> Device;
 		auto inputStream = std::make_unique<boost::iostreams::stream<Device>>(const_cast<char*>(reinterpret_cast<const char*>(entries.data())), entries.size()*sizeof(std::int16_t));

@@ -82,8 +82,7 @@ int IndexTileWriter::getPixelToPoint(const MapBox& sourceArea, const MapPoint& f
 
 	const auto metersToSkip = fullLineSkipMeters + inLineSkipMeters;
 
-	if(metersToSkip % pixelSquareSize != 0)
-		throw std::runtime_error("Box offset is not a multiple of the pixel size");
+	assert(metersToSkip % pixelSquareSize == 0);
 
 	return metersToSkip / pixelSquareSize;
 }
