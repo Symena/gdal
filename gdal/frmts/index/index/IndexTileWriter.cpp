@@ -12,12 +12,6 @@ void IndexTileWriter::write(std::istream& source, const MapBox& sourceArea)
 
 	rewindDestination();
 
-// 	if(boost::geometry::equals(sourceArea, destinationArea))
-// 	{
-// 		destination << source.rdbuf();
-// 		return;
-// 	}
-
 	MapBox intersectingBox;
 	boost::geometry::intersection(destinationArea, sourceArea, intersectingBox);
 

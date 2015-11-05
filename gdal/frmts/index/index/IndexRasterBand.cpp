@@ -56,14 +56,17 @@ CPLErr IndexRasterBand::IReadBlock(int nBlockXOff, int nBlockYOff, void* pImage)
 
 		IndexTileWriter writer(outputStream, requestedBlock, blocks.getPixelSquareSize());
 
-		if(intersectingTiles.size() == 1 && tileCoversBlockCompletely(intersectingTiles.front().first, requestedBlock))
-			writeTile(writer, intersectingTiles.front());
+		if(intersectingTiles.size() == 1 && boost::geometry::equals(intersectingTiles.front().first, requestedBlock))
+		{
+			auto dataFile = intersectingTiles.front().second.getData();
+			outputStream << dataFile->rdbuf();
+		}
 		else
 		{
 			fillBlockWithUndefBigEndian(outputStream);
 
 			boost::range::sort(intersectingTiles, 
-							   [](const auto& tile1, const auto& tile2) {return tile1.second.getIndex() < tile2.second.getIndex(); });
+							   [](const auto& tile1, const auto& tile2){ return tile1.second.getIndex() < tile2.second.getIndex(); });
 
 			for (const auto& touchedTile : intersectingTiles)
 				writeTile(writer, touchedTile);
