@@ -14,11 +14,39 @@ int getYRasterSize(const IndexLine& line) { return (line.getTileNorthMax() - lin
 }
 
 IndexBlocks::IndexBlocks(const std::vector<IndexLine>& lines)
-	: blockXSize(std::numeric_limits<int>::min())
-	, blockYSize(std::numeric_limits<int>::min())
+	: blockXSize(0)
+	, blockYSize(0)
 {
 	const IndexLine* referenceLine = nullptr;
 
+	initializeBlockIndex(lines, referenceLine);
+
+	if (referenceLine)
+	{
+		calculateBoundingBox(*referenceLine); 
+
+		auto boxWidth = width(boundingBox);
+		auto boxHeight = height(boundingBox);
+
+		auto blockXMeter = referenceLine->getPixelSquareSize() * blockXSize;
+		auto blockYMeter = referenceLine->getPixelSquareSize() * blockYSize;
+
+		nrBlocksX = boxWidth / blockXMeter;
+		nrBlocksY = boxHeight / blockYMeter;
+
+		if (boxWidth % blockXMeter != 0)
+			++nrBlocksX;
+
+		if (boxHeight % blockYMeter != 0)
+			++nrBlocksY;
+
+		pixelSquareSize = referenceLine->getPixelSquareSize();
+	}
+}
+
+void IndexBlocks::initializeBlockIndex(const std::vector<IndexLine>& lines, const IndexLine*& referenceLine)
+{
+	int lineNr = 0;
 	for (const auto& line : lines)
 	{
 		const int xRasterSize = getXRasterSize(line);
@@ -31,41 +59,12 @@ IndexBlocks::IndexBlocks(const std::vector<IndexLine>& lines)
 			referenceLine = &line;
 		}
 
-		auto block = IndexBlock(xRasterSize, yRasterSize, line.getTileDataSource());
+		auto block = IndexBlock(xRasterSize, yRasterSize, line.getTileDataSource(), lineNr++);
 
 		auto lowerLeft = MapPoint(line.getTileEastMin(), line.getTileNorthMin());
 		auto upperRight = MapPoint(line.getTileEastMax(), line.getTileNorthMax());
 
 		blockIndex.insert(std::make_pair(MapBox(lowerLeft, upperRight), block));
-	}
-
-	if(!lines.empty())
-	{
-		static const std::int16_t ASSET_MAGIC_CONSTANT_FOR_UNDEFINED_VALUES = boost::endian::native_to_big(static_cast<std::int16_t>(-9999));
-		
-		undefBlockline.resize(blockXSize, ASSET_MAGIC_CONSTANT_FOR_UNDEFINED_VALUES);
-	}
-
-	if (referenceLine)
-	{
-		boundingBox = blockIndex.bounds();
-
-		auto blockXMeter = referenceLine->getPixelSquareSize() * blockXSize;
-		auto blockYMeter = referenceLine->getPixelSquareSize() * blockYSize;
-
-		auto boxWidth = width(boundingBox);
-		auto boxHeight = height(boundingBox);
-
-		nrBlocksX = boxWidth / blockXMeter;
-		nrBlocksY = boxHeight / blockYMeter;
-
-		if (boxWidth % blockXMeter != 0)
-			++nrBlocksX;
-
-		if (boxHeight % blockYMeter != 0)
-			++nrBlocksY;
-
-		pixelSquareSize = referenceLine->getPixelSquareSize();
 	}
 }
 
@@ -122,4 +121,39 @@ size_t IndexBlocks::getNrBlocksX() const
 size_t IndexBlocks::getNrBlocksY() const
 {
 	return nrBlocksY;
+}
+
+void IndexBlocks::calculateBoundingBox(const IndexLine& referenceLine)
+{
+	boundingBox = blockIndex.bounds();
+
+	matchBoundingBoxToReferenceLine(referenceLine);
+}
+
+int IndexBlocks::getDistanceIncreaseForDivisibility(int distance, int blockSize)
+{
+	int offset = 0;
+	if (distance % blockSize != 0)
+		offset = blockSize - (distance % blockSize);
+
+	return offset;
+}
+
+void IndexBlocks::matchBoundingBoxToReferenceLine(const IndexLine& referenceLine)
+{
+	MapPoint referencePoint(referenceLine.getTileEastMin(), referenceLine.getTileNorthMax());
+
+	const auto blockXMeter = referenceLine.getPixelSquareSize() * blockXSize;
+	const auto blockYMeter = referenceLine.getPixelSquareSize() * blockYSize;
+
+	const auto xDifferenceMeter = referencePoint.get<0>() - boundingBox.min_corner().get<0>();
+	const auto yDifferenceMeter = boundingBox.max_corner().get<1>() - referencePoint.get<1>();
+
+	const auto xOffset = getDistanceIncreaseForDivisibility(xDifferenceMeter, blockXMeter);
+	const auto yOffset = getDistanceIncreaseForDivisibility(yDifferenceMeter, blockYMeter);
+
+	const auto boundMin = boundingBox.min_corner();
+	const auto boundMax = boundingBox.max_corner();
+
+	boundingBox = MapBox({boundMin.get<0>() - xOffset, boundMin.get<1>()}, {boundMax.get<0>(), boundMax.get<1>() + yOffset});
 }

@@ -168,6 +168,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IndexBlocks.h" />
+    <ClInclude Include="IndexConstants.h" />
     <ClInclude Include="IndexDataset.h" />
     <ClInclude Include="IndexGeometry.h" />
     <ClInclude Include="IndexLine.h" />

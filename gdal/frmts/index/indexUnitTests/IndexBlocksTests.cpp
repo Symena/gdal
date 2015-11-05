@@ -61,23 +61,23 @@ TEST_F(IndexBlocksTests, buildsSuccessfullyFromSingleLine)
 	EXPECT_EQ(5, block.getRasterSizeY());
 }
 
-// TEST_F(IndexBlocksTests, blocksWithLowerNorthingHaveHigherBlockIndex)
-// {
-// 	addBlock(0, 1, 0, 1, "low");
-// 	addBlock(0, 1, 1, 2, "high");
-// 
-// 	EXPECT_EQ("high", getBlock(0,0).getFile());
-// 	EXPECT_EQ("low", getBlock(0,1).getFile());
-// }
-// 
-// TEST_F(IndexBlocksTests, blocksWithLowerEastingHaveLowerBlockIndex)
-// {
-// 	addBlock(0, 1, 0, 1, "left");
-// 	addBlock(1, 2, 0, 1, "right");
-// 
-// 	EXPECT_EQ("left", getBlock(0, 0).getFile());
-// 	EXPECT_EQ("right", getBlock(1, 0).getFile());
-// }
+TEST_F(IndexBlocksTests, blocksWithLowerNorthingHaveHigherBlockIndex)
+{
+	addBlock(0, 1, 0, 1);
+	addBlock(0, 1, 1, 2);
+
+	EXPECT_EQ(1, getBlock(0,0).getIndex());
+	EXPECT_EQ(0, getBlock(0,1).getIndex());
+}
+
+TEST_F(IndexBlocksTests, blocksWithLowerEastingHaveLowerBlockIndex)
+{
+	addBlock(1, 2, 0, 1);
+	addBlock(0, 1, 0, 1);
+
+	EXPECT_EQ(1, getBlock(0, 0).getIndex());
+	EXPECT_EQ(0, getBlock(1, 0).getIndex());
+}
 
 TEST_F(IndexBlocksTests, recognizesHoleAsMissingTile_X)
 {
@@ -121,9 +121,6 @@ TEST_F(IndexBlocksTests, holeRecognitionWorksWithNonUnitBlockSizes_Y)
 	EXPECT_TRUE(hasBlock(0, 2));
 }
 
-//TODO: ragged tests
-
-
 TEST_F(IndexBlocksTests, supportsPartialTileUpperSide)
 {
 	setPixelSize(2);
@@ -144,30 +141,6 @@ TEST_F(IndexBlocksTests, supportsPartialTileLowerSide)
 
 	EXPECT_TRUE(hasBlock(0, 0));
 	EXPECT_TRUE(hasBlock(0, 1));
-}
-
-//todo: partial tile in corners tests
-
-TEST_F(IndexBlocksTests, reservesUndefValueVector)
-{
-	addBlock(0, 10, 0, 20);
-
-	auto undefLine = getBlocks().getUndefBlockLine();
-
-	EXPECT_EQ(10, undefLine.size());
-	EXPECT_EQ(-3624, undefLine.at(4));
-}
-
-TEST_F(IndexBlocksTests, undefValueVectorHasCorrectByteOrder)
-{
-	addBlock(0, 10, 0, 20);
-
-	auto undefLine = getBlocks().getUndefBlockLine();
-
-	const std::uint8_t* data = reinterpret_cast<std::uint8_t*>(undefLine.data());
-
-	EXPECT_EQ(0xD8, *data);
-	EXPECT_EQ(0xF1, *(data + 1));
 }
 
 TEST_F(IndexBlocksTests, supportsOverlappingBlocks)
@@ -192,9 +165,6 @@ TEST_F(IndexBlocksTests, supportsOverlappingBlocks_east)
 	EXPECT_TRUE(hasBlock(0, 0));
 	EXPECT_TRUE(hasBlock(1, 0));
 	EXPECT_TRUE(hasBlock(2, 0));
-
-// 	EXPECT_EQ(9, getBlocks().getBlockXSize());
-// 	EXPECT_EQ(9, getBlock(2,0).getRasterSizeX());
 }
 
 TEST_F(IndexBlocksTests, supportsOverlappingBlocks_north)
@@ -208,9 +178,4 @@ TEST_F(IndexBlocksTests, supportsOverlappingBlocks_north)
 	EXPECT_TRUE(hasBlock(0, 0));
 	EXPECT_TRUE(hasBlock(0, 1));
 	EXPECT_TRUE(hasBlock(0, 2));
-
-// 	EXPECT_EQ(9, getBlocks().getBlockYSize());
-// 	EXPECT_EQ(9, getBlock(0,2).getRasterSizeY());
 }
-
-//TODO: partial tiles with overlap

@@ -6,6 +6,8 @@
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/stream.hpp>
 
+#include <boost/endian/conversion.hpp>
+
 #include "IndexLine.h"
 #include "IndexBlocks.h"
 
@@ -73,6 +75,9 @@ public:
 
 	IndexBlocksBuilder& withData(std::vector<std::int16_t> data)
 	{
+		for (auto& entry : data)
+			boost::endian::native_to_big_inplace(entry);
+
 		protoLines.back().data = std::make_shared<VectorBackedStreamSource>(std::move(data));
 
 		return *this;

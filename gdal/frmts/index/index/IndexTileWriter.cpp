@@ -3,6 +3,8 @@
 #include <boost/geometry/algorithms/intersection.hpp>
 #include <boost/geometry/algorithms/equals.hpp>
 
+#include "IndexConstants.h"
+
 void IndexTileWriter::write(std::istream& source, const MapBox& sourceArea)
 {
 	source.exceptions(std::ios::failbit | std::ios::badbit | std::ios::eofbit);
@@ -10,11 +12,11 @@ void IndexTileWriter::write(std::istream& source, const MapBox& sourceArea)
 
 	rewindDestination();
 
-	if(boost::geometry::equals(sourceArea, destinationArea))
-	{
-		destination << source.rdbuf();
-		return;
-	}
+// 	if(boost::geometry::equals(sourceArea, destinationArea))
+// 	{
+// 		destination << source.rdbuf();
+// 		return;
+// 	}
 
 	MapBox intersectingBox;
 	boost::geometry::intersection(destinationArea, sourceArea, intersectingBox);
@@ -37,20 +39,22 @@ void IndexTileWriter::write(std::istream& source, const MapBox& sourceArea)
 	assert(width(intersectingBox) % pixelSquareSize == 0);
 
 	const auto linesToWrite = height(intersectingBox) / pixelSquareSize;
-	int bytesToReadPerLine = sizeof(std::int16_t) * width(intersectingBox) / pixelSquareSize;
+	int valuesToReadPerLine = width(intersectingBox) / pixelSquareSize;
 
-
-	for (int i = 0; i < linesToWrite; ++i)
+	for (int line = 0; line < linesToWrite; ++line)
 	{
-		//std::copy_n(std::istream_iterator<char>(source), bytesToReadPerLine, std::ostream_iterator<char>(destination));
-		for (int b = 0; b < bytesToReadPerLine; ++b)
+		for (int i = 0; i < valuesToReadPerLine; ++i)
 		{
-			char value;
-			source.read(&value, 1);
-			destination.write(&value, 1);
+			std::int16_t value;
+			source.read(reinterpret_cast<char*>(&value), sizeof(std::int16_t));
+
+			if(value != ASSET_MAGIC_CONSTANT_FOR_UNDEFINED_VALUES_BIG_ENDIAN)
+				destination.write(reinterpret_cast<char*>(&value), sizeof(std::int16_t));
+			else
+				advance(destination, sizeof(std::int16_t));
 		}
 
-		if(i < linesToWrite - 1)
+		if(line < linesToWrite - 1)
 		{
 			advance(source, byteSkipSource);
 			advance(destination, byteSkipDestination);
