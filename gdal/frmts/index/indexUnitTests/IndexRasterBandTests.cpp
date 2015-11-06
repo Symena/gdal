@@ -19,7 +19,7 @@ public:
 	IndexRasterBand& getRasterBand()
 	{
 		if(!rasterBand)
-			rasterBand = std::make_unique<IndexRasterBand>(owningDS, builder.create());
+			rasterBand = std::make_unique<IndexRasterBand>(owningDS, builder.create(), boost::optional<IndexClutterCodes>());
 
 		return *rasterBand;
 	}

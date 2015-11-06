@@ -1,22 +1,25 @@
 #pragma once
 
-#include "gdal_pam.h"
-
 #include <iosfwd>
-#include <memory>
+#include <string>
+#include <map>
+#include <vector>
 
 #include <boost/filesystem/path.hpp>
+
+#include <cpl_string.h>
 
 class IndexClutterCodes
 {
 	int maxIndex;
-	std::unique_ptr<std::vector<std::string>> clutterCodes;
+	CPLStringList gdalClutterCodes;
 
 public:
 	IndexClutterCodes(const boost::filesystem::path& menuFile);
 	IndexClutterCodes(std::istream& menuFile);
 
-	const std::vector<std::string>& getClutterCodes() const { return *clutterCodes; }
+	char** getClutterCodes() { return gdalClutterCodes.List(); }
+	size_t getNrOfClutterCodes() { return gdalClutterCodes.size(); }
 
 private:
 	void readClutterMenuFile(std::istream& menuFile, std::map<int, std::string>& clutterCodesMap);

@@ -80,8 +80,17 @@ std::pair<int, std::string> IndexClutterCodes::readClutterLine(std::string line)
 
 void IndexClutterCodes::createClutterList(std::map<int, std::string>& clutterCodesMap)
 {
-	clutterCodes = std::make_unique<std::vector<std::string>>(maxIndex + 1, "");
+	int currentIndex = 0;
 
-	for (auto& code : clutterCodesMap)
-		clutterCodes->at(code.first) = code.second;
+	for(const auto& clutterCode : clutterCodesMap)
+	{
+		while(clutterCode.first > currentIndex)
+		{
+			gdalClutterCodes.AddString("");
+			++currentIndex;
+		}
+
+		gdalClutterCodes.AddString(clutterCode.second.c_str());
+		++currentIndex;
+	}
 }

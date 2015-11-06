@@ -124,7 +124,7 @@ IndexDataset::IndexDataset(std::istream& indexFile, IndexWarnings& warnings)
 
 	setRasterSizes(blocks);
 
-	SetBand(1, new IndexRasterBand(this, std::move(blocks)));
+	SetBand(1, new IndexRasterBand(this, std::move(blocks), {}));
 }
 
 void IndexDataset::setRasterSizes(const IndexBlocks& blocks)

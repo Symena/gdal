@@ -26,8 +26,9 @@ void writeTile(IndexTileWriter& writer, const IndexBlocks::MapTile& tileInformat
 }
 }
 
-IndexRasterBand::IndexRasterBand(IndexDataset* owningDataSet, IndexBlocks blocks)
+IndexRasterBand::IndexRasterBand(IndexDataset* owningDataSet, IndexBlocks blocks, boost::optional<IndexClutterCodes> codes)
 	: blocks(std::move(blocks))
+	, clutterCodes(std::move(codes))
 {
 	poDS = owningDataSet;
 	nBand = 1;
@@ -103,6 +104,11 @@ void IndexRasterBand::convertToNativeByteOrder(std::int16_t* outputData)
 
 	for (size_t i = 0; i < writtenValues; ++i)
 		boost::endian::big_to_native_inplace(*(outputData++));
+}
+
+char** IndexRasterBand::GetCategoryNames()
+{
+	return clutterCodes->getClutterCodes();
 }
 
 void IndexRasterBand::readIntersectingTilesIntoBlock(std::ostream& outputStream, const std::vector<IndexBlocks::MapTile>& intersectingTiles, const MapBox& requestedBlock, IndexWarnings& warnings)

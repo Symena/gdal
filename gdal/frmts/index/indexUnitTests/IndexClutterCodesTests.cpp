@@ -20,7 +20,13 @@ public:
 			return;
 
 		indexClutterCodes = std::make_unique<IndexClutterCodes>(menu);
-		clutterCodes = indexClutterCodes->getClutterCodes();
+		
+		const auto nrCodes = indexClutterCodes->getNrOfClutterCodes();
+
+		clutterCodes.reserve(nrCodes);
+
+		for (size_t i = 0; i < nrCodes; ++i)
+			clutterCodes.push_back(indexClutterCodes->getClutterCodes()[i]);
 	}
 
 	std::vector<std::string>& getClutterCodes()
@@ -37,6 +43,14 @@ public:
 			buildClutterCodes();
 
 		return clutterCodes[index];
+	}
+
+	std::string getGdalClutterCode(int index)
+	{
+		if(!indexClutterCodes)
+			buildClutterCodes();
+
+		return indexClutterCodes->getClutterCodes()[index];
 	}
 };
 
@@ -127,4 +141,14 @@ TEST_F(IndexClutterCodesTests, throwsIfNoIndexOrNameIsDefined)
 	addClutter("0");
 
 	EXPECT_THROW(buildClutterCodes(), std::runtime_error);
+}
+
+TEST_F(IndexClutterCodesTests, supportsGDALClutterCodes)
+{
+	addClutter("0 water");
+	addClutter("2 mountain");
+
+	EXPECT_EQ("water", getGdalClutterCode(0));
+	EXPECT_EQ("", getGdalClutterCode(1));
+	EXPECT_EQ("mountain", getGdalClutterCode(2));
 }
