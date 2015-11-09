@@ -33,8 +33,8 @@ private:
 	void IReadBock(int nBlockXOff, int nBlockYOff, std::ostream& outputStream, std::int16_t* outputData);
 	
 	void readTilesIntoBlock(int nBlockXOff, int nBlockYOff, std::ostream& outputStream, std::int16_t* outputData, IndexWarnings& warnings);
-	void readIntersectingTilesIntoBlock(std::ostream& outputStream, const std::vector<IndexBlocks::MapTile>& intersectingTiles, const MapBox& requestedBlock, IndexWarnings& warnings);
-	void readSingleTileIntoBlock(std::ostream& outputStream, const IndexBlock& tile, IndexWarnings& warnings);
+	void readIntersectingTilesIntoBlock(std::ostream& outputStream, std::int16_t* outputData, const std::vector<IndexBlocks::MapTile>& intersectingTiles, const MapBox& requestedBlock, IndexWarnings& warnings);
+	void readSingleTileIntoBlock(std::ostream& outputStream, std::int16_t* outputData, const IndexBlock& tile, IndexWarnings& warnings);
 	void readMultipleTilesIntoBlock(std::ostream& outputStream, IndexTileWriter& writer, const std::vector<IndexBlocks::MapTile>& intersectingTiles, IndexWarnings& warnings);
 
 	bool singleTileMatchesBlockPerfectly(const std::vector<IndexBlocks::MapTile>& intersectingTiles, const MapBox& requestedBlock);

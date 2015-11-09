@@ -88,43 +88,36 @@ bool IndexDataset::Identify(const boost::filesystem::path& file, std::istream& h
 	return true;
 }
 
+std::unique_ptr<std::istream> getClutterCodeStream(const boost::filesystem::path& indexFile)
+{
+	auto menuFile = indexFile.parent_path() / "menu.txt";
+
+	if(!boost::filesystem::exists(menuFile))
+		return {};
+
+	return std::make_unique<std::ifstream>(menuFile.string());
+}
+
 IndexDataset::IndexDataset(const boost::filesystem::path& indexFile, IndexWarnings& warnings) 
-	: IndexDataset(std::ifstream(indexFile.string()), warnings)
+	: IndexDataset(std::ifstream(indexFile.string()), getClutterCodeStream(indexFile), warnings)
 {}
 
-IndexDataset::IndexDataset(std::istream& indexFile, IndexWarnings& warnings)
+IndexDataset::IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream> clutterFile, IndexWarnings& warnings)
 {
 	if(!indexFile.good())
 		throw std::runtime_error("Index file is empty or stream is in a bad or failed state");
 
 	std::vector<IndexLine> lines;
+	int bestPixelSquareSize = -1;
 
-	size_t readLines = 0;
-	int bestPixelSquareSize = std::numeric_limits<int>::max();
-	while(indexFile.good())
-	{
-		std::string line;
-		std::getline(indexFile, line);
-		++readLines;
-		IndexWarningsContext lineNumber(warnings, "Line %d: ", readLines);
-
-		if(line.empty())
-			continue;
-
-		lines.emplace_back(line, warnings);
-
-		const auto& readLine = lines.back();
-		if(readLine.isConsistent())
-			bestPixelSquareSize = std::min(bestPixelSquareSize, readLine.getPixelSquareSize());
-	}
-
+	readLines(indexFile,lines, bestPixelSquareSize, warnings);
 	filterUnusableLines(lines, bestPixelSquareSize);
 
 	auto blocks = IndexBlocks(lines);
 
 	setRasterSizes(blocks);
 
-	SetBand(1, new IndexRasterBand(this, std::move(blocks), {}));
+	SetBand(1, new IndexRasterBand(this, std::move(blocks), readClutterCodes(std::move(clutterFile))));
 }
 
 void IndexDataset::setRasterSizes(const IndexBlocks& blocks)
@@ -149,4 +142,34 @@ void IndexDataset::filterUnusableLines(std::vector<IndexLine>& lines, int target
 			usableLines.push_back(line);
 
 	std::swap(lines, usableLines);
+}
+
+void IndexDataset::readLines(std::istream& indexFile, std::vector<IndexLine>& lines, int& bestPixelSquareSize, IndexWarnings& warnings)
+{
+	size_t readLines = 0;
+	bestPixelSquareSize = std::numeric_limits<int>::max();
+	while (indexFile.good())
+	{
+		std::string line;
+		std::getline(indexFile, line);
+		++readLines;
+		IndexWarningsContext lineNumber(warnings, "Line %d: ", readLines);
+
+		if (line.empty())
+			continue;
+
+		lines.emplace_back(line, warnings);
+
+		const auto& readLine = lines.back();
+		if (readLine.isConsistent())
+			bestPixelSquareSize = std::min(bestPixelSquareSize, readLine.getPixelSquareSize());
+	}
+}
+
+boost::optional<IndexClutterCodes> IndexDataset::readClutterCodes(std::unique_ptr<std::istream> clutterFile)
+{
+	if(!clutterFile)
+		return {};
+
+	return IndexClutterCodes(*clutterFile);
 }

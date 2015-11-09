@@ -87,7 +87,7 @@ void IndexRasterBand::readTilesIntoBlock(int nBlockXOff, int nBlockYOff, std::os
 		fillBlockWithUndefLittleEndian(outputStream);
 	else
 	{
-		readIntersectingTilesIntoBlock(outputStream, intersectingTiles, blocks.getBlockBox(nBlockXOff, nBlockYOff), warnings);
+		readIntersectingTilesIntoBlock(outputStream, outputData, intersectingTiles, blocks.getBlockBox(nBlockXOff, nBlockYOff), warnings);
 
 		convertToNativeByteOrder(outputData);
 	}
@@ -108,25 +108,32 @@ void IndexRasterBand::convertToNativeByteOrder(std::int16_t* outputData)
 
 char** IndexRasterBand::GetCategoryNames()
 {
-	return clutterCodes->getClutterCodes();
+	if(clutterCodes)
+		return clutterCodes->getClutterCodes();
+
+	return nullptr;
 }
 
-void IndexRasterBand::readIntersectingTilesIntoBlock(std::ostream& outputStream, const std::vector<IndexBlocks::MapTile>& intersectingTiles, const MapBox& requestedBlock, IndexWarnings& warnings)
+void IndexRasterBand::readIntersectingTilesIntoBlock(std::ostream& outputStream, std::int16_t* outputData, const std::vector<IndexBlocks::MapTile>& intersectingTiles, const MapBox& requestedBlock, IndexWarnings& warnings)
 {
 	IndexTileWriter writer(outputStream, requestedBlock, blocks.getPixelSquareSize());
 
 	if (singleTileMatchesBlockPerfectly(intersectingTiles, requestedBlock))
-		readSingleTileIntoBlock(outputStream, intersectingTiles.front().second, warnings);
+		readSingleTileIntoBlock(outputStream, outputData, intersectingTiles.front().second, warnings);
 	else
 		readMultipleTilesIntoBlock(outputStream, writer, intersectingTiles, warnings);
 }
 
-void IndexRasterBand::readSingleTileIntoBlock(std::ostream& outputStream, const IndexBlock& tile, IndexWarnings& warnings)
+void IndexRasterBand::readSingleTileIntoBlock(std::ostream& outputStream, std::int16_t* outputData, const IndexBlock& tile, IndexWarnings& warnings)
 {
 	auto dataFile = tile.getData(warnings);
 
 	if (dataFile)
-		outputStream << dataFile->rdbuf();
+	{
+		const auto bytesToRead = sizeof(std::int16_t)*nBlockXSize*nBlockYSize;
+
+		dataFile->read(reinterpret_cast<char*>(outputData), bytesToRead);
+	}
 	else
 		fillBlockWithUndefBigEndian(outputStream);
 }

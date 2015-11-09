@@ -16,7 +16,7 @@ public:
 	IndexDataset& getData()
 	{
 		if(!dataSet)
-			dataSet = std::make_unique<IndexDataset>(file, warnings);
+			dataSet = std::make_unique<IndexDataset>(file, std::unique_ptr<std::istream>{}, warnings);
 
 		return *dataSet;
 	}
