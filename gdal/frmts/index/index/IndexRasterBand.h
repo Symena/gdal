@@ -30,7 +30,7 @@ public:
 	virtual GDALColorInterp GetColorInterpretation() override;
 
 private:
-	void IReadBock(int nBlockXOff, int nBlockYOff, std::ostream& outputStream, std::int16_t* outputData);
+	void readBlock(int nBlockXOff, int nBlockYOff, std::ostream& outputStream, std::int16_t* outputData);
 	
 	void readTilesIntoBlock(int nBlockXOff, int nBlockYOff, std::ostream& outputStream, std::int16_t* outputData, IndexWarnings& warnings);
 	void readIntersectingTilesIntoBlock(std::ostream& outputStream, std::int16_t* outputData, const std::vector<IndexBlocks::MapTile>& intersectingTiles, const MapBox& requestedBlock, IndexWarnings& warnings);

@@ -55,7 +55,6 @@ public:
 
 	void initializeBlockIndex(const std::vector<IndexLine>& lines, const IndexLine*& referenceLine);
 
-
 	MapBox getBlockBox(int blockXOffset, int blockYOffset) const;
 	std::vector<MapTile> getIntersectingMapTiles(int blockXOffset, int blockYOffset) const;
 

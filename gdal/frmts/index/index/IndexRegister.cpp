@@ -6,20 +6,20 @@
 
 void CPL_DLL GDALRegister_INDEX()
 {
-	GDALDriver  *poDriver;
+	GDALDriver  *driver;
 	if (!GDAL_CHECK_VERSION("INDEX"))
 		return;
 	if (GDALGetDriverByName("INDEX") == NULL)
 	{
-		poDriver = new GDALDriver();
+		driver = new GDALDriver();
 
-		poDriver->SetDescription("INDEX");
-		poDriver->SetMetadataItem(GDAL_DCAP_RASTER, "YES");
-		poDriver->SetMetadataItem(GDAL_DMD_LONGNAME, "Asset Index Files for height or clutter data");
-// 		poDriver->SetMetadataItem(GDAL_DCAP_VIRTUALIO, "YES"); does not seem necessary at the moment
+		driver->SetDescription("INDEX");
+		driver->SetMetadataItem(GDAL_DCAP_RASTER, "YES");
+		driver->SetMetadataItem(GDAL_DMD_LONGNAME, "Asset Index Files for height or clutter data");
+// 		driver->SetMetadataItem(GDAL_DCAP_VIRTUALIO, "YES"); does not seem necessary at the moment
 
-		poDriver->pfnOpen = IndexDataset::Open;
+		driver->pfnOpen = IndexDataset::Open;
 		
-		GetGDALDriverManager()->RegisterDriver(poDriver);
+		GetGDALDriverManager()->RegisterDriver(driver);
 	}
 }

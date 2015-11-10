@@ -126,12 +126,6 @@ void IndexDataset::setRasterSizes(const IndexBlocks& blocks)
 	nRasterYSize = static_cast<int>(blocks.getNrBlocksY()*blocks.getBlockYSize());
 }
 
-void IndexDataset::setDefaultRasterSize()
-{
-	nRasterXSize = 0;
-	nRasterYSize = 0;
-}
-
 void IndexDataset::filterUnusableLines(std::vector<IndexLine>& lines, int targetPixelSquareSize)
 {
 	std::vector<IndexLine> usableLines;
