@@ -8,13 +8,13 @@ class IndexTileWriter
 {
 	std::ostream& destination;
 	MapBox destinationArea;
-	int pixelSquareSize;
+	int resolution;
 
 public:
-	IndexTileWriter(std::ostream& destination, const MapBox& destinationArea, int pixelSquareSize)
+	IndexTileWriter(std::ostream& destination, const MapBox& destinationArea, int resolution)
 		: destination(destination)
 		, destinationArea(destinationArea)
-		, pixelSquareSize(pixelSquareSize)
+		, resolution(resolution)
 	{}
 
 	void write(std::istream& source, const MapBox& sourceArea);

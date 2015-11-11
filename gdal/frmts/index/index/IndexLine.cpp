@@ -36,7 +36,7 @@ void IndexLine::initializeMembers(const std::string& line)
 			case 2: eastMax = boost::lexical_cast<int>(token); break;
 			case 3: northMin = boost::lexical_cast<int>(token); break;
 			case 4: northMax = boost::lexical_cast<int>(token); break;
-			case 5: pixelSquareSize = boost::lexical_cast<int>(token); break;
+			case 5: resolution = boost::lexical_cast<int>(token); break;
 			default: throw std::logic_error("More tokens than should be possible");
 			}
 		}
@@ -48,10 +48,10 @@ void IndexLine::initializeMembers(const std::string& line)
 		++tokenCount;
 	}
 
-	if(pixelSquareSize != 0)
+	if(resolution != 0)
 	{
-		const auto dataWidth = (eastMax - eastMin) / pixelSquareSize;
-		const auto dataHeight = (northMax - northMin) / pixelSquareSize;
+		const auto dataWidth = (eastMax - eastMin) / resolution;
+		const auto dataHeight = (northMax - northMin) / resolution;
 		const auto expectedFileSize = dataWidth * dataHeight * sizeof(std::int16_t);
 
 		dataSource = std::make_shared<IndexFileStreamSource>(path, expectedFileSize);
@@ -60,20 +60,20 @@ void IndexLine::initializeMembers(const std::string& line)
 
 void IndexLine::checkMembers(IndexWarnings& warnings)
 {
-	if (pixelSquareSize < 1)
+	if (resolution < 1)
 	{
-		warnings.add("Pixel size '%d' is not > 0", pixelSquareSize);
+		warnings.add("Pixel size '%d' is not > 0", resolution);
 		consistent = false;
 	}
 	else
 	{
-		if ((eastMax - eastMin) % pixelSquareSize != 0)
+		if ((eastMax - eastMin) % resolution != 0)
 		{
 			warnings.add("Easting distance is not a multiple of the pixel size");
 			consistent = false;
 		}
 
-		if ((northMax - northMin) % pixelSquareSize != 0)
+		if ((northMax - northMin) % resolution != 0)
 		{
 			warnings.add("Northing distance is not a multiple of the pixel size");
 			consistent = false;

@@ -9,8 +9,8 @@ static_assert(std::is_move_assignable<IndexBlocks>::value, "IndexBlocks should b
 
 namespace {
 
-int getXRasterSize(const IndexLine& line) { return (line.getTileEastMax() - line.getTileEastMin()) / line.getPixelSquareSize();}
-int getYRasterSize(const IndexLine& line) { return (line.getTileNorthMax() - line.getTileNorthMin()) / line.getPixelSquareSize(); }
+int getXRasterSize(const IndexLine& line) { return (line.getTileEastMax() - line.getTileEastMin()) / line.getResolution();}
+int getYRasterSize(const IndexLine& line) { return (line.getTileNorthMax() - line.getTileNorthMin()) / line.getResolution(); }
 
 }
 
@@ -29,8 +29,8 @@ IndexBlocks::IndexBlocks(const std::vector<IndexLine>& lines)
 		auto boxWidth = width(boundingBox);
 		auto boxHeight = height(boundingBox);
 
-		auto blockXMeter = referenceLine->getPixelSquareSize() * blockXSize;
-		auto blockYMeter = referenceLine->getPixelSquareSize() * blockYSize;
+		auto blockXMeter = referenceLine->getResolution() * blockXSize;
+		auto blockYMeter = referenceLine->getResolution() * blockYSize;
 
 		nrBlocksX = boxWidth / blockXMeter;
 		nrBlocksY = boxHeight / blockYMeter;
@@ -41,7 +41,7 @@ IndexBlocks::IndexBlocks(const std::vector<IndexLine>& lines)
 		if (boxHeight % blockYMeter != 0)
 			++nrBlocksY;
 
-		pixelSquareSize = referenceLine->getPixelSquareSize();
+		resolution = referenceLine->getResolution();
 	}
 }
 
@@ -71,10 +71,10 @@ void IndexBlocks::initializeBlockIndex(const std::vector<IndexLine>& lines, cons
 
 MapBox IndexBlocks::getBlockBox(int blockXOffset, int blockYOffset) const
 {
-	int xLowerLeft = boundingBox.min_corner().get<0>() + blockXOffset * blockXSize * pixelSquareSize;
-	int xUpperRight = xLowerLeft + blockXSize * pixelSquareSize;
-	int yUpperRight = boundingBox.max_corner().get<1>() - blockYOffset * blockYSize * pixelSquareSize;
-	int yLowerLeft = yUpperRight - blockYSize * pixelSquareSize;
+	int xLowerLeft = boundingBox.min_corner().get<0>() + blockXOffset * blockXSize * resolution;
+	int xUpperRight = xLowerLeft + blockXSize * resolution;
+	int yUpperRight = boundingBox.max_corner().get<1>() - blockYOffset * blockYSize * resolution;
+	int yLowerLeft = yUpperRight - blockYSize * resolution;
 
 	auto lowerLeft = MapPoint(xLowerLeft, yLowerLeft);
 	auto upperRight = MapPoint(xUpperRight, yUpperRight);
@@ -147,8 +147,8 @@ void IndexBlocks::matchBoundingBoxToReferenceLine(const IndexLine& referenceLine
 {
 	MapPoint referencePoint(referenceLine.getTileEastMin(), referenceLine.getTileNorthMax());
 
-	const auto blockXMeter = referenceLine.getPixelSquareSize() * blockXSize;
-	const auto blockYMeter = referenceLine.getPixelSquareSize() * blockYSize;
+	const auto blockXMeter = referenceLine.getResolution() * blockXSize;
+	const auto blockYMeter = referenceLine.getResolution() * blockYSize;
 
 	const auto xDifferenceMeter = referencePoint.get<0>() - boundingBox.min_corner().get<0>();
 	const auto yDifferenceMeter = boundingBox.max_corner().get<1>() - referencePoint.get<1>();

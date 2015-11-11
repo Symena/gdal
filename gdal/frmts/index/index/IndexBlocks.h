@@ -45,7 +45,7 @@ private:
 	size_t nrBlocksX;
 	size_t nrBlocksY;
 
-	int pixelSquareSize;
+	int resolution;
 
 	boost::geometry::index::rtree<MapTile, boost::geometry::index::rstar<16>> blockIndex;
 	MapBox boundingBox;
@@ -64,7 +64,7 @@ public:
 	size_t getNrBlocksX() const;
 	size_t getNrBlocksY() const;
 
-	int getPixelSquareSize() const { return pixelSquareSize; }
+	int getResolution() const { return resolution; }
 	
 private:
 	void calculateBoundingBox(const IndexLine& referenceLine);

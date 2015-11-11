@@ -120,7 +120,7 @@ void IndexRasterBand::readIntersectingTilesIntoBlock(std::ostream& outputStream,
 		readSingleTileIntoBlock(outputStream, outputData, intersectingTiles.front().second, warnings);
 	else
 	{
-		IndexTileWriter writer(outputStream, requestedBlock, blocks.getPixelSquareSize());
+		IndexTileWriter writer(outputStream, requestedBlock, blocks.getResolution());
 		readMultipleTilesIntoBlock(outputStream, writer, intersectingTiles, warnings);
 	}
 		

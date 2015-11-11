@@ -108,10 +108,10 @@ IndexDataset::IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream
 		throw std::runtime_error("Index file is empty or stream is in a bad or failed state");
 
 	std::vector<IndexLine> lines;
-	int bestPixelSquareSize = -1;
+	int bestResolution = -1;
 
-	readLines(indexFile,lines, bestPixelSquareSize, warnings);
-	filterUnusableLines(lines, bestPixelSquareSize);
+	readLines(indexFile,lines, bestResolution, warnings);
+	filterUnusableLines(lines, bestResolution);
 
 	provideResolutionsAsMetadata(lines);
 
@@ -128,22 +128,22 @@ void IndexDataset::setRasterSizes(const IndexBlocks& blocks)
 	nRasterYSize = static_cast<int>(blocks.getNrBlocksY()*blocks.getBlockYSize());
 }
 
-void IndexDataset::filterUnusableLines(std::vector<IndexLine>& lines, int targetPixelSquareSize)
+void IndexDataset::filterUnusableLines(std::vector<IndexLine>& lines, int targetResolution)
 {
 	std::vector<IndexLine> usableLines;
 	usableLines.reserve(lines.size());
 
 	for(const auto& line : lines)
-		if(line.isConsistent() && line.getPixelSquareSize() == targetPixelSquareSize)
+		if(line.isConsistent() && line.getResolution() == targetResolution)
 			usableLines.push_back(line);
 
 	std::swap(lines, usableLines);
 }
 
-void IndexDataset::readLines(std::istream& indexFile, std::vector<IndexLine>& lines, int& bestPixelSquareSize, IndexWarnings& warnings)
+void IndexDataset::readLines(std::istream& indexFile, std::vector<IndexLine>& lines, int& bestResolution, IndexWarnings& warnings)
 {
 	size_t readLines = 0;
-	bestPixelSquareSize = std::numeric_limits<int>::max();
+	bestResolution = std::numeric_limits<int>::max();
 	while (indexFile.good())
 	{
 		std::string line;
@@ -158,7 +158,7 @@ void IndexDataset::readLines(std::istream& indexFile, std::vector<IndexLine>& li
 
 		const auto& readLine = lines.back();
 		if (readLine.isConsistent())
-			bestPixelSquareSize = std::min(bestPixelSquareSize, readLine.getPixelSquareSize());
+			bestResolution = std::min(bestResolution, readLine.getResolution());
 	}
 }
 

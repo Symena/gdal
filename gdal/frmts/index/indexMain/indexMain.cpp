@@ -2,10 +2,13 @@
 
 int main()
 {
-// 	GDALOpenInfo openInfo(R"(Q:\Data\Scenarios\Work\Asset8.1\Houston\mapdata\Height\Houston\index.txt)", GA_ReadOnly);
+ 	GDALOpenInfo openInfo(R"(q:\Data\Scenarios\Work\Asset\GSM Drive Test data\GSM\Height\Height Data\index.txt)", GA_ReadOnly);
 // 
-// 	IndexDataset::Open(&openInfo);
+ 	auto dataset = IndexDataset::Open(&openInfo);
+	dataset->SetMetadataItem("name", "value", "domain");
+	dataset->SetMetadataItem("name1", "value2", "domain");
 
+	auto t = dataset->GetMetadata("domain");
 	return 0;
 }
 

@@ -23,17 +23,17 @@ void IndexTileWriter::write(std::istream& source, const MapBox& sourceArea)
 	advance(source, pixelInitialSkipSource * sizeof(std::int16_t));
 	advance(destination, pixelInitialSkipDestination * sizeof(std::int16_t));
 
-	assert(static_cast<int>(sizeof(std::int16_t)) * (width(sourceArea) - width(intersectingBox)) % pixelSquareSize == 0);
-	assert(static_cast<int>(sizeof(std::int16_t)) * (width(destinationArea) - width(intersectingBox)) % pixelSquareSize == 0);
+	assert(static_cast<int>(sizeof(std::int16_t)) * (width(sourceArea) - width(intersectingBox)) % resolution == 0);
+	assert(static_cast<int>(sizeof(std::int16_t)) * (width(destinationArea) - width(intersectingBox)) % resolution == 0);
 
-	const auto byteSkipSource = static_cast<int>(sizeof(std::int16_t)) * (width(sourceArea) - width(intersectingBox)) / pixelSquareSize;
-	const auto byteSkipDestination = static_cast<int>(sizeof(std::int16_t)) * (width(destinationArea) - width(intersectingBox)) / pixelSquareSize;
+	const auto byteSkipSource = static_cast<int>(sizeof(std::int16_t)) * (width(sourceArea) - width(intersectingBox)) / resolution;
+	const auto byteSkipDestination = static_cast<int>(sizeof(std::int16_t)) * (width(destinationArea) - width(intersectingBox)) / resolution;
 
-	assert(height(intersectingBox) % pixelSquareSize == 0);
-	assert(width(intersectingBox) % pixelSquareSize == 0);
+	assert(height(intersectingBox) % resolution == 0);
+	assert(width(intersectingBox) % resolution == 0);
 
-	const auto linesToWrite = height(intersectingBox) / pixelSquareSize;
-	int valuesToReadPerLine = width(intersectingBox) / pixelSquareSize;
+	const auto linesToWrite = height(intersectingBox) / resolution;
+	int valuesToReadPerLine = width(intersectingBox) / resolution;
 
 	for (int line = 0; line < linesToWrite; ++line)
 	{
@@ -73,7 +73,7 @@ void IndexTileWriter::advance(std::ostream& outputStream, int offset) const
 
 int IndexTileWriter::getPixelToPoint(const MapBox& sourceArea, const MapPoint& firstCopiedPoint)
 {
-	const auto fullLinesToSkip = (sourceArea.max_corner().get<1>() - firstCopiedPoint.get<1>()) / pixelSquareSize;
+	const auto fullLinesToSkip = (sourceArea.max_corner().get<1>() - firstCopiedPoint.get<1>()) / resolution;
 	const auto fullLineSkipMeters = width(sourceArea) * fullLinesToSkip;
 	const auto inLineSkipMeters = firstCopiedPoint.get<0>() - sourceArea.min_corner().get<0>();
 
@@ -82,7 +82,7 @@ int IndexTileWriter::getPixelToPoint(const MapBox& sourceArea, const MapPoint& f
 
 	const auto metersToSkip = fullLineSkipMeters + inLineSkipMeters;
 
-	assert(metersToSkip % pixelSquareSize == 0);
+	assert(metersToSkip % resolution == 0);
 
-	return metersToSkip / pixelSquareSize;
+	return metersToSkip / resolution;
 }

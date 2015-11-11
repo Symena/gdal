@@ -21,9 +21,9 @@ public:
 		return *dataSet;
 	}
 
-	void addTile(int eastMin, int eastMax, int northMin, int northMax, int pixelSquareSize)
+	void addTile(int eastMin, int eastMax, int northMin, int northMax, int resolution)
 	{
-		file << "afile " << eastMin << " " << eastMax << " " << northMin << " " << northMax << " " << pixelSquareSize << "\n";
+		file << "afile " << eastMin << " " << eastMax << " " << northMin << " " << northMax << " " << resolution << "\n";
 	}
 };
 

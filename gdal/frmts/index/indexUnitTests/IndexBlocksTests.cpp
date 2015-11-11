@@ -23,7 +23,7 @@ public:
 		builder.addTile().from(eastMin, northMin).to(eastMax, northMax);
 	}
 
-	void setPixelSize(int pixelSquareSize) { builder.setPixelSize(pixelSquareSize); }
+	void setPixelSize(int resolution) { builder.setPixelSize(resolution); }
 
 	bool hasBlock(int xBlockOffset, int yBlockOffset)
 	{

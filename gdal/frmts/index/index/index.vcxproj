@@ -166,6 +166,7 @@
     <ClCompile Include="IndexStreamSource.cpp" />
     <ClCompile Include="IndexTileWriter.cpp" />
     <ClCompile Include="IndexWarnings.cpp" />
+    <ClCompile Include="Resampling.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IndexBlocks.h" />
@@ -180,6 +181,7 @@
     <ClInclude Include="IndexTileWriter.h" />
     <ClInclude Include="IndexWarningsReporter.h" />
     <ClInclude Include="IndexWarnings.h" />
+    <ClInclude Include="Resampling.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

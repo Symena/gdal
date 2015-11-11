@@ -82,7 +82,7 @@ TEST_F(IndexLineTests, readsAllValues)
 	EXPECT_EQ(6, line.getTileEastMax());
 	EXPECT_EQ(3, line.getTileNorthMin());
 	EXPECT_EQ(4, line.getTileNorthMax());
-	EXPECT_EQ(1, line.getPixelSquareSize());
+	EXPECT_EQ(1, line.getResolution());
 }
 
 TEST_F(IndexLineTests, readsNegativeCoordinateValues)

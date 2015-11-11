@@ -28,8 +28,8 @@ public:
 private:
 	void setRasterSizes(const IndexBlocks& blocks);
 
-	void filterUnusableLines(std::vector<IndexLine>& lines, int targetPixelSquareSize);
-	void readLines(std::istream& indexFile, std::vector<IndexLine>& lines, int& bestPixelSquareSize, IndexWarnings& warnings);
+	void filterUnusableLines(std::vector<IndexLine>& lines, int targetResolution);
+	void readLines(std::istream& indexFile, std::vector<IndexLine>& lines, int& bestResolution, IndexWarnings& warnings);
 	boost::optional<IndexClutterCodes> readClutterCodes(std::unique_ptr<std::istream> clutterFile);
 	void provideResolutionsAsMetadata(const std::vector<IndexLine>& lines);
 };

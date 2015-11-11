@@ -13,7 +13,7 @@ class IndexLine
 	int eastMax = 0;
 	int northMin = 0;
 	int northMax = 0;
-	int pixelSquareSize = 0;
+	int resolution = 0;
 
 	std::shared_ptr<IndexStreamSource> dataSource;
 
@@ -21,12 +21,12 @@ class IndexLine
 
 public:
 	IndexLine(const std::string& line, IndexWarnings& warnings);
-	IndexLine(int eastMin, int eastMax, int northMin, int northMax, int pixelSquareSize, std::shared_ptr<IndexStreamSource> dataSource)
+	IndexLine(int eastMin, int eastMax, int northMin, int northMax, int resolution, std::shared_ptr<IndexStreamSource> dataSource)
 		: eastMin(eastMin)
 		, eastMax(eastMax)
 		, northMin(northMin)
 		, northMax(northMax)
-		, pixelSquareSize(pixelSquareSize)
+		, resolution(resolution)
 		, dataSource(std::move(dataSource))
 	{}
 
@@ -37,7 +37,7 @@ public:
 	int getTileNorthMin() const { return northMin; }
 	int getTileNorthMax() const { return northMax; }
 
-	int getPixelSquareSize() const { return pixelSquareSize; }
+	int getResolution() const { return resolution; }
 
 	bool isConsistent() const { return consistent; }
 
