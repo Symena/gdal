@@ -167,17 +167,10 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\gdal-symena.redist.2.0.20.0\build\native\gdal-symena.redist.targets" Condition="Exists('..\packages\gdal-symena.redist.2.0.20.0\build\native\gdal-symena.redist.targets')" />
+    <Import Project="..\packages\gdal-symena.2.0.20.0\build\native\gdal-symena.targets" Condition="Exists('..\packages\gdal-symena.2.0.20.0\build\native\gdal-symena.targets')" />
     <Import Project="..\packages\boost-headers-symena.1.59.0.1\build\native\boost-headers-symena.targets" Condition="Exists('..\packages\boost-headers-symena.1.59.0.1\build\native\boost-headers-symena.targets')" />
     <Import Project="..\packages\boost-system-symena.1.59.0.1\build\native\boost-system-symena.targets" Condition="Exists('..\packages\boost-system-symena.1.59.0.1\build\native\boost-system-symena.targets')" />
     <Import Project="..\packages\boost-filesystem-symena.1.59.0.1\build\native\boost-filesystem-symena.targets" Condition="Exists('..\packages\boost-filesystem-symena.1.59.0.1\build\native\boost-filesystem-symena.targets')" />
-    <Import Project="..\packages\gdal-symena.redist.2.0.20.0\build\native\gdal-symena.redist.targets" Condition="Exists('..\packages\gdal-symena.redist.2.0.20.0\build\native\gdal-symena.redist.targets')" />
-    <Import Project="..\packages\gdal-symena.2.0.20.0\build\native\gdal-symena.targets" Condition="Exists('..\packages\gdal-symena.2.0.20.0\build\native\gdal-symena.targets')" />
   </ImportGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\gdal-symena.redist.2.0.20.0\build\native\gdal-symena.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\gdal-symena.redist.2.0.20.0\build\native\gdal-symena.redist.targets'))" />
-    <Error Condition="!Exists('..\packages\gdal-symena.2.0.20.0\build\native\gdal-symena.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\gdal-symena.2.0.20.0\build\native\gdal-symena.targets'))" />
-  </Target>
 </Project>
