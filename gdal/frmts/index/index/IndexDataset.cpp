@@ -117,7 +117,7 @@ IndexDataset::IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream
 
 	auto blocks = IndexBlocks(lines);
 	
- 	setRasterSizes(blocks);
+	setRasterSizes(blocks);
 
 	SetBand(1, new IndexRasterBand(this, std::move(blocks), readClutterCodes(std::move(clutterFile))));
 }
@@ -125,8 +125,8 @@ IndexDataset::IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream
 void IndexDataset::setRasterSizes(const IndexBlocks& blocks)
 {
 	const auto& bounds = blocks.getBoundingBox();
-	nRasterXSize = static_cast<int>(blocks.getNrBlocksX()*blocks.getBlockXSize());
-	nRasterYSize = static_cast<int>(blocks.getNrBlocksY()*blocks.getBlockYSize());
+	nRasterXSize = bounds.max_corner().get<0>() - bounds.min_corner().get<0>();
+	nRasterYSize = bounds.max_corner().get<1>() - bounds.min_corner().get<1>();
 
 	double transformMatrix[6];
 	transformMatrix[0] = bounds.min_corner().get<0>(); // minX

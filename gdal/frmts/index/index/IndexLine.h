@@ -4,11 +4,11 @@
 #include <string>
 #include <memory>
 
-#include "IndexWarnings.h"
 #include "IndexStreamSource.h"
+#include "IndexWarnings.h"
 
 class IndexLine
-{	
+{
 	int eastMin = 0;
 	int eastMax = 0;
 	int northMin = 0;

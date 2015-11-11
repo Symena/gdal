@@ -15,6 +15,7 @@
 #include <boost/endian/conversion.hpp>
 
 namespace {
+/*
 void writeTile(IndexTileWriter& writer, const IndexBlocks::MapTile& tileInformation, IndexWarnings& warnings)
 {
 	const auto& accessedTile = tileInformation.second;
@@ -24,6 +25,7 @@ void writeTile(IndexTileWriter& writer, const IndexBlocks::MapTile& tileInformat
 	if(dataFile)
 		writer.write(*dataFile, tileInformation.first);
 }
+*/
 }
 
 IndexRasterBand::IndexRasterBand(IndexDataset* owningDataSet, IndexBlocks blocks, boost::optional<IndexClutterCodes> codes)
@@ -35,22 +37,21 @@ IndexRasterBand::IndexRasterBand(IndexDataset* owningDataSet, IndexBlocks blocks
 
 	eDataType = GDT_Int16;
 
-	nBlockXSize = this->blocks.getBlockXSize();
-	nBlockYSize = this->blocks.getBlockYSize();
-
-	undefValueLineLittleEndian.resize(nBlockXSize, ASSET_MAGIC_CONSTANT_FOR_UNDEFINED_VALUES_LITTLE_ENDIAN);
-	undefValueLineBigEndian.resize(nBlockXSize, ASSET_MAGIC_CONSTANT_FOR_UNDEFINED_VALUES_BIG_ENDIAN);
+	//undefValueLineLittleEndian.resize(nBlockXSize, ASSET_MAGIC_CONSTANT_FOR_UNDEFINED_VALUES_LITTLE_ENDIAN);
+	//undefValueLineBigEndian.resize(nBlockXSize, ASSET_MAGIC_CONSTANT_FOR_UNDEFINED_VALUES_BIG_ENDIAN);
 }
 
 CPLErr IndexRasterBand::IReadBlock(int nBlockXOff, int nBlockYOff, void* pImage)
 {
+	/*
 	typedef boost::iostreams::basic_array<char> Device;
 	boost::iostreams::stream<Device> outputStream(static_cast<char*>(pImage), sizeof(std::int16_t) * blocks.getBlockXSize() * blocks.getBlockYSize());
 
 	auto outputData = static_cast<std::int16_t*>(pImage);
 
 	readBlock(nBlockXOff, nBlockYOff, outputStream, outputData);
-	
+	*/
+
 	return CE_None;
 }
 
@@ -81,6 +82,7 @@ void IndexRasterBand::readBlock(int nBlockXOff, int nBlockYOff, std::ostream& ou
 
 void IndexRasterBand::readTilesIntoBlock(int nBlockXOff, int nBlockYOff, std::ostream& outputStream, std::int16_t* outputData, IndexWarnings& warnings)
 {
+	/*
 	auto intersectingTiles = blocks.getIntersectingMapTiles(nBlockXOff, nBlockYOff);
 
 	if (intersectingTiles.empty())
@@ -91,8 +93,10 @@ void IndexRasterBand::readTilesIntoBlock(int nBlockXOff, int nBlockYOff, std::os
 
 		convertToNativeByteOrder(outputData);
 	}
+	*/
 }
 
+/*
 bool IndexRasterBand::singleTileMatchesBlockPerfectly(const std::vector<IndexBlocks::MapTile>& intersectingTiles, const MapBox& requestedBlock)
 {
 	return intersectingTiles.size() == 1 && boost::geometry::equals(intersectingTiles.front().first, requestedBlock);
@@ -105,6 +109,7 @@ void IndexRasterBand::convertToNativeByteOrder(std::int16_t* outputData)
 	for (size_t i = 0; i < writtenValues; ++i)
 		boost::endian::big_to_native_inplace(*(outputData++));
 }
+*/
 
 char** IndexRasterBand::GetCategoryNames()
 {
@@ -114,6 +119,7 @@ char** IndexRasterBand::GetCategoryNames()
 	return nullptr;
 }
 
+/*
 void IndexRasterBand::readIntersectingTilesIntoBlock(std::ostream& outputStream, std::int16_t* outputData, const std::vector<IndexBlocks::MapTile>& intersectingTiles, const MapBox& requestedBlock, IndexWarnings& warnings)
 {
 	if (singleTileMatchesBlockPerfectly(intersectingTiles, requestedBlock))
@@ -123,7 +129,6 @@ void IndexRasterBand::readIntersectingTilesIntoBlock(std::ostream& outputStream,
 		IndexTileWriter writer(outputStream, requestedBlock, blocks.getResolution());
 		readMultipleTilesIntoBlock(outputStream, writer, intersectingTiles, warnings);
 	}
-		
 }
 
 void IndexRasterBand::readSingleTileIntoBlock(std::ostream& outputStream, std::int16_t* outputData, const IndexBlock& tile, IndexWarnings& warnings)
@@ -147,6 +152,7 @@ void IndexRasterBand::readMultipleTilesIntoBlock(std::ostream& outputStream, Ind
 	for (const auto& touchedTile : intersectingTiles)
 		writeTile(writer, touchedTile, warnings);
 }
+*/
 
 void IndexRasterBand::fillBlockWithUndefLittleEndianForException(std::ostream& outputStream)
 {

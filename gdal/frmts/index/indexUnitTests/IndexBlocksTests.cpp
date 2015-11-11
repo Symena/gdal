@@ -1,181 +1,114 @@
+#include "IndexBlocks.h"
+
 #include <gmock/gmock.h>
 
-#include "IndexBlocks.h"
-#include "IndexBlocksBuilder.h"
+using std::vector;
 
-class IndexBlocksTests : public testing::Test
+namespace {
+
+MapBox makeBox(int minX, int minY, int maxX, int maxY)
 {
-	std::unique_ptr<IndexBlocks> blocks;
-	int pixelSize = 1;
-	IndexBlocksBuilder builder;
-public:
+	return MapBox(MapPoint(minX, minY), MapPoint(maxX, maxY));
+}
 
-	IndexBlocks& getBlocks()
+IndexLine makeLine(int minX, int minY, int maxX, int maxY, int resolution = 1)
+{
+	return IndexLine(minX, maxX, minY, maxY, resolution, nullptr);
+}
+
+bool boxesAreEqual(const MapBox& lhs, const MapBox& rhs)
+{
+	return lhs.min_corner().get<0>() == rhs.min_corner().get<0>()
+		&& lhs.min_corner().get<1>() == rhs.min_corner().get<1>()
+		&& lhs.max_corner().get<0>() == rhs.max_corner().get<0>()
+		&& lhs.max_corner().get<1>() == rhs.max_corner().get<1>();
+}
+
+vector<int> getIndicesOfIntersectingBlocks(IndexBlocks& blocks, int minX, int minY, int maxX, int maxY)
+{
+	auto intersectingBlocks = blocks.getIntersectingBlocks(makeBox(minX, minY, maxX, maxY));
+
+	vector<int> indices;
+	indices.reserve(intersectingBlocks.size());
+	for (auto& block : intersectingBlocks)
+		indices.push_back(block.getIndex());
+
+	return indices;
+}
+
+}
+
+TEST(IndexBlock, constructors)
+{
+	const auto box = makeBox(-3, 2, 7, 6);
+	IndexBlock block(box, 2, nullptr, 1);
+
+	for (int i = 0; i < 2; ++i)
 	{
-		if(!blocks)
-			blocks = std::make_unique<IndexBlocks>(builder.create());
+		if (i == 1)
+			block = IndexBlock(makeLine(-3, 2, 7, 6, 2), 1);
 
-		return *blocks;
+		EXPECT_TRUE(boxesAreEqual(box, block.getBoundingBox()));
+		EXPECT_EQ(10/2, block.getWidthInPixels());
+		EXPECT_EQ(4/2, block.getHeightInPixels());
+		EXPECT_EQ(2, block.getResolution());
+		EXPECT_EQ(1, block.getIndex());
 	}
-
-	void addBlock(int eastMin, int eastMax, int northMin, int northMax)
-	{
-		builder.addTile().from(eastMin, northMin).to(eastMax, northMax);
-	}
-
-	void setPixelSize(int resolution) { builder.setPixelSize(resolution); }
-
-	bool hasBlock(int xBlockOffset, int yBlockOffset)
-	{
-		return !getBlocks().getIntersectingMapTiles(xBlockOffset, yBlockOffset).empty();
-	}
-
-	IndexBlock getBlock(int xBlockOffset, int yBlockOffset)
-	{
-		auto blockEntry = getBlocks().getIntersectingMapTiles(xBlockOffset, yBlockOffset).at(0);
-
-		return blockEntry.second;
-	}
-};
-
-TEST_F(IndexBlocksTests, accessingAnUnavailableBlockGivesEmptyOptional_noBlocksPresent)
-{
-	EXPECT_FALSE(hasBlock(0,0));
 }
 
-TEST_F(IndexBlocksTests, accessingAnUnavailableBlockGivesEmptyOptional_otherBlocksPresent)
-{
-	addBlock(0, 1, 0, 1);
 
-	EXPECT_FALSE(hasBlock(1,0));
+
+TEST(IndexBlocks, constructorSetsBoundingBox)
+{
+	vector<IndexLine> lines = { makeLine(-3, 2, 7, 6, 2), makeLine(2, -4, 8, 2, 1) };
+	IndexBlocks blocks(std::move(lines));
+
+	auto expected = makeBox(-3, -4, 8, 6);
+	EXPECT_TRUE(boxesAreEqual(expected, blocks.getBoundingBox()));
 }
 
-TEST_F(IndexBlocksTests, buildsSuccessfullyFromSingleLine)
+TEST(IndexBlocks, insertsAndQueriesBlocksCorrectly)
 {
-	setPixelSize(3);
-	addBlock(-3, 6, -6, 9);
+	// overall: square from (0,0) to (2,2) with 3 differently sized blocks of identical resolution;
+	// upper-right quadrant is overlapping
+	vector<IndexLine> lines = {
+		makeLine(0, 1, 2, 2),
+		makeLine(0, 0, 1, 1),
+		makeLine(1, 0, 2, 2)
+	};
+	IndexBlocks blocks(std::move(lines));
 
-	auto block = getBlock(0, 0);
+	auto all = getIndicesOfIntersectingBlocks(blocks, 0, 0, 2, 2);
+	EXPECT_THAT(all, testing::ElementsAre(0, 1, 2));
 
-	EXPECT_EQ(3, block.getRasterSizeX());
-	EXPECT_EQ(5, block.getRasterSizeY());
+	auto bottomLeftQuadrant = getIndicesOfIntersectingBlocks(blocks, 0, 0, 1, 1);
+	EXPECT_THAT(bottomLeftQuadrant, testing::ElementsAre(1));
+
+	auto bottomRightQuadrant = getIndicesOfIntersectingBlocks(blocks, 1, 0, 2, 1);
+	EXPECT_THAT(bottomRightQuadrant, testing::ElementsAre(2));
+
+	auto topLeftQuadrant = getIndicesOfIntersectingBlocks(blocks, 0, 1, 1, 2);
+	EXPECT_THAT(topLeftQuadrant, testing::ElementsAre(0));
+
+	auto topRightQuadrant = getIndicesOfIntersectingBlocks(blocks, 1, 1, 2, 2);
+	EXPECT_THAT(topRightQuadrant, testing::ElementsAre(0, 2));
+
+	auto centerPoint = getIndicesOfIntersectingBlocks(blocks, 1, 1, 1, 1);
+	EXPECT_EQ(true, centerPoint.empty());
+
+	auto adjacentRight = getIndicesOfIntersectingBlocks(blocks, 2, -666, 666, 666);
+	EXPECT_EQ(true, adjacentRight.empty());
 }
 
-TEST_F(IndexBlocksTests, blocksWithLowerNorthingHaveHigherBlockIndex)
+TEST(IndexBlocks, queriedBlocksAreOrderedByResolutionAndIndex)
 {
-	addBlock(0, 1, 0, 1);
-	addBlock(0, 1, 1, 2);
+	vector<IndexLine> lines = {
+		makeLine(0, 0, 1, 1, 1),
+		makeLine(0, 0, 1, 1, 2),
+		makeLine(0, 0, 1, 1, 2)
+	};
+	IndexBlocks blocks(std::move(lines));
 
-	EXPECT_EQ(1, getBlock(0,0).getIndex());
-	EXPECT_EQ(0, getBlock(0,1).getIndex());
-}
-
-TEST_F(IndexBlocksTests, blocksWithLowerEastingHaveLowerBlockIndex)
-{
-	addBlock(1, 2, 0, 1);
-	addBlock(0, 1, 0, 1);
-
-	EXPECT_EQ(1, getBlock(0, 0).getIndex());
-	EXPECT_EQ(0, getBlock(1, 0).getIndex());
-}
-
-TEST_F(IndexBlocksTests, recognizesHoleAsMissingTile_X)
-{
-	addBlock(0, 1, 0, 1);
-	addBlock(2, 3, 0, 1);
-
-	EXPECT_TRUE(hasBlock(0, 0));
-	EXPECT_FALSE(hasBlock(1, 0));
-	EXPECT_TRUE(hasBlock(2, 0));
-}
-
-TEST_F(IndexBlocksTests, recognizesHoleAsMissingTile_Y)
-{
-	addBlock(0, 1, 0, 1);
-	addBlock(0, 1, 2, 3);
-
-	EXPECT_TRUE(hasBlock(0, 0));
-	EXPECT_FALSE(hasBlock(0, 1));
-	EXPECT_TRUE(hasBlock(0, 2));
-}
-
-TEST_F(IndexBlocksTests, holeRecognitionWorksWithNonUnitBlockSizes_X)
-{
-	setPixelSize(3);
-	addBlock(3, 9, 0, 3);
-	addBlock(15, 21, 0, 3);
-
-	EXPECT_TRUE(hasBlock(0, 0));
-	EXPECT_FALSE(hasBlock(1, 0));
-	EXPECT_TRUE(hasBlock(2, 0));
-}
-
-TEST_F(IndexBlocksTests, holeRecognitionWorksWithNonUnitBlockSizes_Y)
-{
-	setPixelSize(3);
-	addBlock(0, 3, 3, 9);
-	addBlock(0, 3, 15, 21);
-
-	EXPECT_TRUE(hasBlock(0, 0));
-	EXPECT_FALSE(hasBlock(0, 1));
-	EXPECT_TRUE(hasBlock(0, 2));
-}
-
-TEST_F(IndexBlocksTests, supportsPartialTileUpperSide)
-{
-	setPixelSize(2);
-
-	addBlock(0, 2, 0, 4);
-	addBlock(0, 2, 4, 6);
-
-	EXPECT_TRUE(hasBlock(0, 0));
-	EXPECT_TRUE(hasBlock(0, 1));
-}
-
-TEST_F(IndexBlocksTests, supportsPartialTileLowerSide)
-{
-	setPixelSize(2);
-
-	addBlock(0, 2, 0, 2);
-	addBlock(0, 2, 2, 6);
-
-	EXPECT_TRUE(hasBlock(0, 0));
-	EXPECT_TRUE(hasBlock(0, 1));
-}
-
-TEST_F(IndexBlocksTests, supportsOverlappingBlocks)
-{
-	setPixelSize(50);
-
-	addBlock(399975, 420025, 1139975, 1160025);
-	addBlock(399975, 420025, 1159975, 1180025);
-
-	EXPECT_TRUE(hasBlock(0, 0));
-	EXPECT_TRUE(hasBlock(0, 1));
-}
-
-TEST_F(IndexBlocksTests, supportsOverlappingBlocks_east)
-{
-	setPixelSize(10);
-
-	addBlock(0, 100, 0, 10);
-	addBlock(90, 190, 0, 10);
-	addBlock(180, 280, 0, 10);
-
-	EXPECT_TRUE(hasBlock(0, 0));
-	EXPECT_TRUE(hasBlock(1, 0));
-	EXPECT_TRUE(hasBlock(2, 0));
-}
-
-TEST_F(IndexBlocksTests, supportsOverlappingBlocks_north)
-{
-	setPixelSize(10);
-
-	addBlock(0, 10, 0, 100);
-	addBlock(0, 10, 90, 190);
-	addBlock(0, 10, 180, 280);
-
-	EXPECT_TRUE(hasBlock(0, 0));
-	EXPECT_TRUE(hasBlock(0, 1));
-	EXPECT_TRUE(hasBlock(0, 2));
+	auto indices = getIndicesOfIntersectingBlocks(blocks, 0, 0, 1, 1);
+	EXPECT_THAT(indices, testing::ElementsAre(1, 2, 0));
 }

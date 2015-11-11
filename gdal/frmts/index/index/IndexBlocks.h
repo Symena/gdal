@@ -11,66 +11,43 @@
 
 class IndexBlock
 {
-	int rasterSizeX;
-	int rasterSizeY;
+	MapBox boundingBox; // in meters
+
+	int widthInPixels;
+	int heightInPixels;
+	int resolution; // in meters
 
 	std::shared_ptr<IndexStreamSource> dataStream;
 
 	int index;
 
 public:
-	IndexBlock(int rasterSizeX, int rasterSizeY, std::shared_ptr<IndexStreamSource> dataStream, int index)
-		: rasterSizeX(rasterSizeX)
-		, rasterSizeY(rasterSizeY)
-		, dataStream(std::move(dataStream))
-		, index(index)
-	{}
+	IndexBlock(const MapBox& boundingBox, int resolution, std::shared_ptr<IndexStreamSource> dataStream, int index);
+	IndexBlock(const IndexLine& line, int index);
 
-	int getRasterSizeX() const { return rasterSizeX; }
-	int getRasterSizeY() const { return rasterSizeY; }
+	const MapBox& getBoundingBox() const { return boundingBox; }
+
+	int getWidthInPixels() const { return widthInPixels; }
+	int getHeightInPixels() const { return heightInPixels; }
+	int getResolution() const { return resolution; }
+
+	std::unique_ptr<std::istream> getData(IndexWarnings& warnings) const { return dataStream->getStream(warnings); }
 
 	int getIndex() const { return index; }
-
-	std::unique_ptr<std::istream> getData(IndexWarnings& warnings) const {return dataStream->getStream(warnings);}
 };
+
 
 class IndexBlocks
 {
-public:
-	using MapTile = std::pair<MapBox, IndexBlock>;
-private:
-	int blockXSize;
-	int blockYSize;
+	using TreeEntry = std::pair<MapBox, IndexBlock>;
 
-	size_t nrBlocksX;
-	size_t nrBlocksY;
-
-	int resolution;
-
-	boost::geometry::index::rtree<MapTile, boost::geometry::index::rstar<16>> blockIndex;
-	MapBox boundingBox;
+	boost::geometry::index::rtree<TreeEntry, boost::geometry::index::rstar<16>> blocksTree;
+	MapBox boundingBox; // in meters
 
 public:
 	explicit IndexBlocks(const std::vector<IndexLine>& lines);
 
-	void initializeBlockIndex(const std::vector<IndexLine>& lines, const IndexLine*& referenceLine);
-
-	MapBox getBlockBox(int blockXOffset, int blockYOffset) const;
-	std::vector<MapTile> getIntersectingMapTiles(int blockXOffset, int blockYOffset) const;
-
-	int getBlockXSize() const;
-	int getBlockYSize() const;
-
-	size_t getNrBlocksX() const;
-	size_t getNrBlocksY() const;
-
-	int getResolution() const { return resolution; }
-
 	const MapBox& getBoundingBox() const { return boundingBox; }
-	
-private:
-	void calculateBoundingBox(const IndexLine& referenceLine);
-	void matchBoundingBoxToReferenceLine(const IndexLine& referenceLine);
-	int getDistanceIncreaseForDivisibility(int xDifferenceMeter, int blockXMeter);
-};
 
+	std::vector<IndexBlock> getIntersectingBlocks(const MapBox& box) const;
+};
