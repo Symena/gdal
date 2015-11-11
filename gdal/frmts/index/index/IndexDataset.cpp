@@ -176,7 +176,7 @@ void IndexDataset::provideResolutionsAsMetadata(const std::vector<IndexLine>& li
 	std::map<int, int> resolutions;
 
 	for (const auto& line : lines)
-		++resolutions[line.getPixelSquareSize()];
+		++resolutions[line.getResolution()];
 
 	for (const auto& res : resolutions)
 	{
