@@ -112,6 +112,22 @@ TEST_F(IndexDatasetTests, rasterSizeIsInPixelInsteadOfMeters)
 	EXPECT_EQ(3, data.GetRasterYSize());
 }
 
+TEST_F(IndexDatasetTests, providesResolutionsAsMetadata)
+{
+	addTile(0, 2, 0, 2, 1);
+	addTile(0, 2, 2, 3, 1);
+	addTile(-1, 0, 0, 2, 2);
+
+	auto& data = getData();
+
+	auto** resolutions = data.GetMetadata("Resolutions");	
+
+	EXPECT_EQ("1m=2 tiles", std::string(resolutions[0]));
+	EXPECT_FALSE(resolutions[1]);
+	// When multi res is supported
+	// EXPECT_EQ("2m=1 tiles", std::string(resolutions[0]));
+}
+
 //support for different resolutions
 
 class IndexDatasetIdentifyTests : public ::testing::Test

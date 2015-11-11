@@ -113,9 +113,11 @@ IndexDataset::IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream
 	readLines(indexFile,lines, bestPixelSquareSize, warnings);
 	filterUnusableLines(lines, bestPixelSquareSize);
 
+	provideResolutionsAsMetadata(lines);
+
 	auto blocks = IndexBlocks(lines);
 
-	setRasterSizes(blocks);
+ 	setRasterSizes(blocks);
 
 	SetBand(1, new IndexRasterBand(this, std::move(blocks), readClutterCodes(std::move(clutterFile))));
 }
@@ -166,4 +168,21 @@ boost::optional<IndexClutterCodes> IndexDataset::readClutterCodes(std::unique_pt
 		return {};
 
 	return IndexClutterCodes(*clutterFile);
+}
+
+void IndexDataset::provideResolutionsAsMetadata(const std::vector<IndexLine>& lines)
+{
+	// resolution to number of tiles
+	std::map<int, int> resolutions;
+
+	for (const auto& line : lines)
+		++resolutions[line.getPixelSquareSize()];
+
+	for (const auto& res : resolutions)
+	{
+		auto sRes = std::to_string(res.first) + "m";
+		auto sSize = std::to_string(res.second) + " tiles";
+
+		SetMetadataItem(sRes.c_str(), sSize.c_str(), "Resolutions");
+	}
 }
