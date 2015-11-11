@@ -107,16 +107,11 @@ IndexDataset::IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream
 	if(!indexFile.good())
 		throw std::runtime_error("Index file is empty or stream is in a bad or failed state");
 
-	std::vector<IndexLine> lines;
-	int bestResolution = -1;
-
-	readLines(indexFile,lines, bestResolution, warnings);
-	filterUnusableLines(lines, bestResolution);
-
+	auto lines = readLines(indexFile, warnings);
 	provideResolutionsAsMetadata(lines);
 
 	auto blocks = IndexBlocks(lines);
-	
+
 	setRasterSizes(blocks);
 
 	SetBand(1, new IndexRasterBand(this, std::move(blocks), readClutterCodes(std::move(clutterFile))));
@@ -138,22 +133,11 @@ void IndexDataset::setRasterSizes(const IndexBlocks& blocks)
 	SetGeoTransform(transformMatrix);
 }
 
-void IndexDataset::filterUnusableLines(std::vector<IndexLine>& lines, int targetResolution)
+std::vector<IndexLine> IndexDataset::readLines(std::istream& indexFile, IndexWarnings& warnings)
 {
-	std::vector<IndexLine> usableLines;
-	usableLines.reserve(lines.size());
+	std::vector<IndexLine> lines;
 
-	for(const auto& line : lines)
-		if(line.isConsistent() && line.getResolution() == targetResolution)
-			usableLines.push_back(line);
-
-	std::swap(lines, usableLines);
-}
-
-void IndexDataset::readLines(std::istream& indexFile, std::vector<IndexLine>& lines, int& bestResolution, IndexWarnings& warnings)
-{
 	size_t readLines = 0;
-	bestResolution = std::numeric_limits<int>::max();
 	while (indexFile.good())
 	{
 		std::string line;
@@ -165,11 +149,11 @@ void IndexDataset::readLines(std::istream& indexFile, std::vector<IndexLine>& li
 			continue;
 
 		lines.emplace_back(line, warnings);
-
-		const auto& readLine = lines.back();
-		if (readLine.isConsistent())
-			bestResolution = std::min(bestResolution, readLine.getResolution());
+		if (!lines.back().isConsistent())
+			lines.pop_back();
 	}
+
+	return lines;
 }
 
 boost::optional<IndexClutterCodes> IndexDataset::readClutterCodes(std::unique_ptr<std::istream> clutterFile)
