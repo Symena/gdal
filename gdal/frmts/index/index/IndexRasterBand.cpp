@@ -28,9 +28,7 @@ void writeTile(IndexTileWriter& writer, const IndexBlocks::MapTile& tileInformat
 */
 }
 
-IndexRasterBand::IndexRasterBand(IndexDataset* owningDataSet, IndexBlocks blocks, boost::optional<IndexClutterCodes> codes)
-	: blocks(std::move(blocks))
-	, clutterCodes(std::move(codes))
+IndexRasterBand::IndexRasterBand(IndexDataset* owningDataSet)
 {
 	poDS = owningDataSet;
 	nBand = 1;
@@ -113,7 +111,8 @@ void IndexRasterBand::convertToNativeByteOrder(std::int16_t* outputData)
 
 char** IndexRasterBand::GetCategoryNames()
 {
-	if(clutterCodes)
+	auto& clutterCodes = getDataset().getClutterCodes();
+	if (clutterCodes)
 		return clutterCodes->getClutterCodes();
 
 	return nullptr;

@@ -22,11 +22,16 @@ public:
 	IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream> clutterFile, IndexWarnings& warnings);
 	
 	static GDALDataset* Open(GDALOpenInfo* openInfo);
-
 	static bool Identify(const boost::filesystem::path& file, std::istream& header);
 
+	IndexBlocks& getBlocks() { return blocks; }
+	boost::optional<IndexClutterCodes>& getClutterCodes() { return clutterCodes; }
+
 private:
-	void setRasterSizes(const IndexBlocks& blocks);
+	IndexBlocks blocks;
+	boost::optional<IndexClutterCodes> clutterCodes;
+
+	void setBoundingBox();
 
 	std::vector<IndexLine> readLines(std::istream& indexFile, IndexWarnings& warnings);
 	boost::optional<IndexClutterCodes> readClutterCodes(std::unique_ptr<std::istream> clutterFile);

@@ -92,32 +92,32 @@ std::unique_ptr<std::istream> getClutterCodeStream(const boost::filesystem::path
 {
 	auto menuFile = indexFile.parent_path() / "menu.txt";
 
-	if(!boost::filesystem::exists(menuFile))
-		return {};
+	if (!boost::filesystem::exists(menuFile))
+		return nullptr;
 
 	return std::make_unique<std::ifstream>(menuFile.string());
 }
 
-IndexDataset::IndexDataset(const boost::filesystem::path& indexFile, IndexWarnings& warnings) 
+IndexDataset::IndexDataset(const boost::filesystem::path& indexFile, IndexWarnings& warnings)
 	: IndexDataset(std::ifstream(indexFile.string()), getClutterCodeStream(indexFile), warnings)
 {}
 
 IndexDataset::IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream> clutterFile, IndexWarnings& warnings)
 {
-	if(!indexFile.good())
+	if (!indexFile.good())
 		throw std::runtime_error("Index file is empty or stream is in a bad or failed state");
 
 	auto lines = readLines(indexFile, warnings);
 	provideResolutionsAsMetadata(lines);
 
-	auto blocks = IndexBlocks(lines);
+	blocks = IndexBlocks(lines);
 
-	setRasterSizes(blocks);
+	setBoundingBox();
 
-	SetBand(1, new IndexRasterBand(this, std::move(blocks), readClutterCodes(std::move(clutterFile))));
+	SetBand(1, new IndexRasterBand(this));
 }
 
-void IndexDataset::setRasterSizes(const IndexBlocks& blocks)
+void IndexDataset::setBoundingBox()
 {
 	const auto& bounds = blocks.getBoundingBox();
 	nRasterXSize = bounds.max_corner().get<0>() - bounds.min_corner().get<0>();

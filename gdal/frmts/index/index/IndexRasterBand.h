@@ -13,15 +13,11 @@ class IndexTileWriter;
 
 class IndexRasterBand: public GDALPamRasterBand
 {
-	IndexBlocks blocks;
-
 	std::vector<std::int16_t> undefValueLineBigEndian;
 	std::vector<std::int16_t> undefValueLineLittleEndian;
 
-	boost::optional<IndexClutterCodes> clutterCodes;
-
 public:
-	IndexRasterBand(IndexDataset* owningDataSet, IndexBlocks blocks, boost::optional<IndexClutterCodes> codes);
+	IndexRasterBand(IndexDataset* owningDataSet);
 	
 	virtual CPLErr IReadBlock(int nBlockXOff, int nBlockYOff, void* pImage) override;
 
@@ -30,6 +26,8 @@ public:
 	virtual GDALColorInterp GetColorInterpretation() override;
 
 private:
+	IndexDataset& getDataset() { return *static_cast<IndexDataset*>(poDS); }
+
 	void readBlock(int nBlockXOff, int nBlockYOff, std::ostream& outputStream, std::int16_t* outputData);
 
 	void readTilesIntoBlock(int nBlockXOff, int nBlockYOff, std::ostream& outputStream, std::int16_t* outputData, IndexWarnings& warnings);
