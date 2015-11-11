@@ -65,6 +65,8 @@ public:
 	size_t getNrBlocksY() const;
 
 	int getResolution() const { return resolution; }
+
+	const MapBox& getBoundingBox() const { return boundingBox; }
 	
 private:
 	void calculateBoundingBox(const IndexLine& referenceLine);

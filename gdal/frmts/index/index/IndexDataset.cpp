@@ -116,7 +116,7 @@ IndexDataset::IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream
 	provideResolutionsAsMetadata(lines);
 
 	auto blocks = IndexBlocks(lines);
-
+	
  	setRasterSizes(blocks);
 
 	SetBand(1, new IndexRasterBand(this, std::move(blocks), readClutterCodes(std::move(clutterFile))));
@@ -124,8 +124,18 @@ IndexDataset::IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream
 
 void IndexDataset::setRasterSizes(const IndexBlocks& blocks)
 {
+	const auto& bounds = blocks.getBoundingBox();
 	nRasterXSize = static_cast<int>(blocks.getNrBlocksX()*blocks.getBlockXSize());
 	nRasterYSize = static_cast<int>(blocks.getNrBlocksY()*blocks.getBlockYSize());
+
+	double transformMatrix[6];
+	transformMatrix[0] = bounds.min_corner().get<0>(); // minX
+	transformMatrix[1] = 1; // x resolution is always 1
+	transformMatrix[2] = 0;
+	transformMatrix[3] = bounds.max_corner().get<1>(); // maxY
+	transformMatrix[4] = 0;
+	transformMatrix[5] = -1; // y resolution is always -1 for top down
+	SetGeoTransform(transformMatrix);
 }
 
 void IndexDataset::filterUnusableLines(std::vector<IndexLine>& lines, int targetResolution)

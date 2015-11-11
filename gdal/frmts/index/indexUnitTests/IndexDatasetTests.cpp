@@ -128,6 +128,27 @@ TEST_F(IndexDatasetTests, providesResolutionsAsMetadata)
 	// EXPECT_EQ("2m=1 tiles", std::string(resolutions[0]));
 }
 
+TEST_F(IndexDatasetTests, setsGeoTransformAccordingToBoundingBox)
+{
+	addTile(1, 3, 3, 4, 1);
+	addTile(3, 4, 4, 6, 1);
+
+	auto& data = getData();
+
+	double actual[6];	
+	data.GetGeoTransform(actual);
+
+	double expected[6];	
+	expected[0] = 1; // east min
+	expected[1] = 1; // resolution is always 1;
+	expected[2] = 0;
+    expected[3] = 6; // north max
+	expected[4] = 0;
+	expected[5] = -1; // resolution is always 1;
+		
+	ASSERT_THAT(actual, ::testing::ElementsAreArray(expected));
+}
+
 //support for different resolutions
 
 class IndexDatasetIdentifyTests : public ::testing::Test
