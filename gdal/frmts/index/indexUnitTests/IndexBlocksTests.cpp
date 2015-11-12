@@ -6,22 +6,9 @@ using std::vector;
 
 namespace {
 
-MapBox makeBox(int minX, int minY, int maxX, int maxY)
-{
-	return MapBox(MapPoint(minX, minY), MapPoint(maxX, maxY));
-}
-
 IndexLine makeLine(int minX, int minY, int maxX, int maxY, int resolution = 1)
 {
 	return IndexLine(minX, maxX, minY, maxY, resolution, nullptr);
-}
-
-bool boxesAreEqual(const MapBox& lhs, const MapBox& rhs)
-{
-	return lhs.min_corner().get<0>() == rhs.min_corner().get<0>()
-		&& lhs.min_corner().get<1>() == rhs.min_corner().get<1>()
-		&& lhs.max_corner().get<0>() == rhs.max_corner().get<0>()
-		&& lhs.max_corner().get<1>() == rhs.max_corner().get<1>();
 }
 
 vector<int> getIndicesOfIntersectingBlocks(IndexBlocks& blocks, int minX, int minY, int maxX, int maxY)
@@ -48,7 +35,7 @@ TEST(IndexBlock, constructors)
 		if (i == 1)
 			block = IndexBlock(makeLine(-3, 2, 7, 6, 2), 1);
 
-		EXPECT_TRUE(boxesAreEqual(box, block.getBoundingBox()));
+		EXPECT_TRUE(box == block.getBoundingBox());
 		EXPECT_EQ(10/2, block.getWidthInPixels());
 		EXPECT_EQ(4/2, block.getHeightInPixels());
 		EXPECT_EQ(2, block.getResolution());
@@ -64,7 +51,7 @@ TEST(IndexBlocks, constructorSetsBoundingBox)
 	IndexBlocks blocks(std::move(lines));
 
 	auto expected = makeBox(-3, -4, 8, 6);
-	EXPECT_TRUE(boxesAreEqual(expected, blocks.getBoundingBox()));
+	EXPECT_TRUE(expected == blocks.getBoundingBox());
 }
 
 TEST(IndexBlocks, insertsAndQueriesBlocksCorrectly)

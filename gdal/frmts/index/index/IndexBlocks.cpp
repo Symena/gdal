@@ -5,15 +5,15 @@
 
 IndexBlock::IndexBlock(const MapBox& boundingBox, int resolution, std::shared_ptr<IndexStreamSource> dataStream, int index)
 	: boundingBox(boundingBox)
-	, widthInPixels((boundingBox.max_corner().get<0>() - boundingBox.min_corner().get<0>()) / resolution)
-	, heightInPixels((boundingBox.max_corner().get<1>() - boundingBox.min_corner().get<1>()) / resolution)
+	, widthInPixels(width(boundingBox) / resolution)
+	, heightInPixels(height(boundingBox) / resolution)
 	, resolution(resolution)
 	, dataStream(std::move(dataStream))
 	, index(index)
 {}
 
 IndexBlock::IndexBlock(const IndexLine& line, int index)
-	: IndexBlock(MapBox(MapPoint(line.getTileEastMin(), line.getTileNorthMin()), MapPoint(line.getTileEastMax(), line.getTileNorthMax())),
+	: IndexBlock(makeBox(line.getTileEastMin(), line.getTileNorthMin(), line.getTileEastMax(), line.getTileNorthMax()),
 	             line.getResolution(), line.getTileDataSource(), index)
 {}
 
