@@ -120,16 +120,16 @@ IndexDataset::IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream
 void IndexDataset::setBoundingBox()
 {
 	const auto& bounds = blocks.getBoundingBox();
-	nRasterXSize = bounds.max_corner().get<0>() - bounds.min_corner().get<0>();
-	nRasterYSize = bounds.max_corner().get<1>() - bounds.min_corner().get<1>();
+	nRasterXSize = width(bounds);
+	nRasterYSize = height(bounds);
 
 	double transformMatrix[6];
 	transformMatrix[0] = bounds.min_corner().get<0>(); // minX
 	transformMatrix[1] = 1; // x resolution is always 1
 	transformMatrix[2] = 0;
-	transformMatrix[3] = bounds.max_corner().get<1>(); // maxY
+	transformMatrix[3] = bounds.min_corner().get<1>(); // minY
 	transformMatrix[4] = 0;
-	transformMatrix[5] = -1; // y resolution is always -1 for top down
+	transformMatrix[5] = 1; // y resolution is always 1 (rows are stored bottom-up)
 	SetGeoTransform(transformMatrix);
 }
 
@@ -166,16 +166,16 @@ boost::optional<IndexClutterCodes> IndexDataset::readClutterCodes(std::unique_pt
 
 void IndexDataset::provideResolutionsAsMetadata(const std::vector<IndexLine>& lines)
 {
-	// resolution to number of tiles
+	// resolution to number of blocks
 	std::map<int, int> resolutions;
 
 	for (const auto& line : lines)
 		++resolutions[line.getResolution()];
 
-	for (const auto& res : resolutions)
+	for (auto pair : resolutions)
 	{
-		auto sRes = std::to_string(res.first) + "m";
-		auto sSize = std::to_string(res.second) + " tiles";
+		auto sRes = std::to_string(pair.first) + "m";
+		auto sSize = std::to_string(pair.second) + " blocks";
 
 		SetMetadataItem(sRes.c_str(), sSize.c_str(), "Resolutions");
 	}

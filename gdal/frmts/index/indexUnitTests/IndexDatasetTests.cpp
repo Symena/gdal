@@ -35,17 +35,7 @@ TEST_F(IndexDatasetTests, sizeOfInitialRasterIsZero)
 	EXPECT_EQ(0, data.GetRasterYSize());
 }
 
-TEST_F(IndexDatasetTests, rasterSizeFromSingleTile)
-{
-	addBlock(0, 1, 0, 2, 1);
-
-	auto& data = getData();
-
-	EXPECT_EQ(1, data.GetRasterXSize());
-	EXPECT_EQ(2, data.GetRasterYSize());
-}
-
-TEST_F(IndexDatasetTests, rasterSizeFromMultipleFullTiles)
+TEST_F(IndexDatasetTests, rasterSizeFromMultipleBlocks)
 {
 	addBlock(0, 1, 0, 2, 1);
 	addBlock(-1, 0, 4, 6, 1);
@@ -57,75 +47,19 @@ TEST_F(IndexDatasetTests, rasterSizeFromMultipleFullTiles)
 	EXPECT_EQ(14, data.GetRasterYSize());
 }
 
-TEST_F(IndexDatasetTests, rasterSizeFromPartialTiles)
-{
-	addBlock(0, 2, 0, 2, 1);
-	addBlock(0, 2, 2, 3, 1);
-	addBlock(-1, 0, 0, 2, 1);
-
-	auto& data = getData();
-
-	EXPECT_EQ(4, data.GetRasterXSize());
-	EXPECT_EQ(4, data.GetRasterYSize());
-}
-
-TEST_F(IndexDatasetTests, rasterSizeSkipsInconsistentFirstTile)
-{
-	addBlock(-1, 1, 0, 3, 3);
-	addBlock(0, 3, 0, 6, 3);
-
-	auto& data = getData();
-
-	EXPECT_EQ(1, data.GetRasterXSize());
-	EXPECT_EQ(2, data.GetRasterYSize());
-}
-
-TEST_F(IndexDatasetTests, rasterSizeIsZeroForOnlyInconsistentTiles)
-{
-	addBlock(-1, 1, 0, 3, 3);
-	addBlock(0, 1, 0, 2, 3);
-
-	auto& data = getData();
-
-	EXPECT_EQ(0, data.GetRasterXSize());
-	EXPECT_EQ(0, data.GetRasterYSize());
-}
-
-TEST_F(IndexDatasetTests, rasterSizeDependsOnBestResolution)
-{
-	addBlock(0, 1, 0, 1, 1);
-	addBlock(-1, 3, -1, 3, 4);
-
-	auto& data = getData();
-
-	EXPECT_EQ(1, data.GetRasterXSize());
-	EXPECT_EQ(1, data.GetRasterYSize());
-}
-
-TEST_F(IndexDatasetTests, rasterSizeIsInPixelInsteadOfMeters)
-{
-	addBlock(0, 10, 0, 15, 5);
-
-	auto& data = getData();
-
-	EXPECT_EQ(2, data.GetRasterXSize());
-	EXPECT_EQ(3, data.GetRasterYSize());
-}
-
 TEST_F(IndexDatasetTests, providesResolutionsAsMetadata)
 {
 	addBlock(0, 2, 0, 2, 1);
 	addBlock(0, 2, 2, 3, 1);
-	addBlock(-1, 0, 0, 2, 2);
+	addBlock(0, 4, 0, 2, 2);
 
 	auto& data = getData();
 
-	auto** resolutions = data.GetMetadata("Resolutions");	
+	auto** resolutions = data.GetMetadata("Resolutions");
 
-	EXPECT_EQ("1m=2 tiles", std::string(resolutions[0]));
-	EXPECT_FALSE(resolutions[1]);
-	// When multi res is supported
-	// EXPECT_EQ("2m=1 tiles", std::string(resolutions[0]));
+	EXPECT_EQ("1m=2 blocks", std::string(resolutions[0]));
+	EXPECT_EQ("2m=1 blocks", std::string(resolutions[1]));
+	EXPECT_EQ(nullptr, resolutions[2]);
 }
 
 TEST_F(IndexDatasetTests, setsGeoTransformAccordingToBoundingBox)
@@ -135,17 +69,17 @@ TEST_F(IndexDatasetTests, setsGeoTransformAccordingToBoundingBox)
 
 	auto& data = getData();
 
-	double actual[6];	
+	double actual[6];
 	data.GetGeoTransform(actual);
 
-	double expected[6];	
+	double expected[6];
 	expected[0] = 1; // east min
 	expected[1] = 1; // resolution is always 1;
 	expected[2] = 0;
-    expected[3] = 6; // north max
+	expected[3] = 3; // north min
 	expected[4] = 0;
-	expected[5] = -1; // resolution is always 1;
-		
+	expected[5] = 1; // resolution is always 1;
+
 	ASSERT_THAT(actual, ::testing::ElementsAreArray(expected));
 }
 
