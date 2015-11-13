@@ -31,7 +31,7 @@ public:
 	int getHeightInPixels() const { return heightInPixels; }
 	int getResolution() const { return resolution; }
 
-	std::unique_ptr<std::istream> getData(IndexWarnings& warnings) const { return dataStream->getStream(warnings); }
+	std::unique_ptr<std::istream> getData(IndexWarnings& warnings) const { return dataStream ? dataStream->getStream(warnings) : nullptr; }
 
 	int getIndex() const { return index; }
 };

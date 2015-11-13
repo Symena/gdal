@@ -91,8 +91,8 @@ TEST(IndexBlocks, queriedBlocksAreOrderedByResolutionAndIndex)
 {
 	vector<IndexLine> lines = {
 		makeLine(0, 0, 1, 1, 1),
-		makeLine(0, 0, 1, 1, 2),
-		makeLine(0, 0, 1, 1, 2)
+		makeLine(0, 0, 2, 2, 2),
+		makeLine(0, 0, 2, 2, 2)
 	};
 	IndexBlocks blocks(std::move(lines));
 

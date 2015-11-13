@@ -26,6 +26,16 @@ inline MapPoint lower_right(const MapBox& box)
 	return {box.max_corner().get<0>(), box.min_corner().get<1>()};
 }
 
+inline MapPoint operator+(MapPoint lhs, MapPoint rhs)
+{
+	return { lhs.get<0>() + rhs.get<0>(), lhs.get<1>() + rhs.get<1>() };
+}
+
+inline MapPoint operator-(MapPoint lhs, MapPoint rhs)
+{
+	return { lhs.get<0>() - rhs.get<0>(), lhs.get<1>() - rhs.get<1>() };
+}
+
 inline MapBox makeBox(int minX, int minY, int maxX, int maxY)
 {
 	return { MapPoint(minX, minY), MapPoint(maxX, maxY) };

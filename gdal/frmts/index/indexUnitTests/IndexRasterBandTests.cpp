@@ -85,8 +85,8 @@ TEST_F(IndexRasterBandTests, hasInt16DataFormat)
 TEST_F(IndexRasterBandTests, setsBlockSize)
 {
 	getBlockBuilder()
-		.addTile().from(0, 0).to(2, 1)
-		.addTile().from(2, 3).to(4, 4);
+		.addBlock().from(0, 0).to(2, 1)
+		.addBlock().from(2, 3).to(4, 4);
 
 	auto band = getRasterBand();
 
@@ -100,7 +100,7 @@ TEST_F(IndexRasterBandTests, setsBlockSize)
 TEST_F(IndexRasterBandTests, writesSingleCompleteTile)
 {
 	getBlockBuilder()
-		.addTile().from(0,0).to(1,1).withData({1});
+		.addBlock().from(0,0).to(1,1).withData({1});
 
 	auto writtenData = getBlock(0, 0);
 
@@ -110,8 +110,8 @@ TEST_F(IndexRasterBandTests, writesSingleCompleteTile)
 TEST_F(IndexRasterBandTests, blocksWhichDontExistAreFilledWithDoesNotExistValue)
 {
 	getBlockBuilder()
-		.addTile().from(0, 0).to(2, 2)
-		.addTile().from(6, 0).to(8, 2);
+		.addBlock().from(0, 0).to(2, 2)
+		.addBlock().from(6, 0).to(8, 2);
 
 	auto writtenData = getBlock(1,0);
 
@@ -121,8 +121,8 @@ TEST_F(IndexRasterBandTests, blocksWhichDontExistAreFilledWithDoesNotExistValue)
 TEST_F(IndexRasterBandTests, blocksWhichAreOnlyPartiallyDefinedHaveUndefinedValues)
 {
 	getBlockBuilder()
-		.addTile().from(0, 0).to(1, 1).withData({1})
-		.addTile().from(2, 0).to(4, 2);
+		.addBlock().from(0, 0).to(1, 1).withData({1})
+		.addBlock().from(2, 0).to(4, 2);
 
 	ASSERT_EQ(2, getBlockSizeX());
 	ASSERT_EQ(2, getBlockSizeY());
@@ -135,8 +135,8 @@ TEST_F(IndexRasterBandTests, blocksWhichAreOnlyPartiallyDefinedHaveUndefinedValu
 TEST_F(IndexRasterBandTests, supportsTileTransparency)
 {
 	getBlockBuilder()
-		.addTile().from(0, 0).to(2, 2).withData({-9999, -9999, 1, 2})
-		.addTile().from(0, 0).to(2, 2).withData({3, 4, -9999, -9999});
+		.addBlock().from(0, 0).to(2, 2).withData({-9999, -9999, 1, 2})
+		.addBlock().from(0, 0).to(2, 2).withData({3, 4, -9999, -9999});
 
 	auto expectedData = vec{3,4,1,2};
 
@@ -146,11 +146,11 @@ TEST_F(IndexRasterBandTests, supportsTileTransparency)
 TEST_F(IndexRasterBandTests, writesDataWithCorrectZOrder)
 {
 	getBlockBuilder()
-		.addTile().from(0, 1).to(2, 3).withData({3,3,3,3}) //li ob
-		.addTile().from(1, 1).to(3, 3).withData({4,4,4,4}) //re ob
-		.addTile().from(0, 0).to(2, 2).withData({1,1,1,1}) //li u
-		.addTile().from(1, 0).to(3, 2).withData({2,2,2,2}) //re u
-		.addTile().from(2, 1).to(4, 3)
+		.addBlock().from(0, 1).to(2, 3).withData({3,3,3,3}) //li ob
+		.addBlock().from(1, 1).to(3, 3).withData({4,4,4,4}) //re ob
+		.addBlock().from(0, 0).to(2, 2).withData({1,1,1,1}) //li u
+		.addBlock().from(1, 0).to(3, 2).withData({2,2,2,2}) //re u
+		.addBlock().from(2, 1).to(4, 3)
 	;
 
 	auto expectedData = vec{3,4,1,2};
@@ -161,8 +161,8 @@ TEST_F(IndexRasterBandTests, writesDataWithCorrectZOrder)
 TEST_F(IndexRasterBandTests, alignsBlocksToReferenceBlock_X)
 {
 	getBlockBuilder()
-		.addTile().from(0,0).to(1,1).withData({1})
-		.addTile().from(1,0).to(3,1);
+		.addBlock().from(0,0).to(1,1).withData({1})
+		.addBlock().from(1,0).to(3,1);
 
 	ASSERT_EQ(2, getBlockSizeX());
 	ASSERT_EQ(1, getBlockSizeY());
@@ -175,8 +175,8 @@ TEST_F(IndexRasterBandTests, alignsBlocksToReferenceBlock_X)
 TEST_F(IndexRasterBandTests, alignsBlocksToReferenceBlock_Y)
 {
 	getBlockBuilder()
-		.addTile().from(0, 0).to(1, 1).withData({1})
-		.addTile().from(0, -2).to(1, 0);
+		.addBlock().from(0, 0).to(1, 1).withData({1})
+		.addBlock().from(0, -2).to(1, 0);
 
 	ASSERT_EQ(1, getBlockSizeX());
 	ASSERT_EQ(2, getBlockSizeY());
@@ -189,7 +189,7 @@ TEST_F(IndexRasterBandTests, alignsBlocksToReferenceBlock_Y)
 TEST_F(IndexRasterBandTests, fillsValuesWithUnknownInPresenceOfExceptions)
 {
 	getBlockBuilder()
-		.addTile().from(0,0).to(1,1).withData({}); //not enough data causes an exception
+		.addBlock().from(0,0).to(1,1).withData({}); //not enough data causes an exception
 
 	auto expectedData = vec{-9999};
 

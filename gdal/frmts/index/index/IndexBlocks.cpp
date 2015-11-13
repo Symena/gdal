@@ -10,7 +10,10 @@ IndexBlock::IndexBlock(const MapBox& boundingBox, int resolution, std::shared_pt
 	, resolution(resolution)
 	, dataStream(std::move(dataStream))
 	, index(index)
-{}
+{
+	assert(widthInPixels * resolution == width(boundingBox));
+	assert(heightInPixels * resolution == height(boundingBox));
+}
 
 IndexBlock::IndexBlock(const IndexLine& line, int index)
 	: IndexBlock(makeBox(line.getTileEastMin(), line.getTileNorthMin(), line.getTileEastMax(), line.getTileNorthMax()),

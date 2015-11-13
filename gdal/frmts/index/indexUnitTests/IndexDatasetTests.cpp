@@ -21,7 +21,7 @@ public:
 		return *dataSet;
 	}
 
-	void addTile(int eastMin, int eastMax, int northMin, int northMax, int resolution)
+	void addBlock(int eastMin, int eastMax, int northMin, int northMax, int resolution)
 	{
 		file << "afile " << eastMin << " " << eastMax << " " << northMin << " " << northMax << " " << resolution << "\n";
 	}
@@ -37,7 +37,7 @@ TEST_F(IndexDatasetTests, sizeOfInitialRasterIsZero)
 
 TEST_F(IndexDatasetTests, rasterSizeFromSingleTile)
 {
-	addTile(0, 1, 0, 2, 1);
+	addBlock(0, 1, 0, 2, 1);
 
 	auto& data = getData();
 
@@ -47,9 +47,9 @@ TEST_F(IndexDatasetTests, rasterSizeFromSingleTile)
 
 TEST_F(IndexDatasetTests, rasterSizeFromMultipleFullTiles)
 {
-	addTile(0, 1, 0, 2, 1);
-	addTile(-1, 0, 4, 6, 1);
-	addTile(3, 4, -8, -6, 1);
+	addBlock(0, 1, 0, 2, 1);
+	addBlock(-1, 0, 4, 6, 1);
+	addBlock(3, 4, -8, -6, 1);
 
 	auto& data = getData();
 
@@ -59,9 +59,9 @@ TEST_F(IndexDatasetTests, rasterSizeFromMultipleFullTiles)
 
 TEST_F(IndexDatasetTests, rasterSizeFromPartialTiles)
 {
-	addTile(0, 2, 0, 2, 1);
-	addTile(0, 2, 2, 3, 1);
-	addTile(-1, 0, 0, 2, 1);
+	addBlock(0, 2, 0, 2, 1);
+	addBlock(0, 2, 2, 3, 1);
+	addBlock(-1, 0, 0, 2, 1);
 
 	auto& data = getData();
 
@@ -71,8 +71,8 @@ TEST_F(IndexDatasetTests, rasterSizeFromPartialTiles)
 
 TEST_F(IndexDatasetTests, rasterSizeSkipsInconsistentFirstTile)
 {
-	addTile(-1, 1, 0, 3, 3);
-	addTile(0, 3, 0, 6, 3);
+	addBlock(-1, 1, 0, 3, 3);
+	addBlock(0, 3, 0, 6, 3);
 
 	auto& data = getData();
 
@@ -82,8 +82,8 @@ TEST_F(IndexDatasetTests, rasterSizeSkipsInconsistentFirstTile)
 
 TEST_F(IndexDatasetTests, rasterSizeIsZeroForOnlyInconsistentTiles)
 {
-	addTile(-1, 1, 0, 3, 3);
-	addTile(0, 1, 0, 2, 3);
+	addBlock(-1, 1, 0, 3, 3);
+	addBlock(0, 1, 0, 2, 3);
 
 	auto& data = getData();
 
@@ -93,8 +93,8 @@ TEST_F(IndexDatasetTests, rasterSizeIsZeroForOnlyInconsistentTiles)
 
 TEST_F(IndexDatasetTests, rasterSizeDependsOnBestResolution)
 {
-	addTile(0, 1, 0, 1, 1);
-	addTile(-1, 3, -1, 3, 4);
+	addBlock(0, 1, 0, 1, 1);
+	addBlock(-1, 3, -1, 3, 4);
 
 	auto& data = getData();
 
@@ -104,7 +104,7 @@ TEST_F(IndexDatasetTests, rasterSizeDependsOnBestResolution)
 
 TEST_F(IndexDatasetTests, rasterSizeIsInPixelInsteadOfMeters)
 {
-	addTile(0, 10, 0, 15, 5);
+	addBlock(0, 10, 0, 15, 5);
 
 	auto& data = getData();
 
@@ -114,9 +114,9 @@ TEST_F(IndexDatasetTests, rasterSizeIsInPixelInsteadOfMeters)
 
 TEST_F(IndexDatasetTests, providesResolutionsAsMetadata)
 {
-	addTile(0, 2, 0, 2, 1);
-	addTile(0, 2, 2, 3, 1);
-	addTile(-1, 0, 0, 2, 2);
+	addBlock(0, 2, 0, 2, 1);
+	addBlock(0, 2, 2, 3, 1);
+	addBlock(-1, 0, 0, 2, 2);
 
 	auto& data = getData();
 
@@ -130,8 +130,8 @@ TEST_F(IndexDatasetTests, providesResolutionsAsMetadata)
 
 TEST_F(IndexDatasetTests, setsGeoTransformAccordingToBoundingBox)
 {
-	addTile(1, 3, 3, 4, 1);
-	addTile(3, 4, 4, 6, 1);
+	addBlock(1, 3, 3, 4, 1);
+	addBlock(3, 4, 4, 6, 1);
 
 	auto& data = getData();
 
