@@ -47,11 +47,16 @@ TEST(IndexBlock, constructors)
 
 TEST(IndexBlocks, constructorSetsBoundingBox)
 {
-	vector<IndexLine> lines = { makeLine(-3, 2, 7, 6, 2), makeLine(2, -4, 8, 2, 1) };
-	IndexBlocks blocks(std::move(lines));
+	const auto emptyBox = makeBox(0, 0, 0, 0);
 
-	auto expected = makeBox(-3, -4, 8, 6);
-	EXPECT_TRUE(expected == blocks.getBoundingBox());
+	IndexBlocks blocks;
+	EXPECT_TRUE(blocks.getBoundingBox() == emptyBox);
+
+	blocks = IndexBlocks({});
+	EXPECT_TRUE(blocks.getBoundingBox() == emptyBox);
+
+	blocks = IndexBlocks({ makeLine(-3, 2, 7, 6, 2), makeLine(2, -4, 8, 2, 1) });
+	EXPECT_TRUE(blocks.getBoundingBox() == makeBox(-3, -4, 8, 6));
 }
 
 TEST(IndexBlocks, insertsAndQueriesBlocksCorrectly)

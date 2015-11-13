@@ -34,7 +34,7 @@ IndexBlocks::IndexBlocks(const std::vector<IndexLine>& lines)
 		blocksTree.insert(std::make_pair(block.getBoundingBox(), block));
 	}
 
-	boundingBox = blocksTree.bounds();
+	boundingBox = (!blocksTree.empty() ? blocksTree.bounds() : makeBox(0, 0, 0, 0));
 }
 
 std::vector<IndexBlock> IndexBlocks::getIntersectingBlocks(const MapBox& box) const
