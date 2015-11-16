@@ -8,11 +8,12 @@ IndexBlock::IndexBlock(const MapBox& boundingBox, int resolution, std::shared_pt
 	, widthInPixels(width(boundingBox) / resolution)
 	, heightInPixels(height(boundingBox) / resolution)
 	, resolution(resolution)
-	, dataStream(std::move(dataStream))
 	, index(index)
+	, dataStream(std::move(dataStream))
 {
-	assert(widthInPixels * resolution == width(boundingBox));
-	assert(heightInPixels * resolution == height(boundingBox));
+	if (widthInPixels * resolution != width(boundingBox) ||
+	    heightInPixels * resolution != height(boundingBox))
+		throw std::runtime_error("IndexBlock::IndexBlock(): bounding box doesn't match resolution");
 }
 
 IndexBlock::IndexBlock(const IndexLine& line, int index)

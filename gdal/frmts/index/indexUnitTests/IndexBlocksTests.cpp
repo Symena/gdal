@@ -44,7 +44,6 @@ TEST(IndexBlock, constructors)
 }
 
 
-
 TEST(IndexBlocks, constructorSetsBoundingBox)
 {
 	const auto emptyBox = makeBox(0, 0, 0, 0);

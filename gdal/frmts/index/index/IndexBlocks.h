@@ -17,9 +17,9 @@ class IndexBlock
 	int heightInPixels;
 	int resolution; // in meters
 
-	std::shared_ptr<IndexStreamSource> dataStream;
-
 	int index;
+
+	std::shared_ptr<IndexStreamSource> dataStream;
 
 public:
 	IndexBlock(const MapBox& boundingBox, int resolution, std::shared_ptr<IndexStreamSource> dataStream, int index);
