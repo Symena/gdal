@@ -1,3 +1,6 @@
+@echo Removing index packages folder 
+rmdir /S /Q gdal\frmts\index\packages
+
 @echo Building NuGet packages
 PowerShell.exe -Command Write-NuGetPackage -Verbose .\gdal.autopkg
 
