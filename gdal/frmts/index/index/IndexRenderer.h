@@ -46,7 +46,8 @@ public:
 	UniqueDataPtr readBlock(const IndexBlock& block, MapBox& region) const;
 
 	// Resamples a block region to the target resolution.
-	UniqueDataPtr resample(const PixelType* data, int width, int height, int resolution) const;
+	// The region may be adjusted.
+	UniqueDataPtr resample(const PixelType* data, MapBox& region, int srcResolution) const;
 
 	// Renders a region (in meters) in the target resolution into the result bitmap.
 	void renderRegion(const PixelType* data, const MapBox& region);

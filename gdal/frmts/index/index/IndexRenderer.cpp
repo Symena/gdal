@@ -36,14 +36,8 @@ void IndexRenderer::render()
 
 		auto srcData = readBlock(block, srcRegion);
 
-		// resample to target resolution
-		const int blockRes = block.getResolution();
-		if (blockRes != resolution)
-		{
-			const int srcWidth = width(srcRegion) / blockRes;
-			const int srcHeight = height(srcRegion) / blockRes;
-			srcData = resample(srcData.get(), srcWidth, srcHeight, blockRes);
-		}
+		if (block.getResolution() != resolution)
+			srcData = resample(srcData.get(), srcRegion, block.getResolution());
 
 		renderRegion(srcData.get(), srcRegion);
 	}
@@ -132,16 +126,21 @@ IndexRenderer::UniqueDataPtr IndexRenderer::readBlock(const IndexBlock& block, M
 	return result;
 }
 
-IndexRenderer::UniqueDataPtr IndexRenderer::resample(const PixelType* data, int width, int height, int resolution) const
+IndexRenderer::UniqueDataPtr IndexRenderer::resample(const PixelType* data, MapBox& region, int srcResolution) const
 {
-	const double scalingFactor = static_cast<double>(resolution) / this->resolution;
-	const int newWidth = std::lround(width * scalingFactor);
-	const int newHeight = std::lround(height * scalingFactor);
+	const int srcWidth = width(region) / srcResolution;
+	const int srcHeight = height(region) / srcResolution;
+
+	const double scalingFactor = static_cast<double>(srcResolution) / resolution;
+	const int newWidth = std::lround(srcWidth * scalingFactor);
+	const int newHeight = std::lround(srcHeight * scalingFactor);
 
 	auto newData = std::make_unique<PixelType[]>(static_cast<size_t>(newWidth) * newHeight);
 
 	const auto algorithm = (scalingFactor < 1 ? downsamplingAlgorithm : upsamplingAlgorithm);
-	::resample(data, width, height, newData.get(), newWidth, newHeight, GDALDataType::GDT_Int16, algorithm, noDataValue);
+	::resample(data, srcWidth, srcHeight, newData.get(), newWidth, newHeight, GDALDataType::GDT_Int16, algorithm, noDataValue);
+
+	region.max_corner() = region.min_corner() + MapPoint(newWidth * resolution, newHeight * resolution);
 
 	return newData;
 }
