@@ -26,7 +26,7 @@ void resample(const void* src, int srcWidth, int srcHeight,
 		band->SetNoDataValue(noDataValue.get());
 
 	GDALRasterIOExtraArg extraArg = { 0 }; // zero-initialize whole struct
-	extraArg.nVersion = 1;
+	extraArg.nVersion = RASTERIO_EXTRA_ARG_CURRENT_VERSION;
 	extraArg.eResampleAlg = algorithm;
 
 	if (band->RasterIO(GDALRWFlag::GF_Read, 0, 0, srcWidth, srcHeight,

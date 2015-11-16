@@ -27,6 +27,10 @@ public:
 	IndexRenderer(const IndexBlocks& blocks, const MapBox& region, int resolution,
 		GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm,
 		IndexWarnings& warnings);
+	IndexRenderer(const IndexBlocks& blocks, UniqueDataPtr data, int widthInPixels,
+		int heightInPixels, int resolution, MapPoint bottomLeftCornerInMeters,
+		GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm,
+		IndexWarnings& warnings);
 
 	const MapBox& getBoundingBox() const { return bounds; }
 

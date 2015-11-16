@@ -22,6 +22,22 @@ IndexRenderer::IndexRenderer(const IndexBlocks& blocks, const MapBox& region, in
 	data = std::make_unique<PixelType[]>(getNumPixels());
 }
 
+IndexRenderer::IndexRenderer(const IndexBlocks& blocks, UniqueDataPtr data, int widthInPixels,
+	int heightInPixels, int resolution, MapPoint bottomLeftCornerInMeters,
+	GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm,
+	IndexWarnings& warnings)
+	: blocks(blocks)
+	, bounds(bottomLeftCornerInMeters, bottomLeftCornerInMeters + MapPoint(widthInPixels * resolution, heightInPixels * resolution))
+	, widthInPixels(widthInPixels)
+	, heightInPixels(heightInPixels)
+	, resolution(resolution)
+	, downsamplingAlgorithm(downsamplingAlgorithm)
+	, upsamplingAlgorithm(upsamplingAlgorithm)
+	, warnings(warnings)
+	, data(std::move(data))
+{}
+
+
 void IndexRenderer::render()
 {
 	fillWithNoDataValue();

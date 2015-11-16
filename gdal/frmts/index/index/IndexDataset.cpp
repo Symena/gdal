@@ -8,11 +8,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/range/algorithm.hpp>
 
-#include "IndexLine.h"
-#include "IndexWarnings.h"
-#include "IndexWarningsReporter.h"
 #include "IndexRasterBand.h"
-#include "IndexBlocks.h"
+#include "IndexRenderer.h"
+#include "IndexWarningsReporter.h"
 
 struct membuf: public std::streambuf
 {
@@ -179,4 +177,28 @@ void IndexDataset::provideResolutionsAsMetadata(const std::vector<IndexLine>& li
 
 		SetMetadataItem(sRes.c_str(), sSize.c_str(), "Resolutions");
 	}
+}
+
+bool IndexDataset::render(std::int16_t* dst, int dstWidth, int dstHeight, int dstResolution,
+	MapPoint bottomLeftCornerInMeters, GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm)
+{
+	IndexWarnings warnings;
+	IndexWarningsReporter warningsReporter(warnings);
+
+	std::unique_ptr<std::int16_t[]> data(dst);
+
+	try
+	{
+		IndexRenderer renderer(blocks, std::move(data), dstWidth, dstHeight, dstResolution,
+			bottomLeftCornerInMeters, downsamplingAlgorithm, upsamplingAlgorithm, warnings);
+		renderer.render();
+		renderer.getResult().release();
+	}
+	catch (const std::exception& e)
+	{
+		warnings.add("Exception while trying to render: %s", e.what());
+		return false;
+	}
+
+	return true;
 }

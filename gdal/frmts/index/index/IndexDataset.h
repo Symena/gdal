@@ -9,9 +9,9 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/optional.hpp>
 
-#include "IndexWarnings.h"
 #include "IndexBlocks.h"
 #include "IndexClutterCodes.h"
+#include "IndexWarnings.h"
 
 class IndexLine;
 
@@ -26,6 +26,10 @@ public:
 
 	IndexBlocks& getBlocks() { return blocks; }
 	boost::optional<IndexClutterCodes>& getClutterCodes() { return clutterCodes; }
+
+	bool render(std::int16_t* dst, int dstWidth, int dstHeight, int dstResolution,
+		MapPoint bottomLeftCornerInMeters,
+		GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm);
 
 private:
 	IndexBlocks blocks;
