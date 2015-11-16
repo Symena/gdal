@@ -31,6 +31,13 @@ public:
 		MapPoint bottomLeftCornerInMeters,
 		GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm);
 
+protected:
+	CPLErr IRasterIO(GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXSize, int nYSize,
+		void* pData, int nBufXSize, int nBufYSize, GDALDataType eBufType,
+		int nBandCount, int *panBandMap,
+		GSpacing nPixelSpace, GSpacing nLineSpace, GSpacing nBandSpace,
+		GDALRasterIOExtraArg* psExtraArg) override;
+
 private:
 	IndexBlocks blocks;
 	boost::optional<IndexClutterCodes> clutterCodes;

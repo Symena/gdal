@@ -156,7 +156,7 @@ std::vector<IndexLine> IndexDataset::readLines(std::istream& indexFile, IndexWar
 
 boost::optional<IndexClutterCodes> IndexDataset::readClutterCodes(std::unique_ptr<std::istream> clutterFile)
 {
-	if(!clutterFile)
+	if (!clutterFile)
 		return {};
 
 	return IndexClutterCodes(*clutterFile);
@@ -196,9 +196,52 @@ bool IndexDataset::render(std::int16_t* dst, int dstWidth, int dstHeight, int ds
 	}
 	catch (const std::exception& e)
 	{
-		warnings.add("Exception while trying to render: %s", e.what());
+		CPLError(CE_Failure, CPLE_AppDefined, "Rendering index file failed: %s", e.what());
 		return false;
 	}
 
 	return true;
+}
+
+CPLErr IndexDataset::IRasterIO(GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXSize, int nYSize,
+	void* pData, int nBufXSize, int nBufYSize, GDALDataType eBufType,
+	int nBandCount, int *panBandMap,
+	GSpacing nPixelSpace, GSpacing nLineSpace, GSpacing nBandSpace,
+	GDALRasterIOExtraArg* psExtraArg)
+{
+	if (eRWFlag != GDALRWFlag::GF_Read)
+	{
+		CPLError(CPLErr::CE_Failure, CPLE_NoWriteAccess, "Index data sets can only be read from");
+		return CPLErr::CE_Failure;
+	}
+
+	if (nXSize <= 0 || nYSize <= 0 || nBufXSize <= 0 || nBufYSize <= 0 || pData == nullptr)
+	{
+		CPLError(CPLErr::CE_Failure, CPLE_IllegalArg, "Invalid arguments");
+		return CPLErr::CE_Failure;
+	}
+
+	if (eBufType != GDALDataType::GDT_Int16 ||
+		(nPixelSpace != 0 && nPixelSpace != sizeof(std::int16_t)) ||
+		(nLineSpace != 0 && nLineSpace != nBufXSize * nPixelSpace))
+	{
+		CPLError(CPLErr::CE_Failure, CPLE_NotSupported, "Index data sets only support reading into contiguous 16-bit buffers");
+		return CPLErr::CE_Failure;
+	}
+
+	// bands are completely ignored (nBandCount, panBandMap, nBandSpace)
+
+	const int resX = std::lround(static_cast<double>(nXSize /* in meters */) / nBufXSize);
+	const int resY = std::lround(static_cast<double>(nYSize /* in meters */) / nBufYSize);
+	if (resX != resY)
+	{
+		CPLError(CPLErr::CE_Failure, CPLE_NotSupported, "Index data sets only support a uniform x/y resolution");
+		return CPLErr::CE_Failure;
+	}
+
+	auto algorithm = (psExtraArg ? psExtraArg->eResampleAlg : GDALRIOResampleAlg::GRIORA_NearestNeighbour);
+	bool success = render(static_cast<std::int16_t*>(pData), nBufXSize, nBufYSize, resX,
+		blocks.getBoundingBox().min_corner() + MapPoint(nXOff, nYOff), algorithm, algorithm);
+
+	return success ? CPLErr::CE_None : CPLErr::CE_Failure;
 }
