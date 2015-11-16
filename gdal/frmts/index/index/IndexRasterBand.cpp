@@ -1,113 +1,33 @@
 #include "IndexRasterBand.h"
 
-#include <fstream>
-
-#include <boost/filesystem/operations.hpp>
-
-#include "IndexLine.h"
-#include "IndexTileWriter.h"
-#include "IndexConstants.h"
-#include "IndexWarnings.h"
-#include "IndexWarningsReporter.h"
-
-#include <boost/iostreams/stream.hpp>
-#include <boost/iostreams/device/array.hpp>
-#include <boost/endian/conversion.hpp>
-
-namespace {
-/*
-void writeTile(IndexTileWriter& writer, const IndexBlocks::MapTile& tileInformation, IndexWarnings& warnings)
-{
-	const auto& accessedTile = tileInformation.second;
-
-	auto dataFile = accessedTile.getData(warnings);
-
-	if(dataFile)
-		writer.write(*dataFile, tileInformation.first);
-}
-*/
-}
-
-IndexRasterBand::IndexRasterBand(IndexDataset* owningDataSet)
+IndexRasterBand::IndexRasterBand(IndexDataset* owningDataSet, int bandIndex, int resolution)
 {
 	poDS = owningDataSet;
-	nBand = 1;
+	nBand = bandIndex;
+
+	auto alignCoord = [resolution](int x, bool floor)
+	{
+		double exact = static_cast<double>(x) / resolution;
+		return static_cast<int>(floor ? std::floor(exact) : std::ceil(exact)) * resolution;
+	};
+
+	// align the bounding box at multiples of the resolution, expanding it if need be
+	// (=> absolute origin (0, 0) will be a pixel corner)
+	// this matches the alignment requirements for blocks of this resolution
+	const auto& dsBounds = owningDataSet->getBlocks().getBoundingBox();
+	bounds = makeBox(
+		alignCoord(dsBounds.min_corner().get<0>(), true),
+		alignCoord(dsBounds.min_corner().get<1>(), true),
+		alignCoord(dsBounds.max_corner().get<0>(), false),
+		alignCoord(dsBounds.max_corner().get<1>(), false));
+	this->resolution = resolution;
+
+	nRasterXSize = width(bounds) / resolution;
+	nRasterYSize = height(bounds) / resolution;
 
 	eDataType = GDT_Int16;
-
-	//undefValueLineLittleEndian.resize(nBlockXSize, ASSET_MAGIC_CONSTANT_FOR_UNDEFINED_VALUES_LITTLE_ENDIAN);
-	//undefValueLineBigEndian.resize(nBlockXSize, ASSET_MAGIC_CONSTANT_FOR_UNDEFINED_VALUES_BIG_ENDIAN);
+	SetNoDataValue(-9999);
 }
-
-CPLErr IndexRasterBand::IReadBlock(int nBlockXOff, int nBlockYOff, void* pImage)
-{
-	/*
-	typedef boost::iostreams::basic_array<char> Device;
-	boost::iostreams::stream<Device> outputStream(static_cast<char*>(pImage), sizeof(std::int16_t) * blocks.getBlockXSize() * blocks.getBlockYSize());
-
-	auto outputData = static_cast<std::int16_t*>(pImage);
-
-	readBlock(nBlockXOff, nBlockYOff, outputStream, outputData);
-	*/
-
-	return CE_None;
-}
-
-void IndexRasterBand::readBlock(int nBlockXOff, int nBlockYOff, std::ostream& outputStream, std::int16_t* outputData)
-{
-	IndexWarnings warnings;
-	IndexWarningsReporter warningsReporter(warnings);
-
-	IndexWarningsContext blockContext(warnings, "Reading block (%1%,%2%): ", nBlockXOff, nBlockYOff);
-
-	try
-	{
-		readTilesIntoBlock(nBlockXOff, nBlockYOff, outputStream, outputData, warnings);
-	}
-	catch (const std::exception& e)
-	{
-		fillBlockWithUndefLittleEndianForException(outputStream);
-
-		warnings.add("%1%",e.what());
-	}
-	catch(...)
-	{
-		fillBlockWithUndefLittleEndianForException(outputStream);
-
-		warnings.add("Unknown exception");
-	}
-}
-
-void IndexRasterBand::readTilesIntoBlock(int nBlockXOff, int nBlockYOff, std::ostream& outputStream, std::int16_t* outputData, IndexWarnings& warnings)
-{
-	/*
-	auto intersectingTiles = blocks.getIntersectingMapTiles(nBlockXOff, nBlockYOff);
-
-	if (intersectingTiles.empty())
-		fillBlockWithUndefLittleEndian(outputStream);
-	else
-	{
-		readIntersectingTilesIntoBlock(outputStream, outputData, intersectingTiles, blocks.getBlockBox(nBlockXOff, nBlockYOff), warnings);
-
-		convertToNativeByteOrder(outputData);
-	}
-	*/
-}
-
-/*
-bool IndexRasterBand::singleTileMatchesBlockPerfectly(const std::vector<IndexBlocks::MapTile>& intersectingTiles, const MapBox& requestedBlock)
-{
-	return intersectingTiles.size() == 1 && boost::geometry::equals(intersectingTiles.front().first, requestedBlock);
-}
-
-void IndexRasterBand::convertToNativeByteOrder(std::int16_t* outputData)
-{
-	const size_t writtenValues = blocks.getBlockXSize() * blocks.getBlockYSize();
-
-	for (size_t i = 0; i < writtenValues; ++i)
-		boost::endian::big_to_native_inplace(*(outputData++));
-}
-*/
 
 char** IndexRasterBand::GetCategoryNames()
 {
@@ -118,66 +38,49 @@ char** IndexRasterBand::GetCategoryNames()
 	return nullptr;
 }
 
-/*
-void IndexRasterBand::readIntersectingTilesIntoBlock(std::ostream& outputStream, std::int16_t* outputData, const std::vector<IndexBlocks::MapTile>& intersectingTiles, const MapBox& requestedBlock, IndexWarnings& warnings)
-{
-	if (singleTileMatchesBlockPerfectly(intersectingTiles, requestedBlock))
-		readSingleTileIntoBlock(outputStream, outputData, intersectingTiles.front().second, warnings);
-	else
-	{
-		IndexTileWriter writer(outputStream, requestedBlock, blocks.getResolution());
-		readMultipleTilesIntoBlock(outputStream, writer, intersectingTiles, warnings);
-	}
-}
-
-void IndexRasterBand::readSingleTileIntoBlock(std::ostream& outputStream, std::int16_t* outputData, const IndexBlock& tile, IndexWarnings& warnings)
-{
-	auto dataFile = tile.getData(warnings);
-
-	if (dataFile)
-	{
-		const auto bytesToRead = sizeof(std::int16_t)*nBlockXSize*nBlockYSize;
-
-		dataFile->read(reinterpret_cast<char*>(outputData), bytesToRead);
-	}
-	else
-		fillBlockWithUndefBigEndian(outputStream);
-}
-
-void IndexRasterBand::readMultipleTilesIntoBlock(std::ostream& outputStream, IndexTileWriter& writer, const std::vector<IndexBlocks::MapTile>& intersectingTiles, IndexWarnings& warnings)
-{
-	fillBlockWithUndefBigEndian(outputStream);
-
-	for (const auto& touchedTile : intersectingTiles)
-		writeTile(writer, touchedTile, warnings);
-}
-*/
-
-void IndexRasterBand::fillBlockWithUndefLittleEndianForException(std::ostream& outputStream)
-{
-	outputStream.clear();
-	outputStream.seekp(std::ios::beg, 0);
-
-	fillBlockWithUndefLittleEndian(outputStream);
-}
-
-void IndexRasterBand::fillBlockWithUndefLittleEndian(std::ostream& outputStream)
-{
-	fillBlock(outputStream, undefValueLineLittleEndian);
-}
-
-void IndexRasterBand::fillBlockWithUndefBigEndian(std::ostream& outputStream)
-{
-	fillBlock(outputStream, undefValueLineBigEndian);
-}
-
-void IndexRasterBand::fillBlock(std::ostream& outputStream, const std::vector<std::int16_t>& lineData)
-{
-	for (int i = 0; i < nBlockYSize; ++i)
-		outputStream.write(reinterpret_cast<const char*>(lineData.data()), lineData.size()*sizeof(std::int16_t));
-}
-
 GDALColorInterp IndexRasterBand::GetColorInterpretation()
 {
 	return GCI_GrayIndex;
+}
+
+CPLErr IndexRasterBand::IReadBlock(int, int, void*)
+{
+	return CPLErr::CE_Failure;
+}
+
+CPLErr IndexRasterBand::IRasterIO(GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXSize, int nYSize,
+	void* pData, int nBufXSize, int nBufYSize, GDALDataType eBufType,
+	GSpacing nPixelSpace, GSpacing nLineSpace, GDALRasterIOExtraArg* psExtraArg)
+{
+	if (eRWFlag != GDALRWFlag::GF_Read)
+	{
+		CPLError(CPLErr::CE_Failure, CPLE_NoWriteAccess, "Index raster bands can only be read from");
+		return CPLErr::CE_Failure;
+	}
+
+	if (nXSize <= 0 || nYSize <= 0 || nBufXSize <= 0 || nBufYSize <= 0 || pData == nullptr)
+	{
+		CPLError(CPLErr::CE_Failure, CPLE_IllegalArg, "Invalid arguments");
+		return CPLErr::CE_Failure;
+	}
+
+	if (eBufType != eDataType ||
+		(nPixelSpace != 0 && nPixelSpace != sizeof(std::int16_t)) ||
+		(nLineSpace != 0 && nLineSpace != nBufXSize * nPixelSpace))
+	{
+		CPLError(CPLErr::CE_Failure, CPLE_NotSupported, "Index raster bands only support reading into contiguous 16-bit buffers");
+		return CPLErr::CE_Failure;
+	}
+
+	if (nBufXSize != nXSize || nBufYSize != nYSize)
+	{
+		CPLError(CPLErr::CE_Failure, CPLE_NotSupported, "Index raster bands can only be read from in their native resolution. Use the data set for arbitrary resolutions.");
+		return CPLErr::CE_Failure;
+	}
+
+	auto algorithm = (psExtraArg ? psExtraArg->eResampleAlg : GDALRIOResampleAlg::GRIORA_NearestNeighbour);
+	bool success = getDataset().render(static_cast<std::int16_t*>(pData), nBufXSize, nBufYSize, resolution,
+		bounds.min_corner() + MapPoint(nXOff * resolution, nYOff * resolution), algorithm, algorithm);
+
+	return success ? CPLErr::CE_None : CPLErr::CE_Failure;
 }

@@ -112,7 +112,8 @@ IndexDataset::IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream
 
 	setBoundingBox();
 
-	SetBand(1, new IndexRasterBand(this));
+	//TODO
+	SetBand(1, new IndexRasterBand(this, 1, 666));
 }
 
 void IndexDataset::setBoundingBox()
