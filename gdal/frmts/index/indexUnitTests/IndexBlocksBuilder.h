@@ -55,6 +55,12 @@ public:
 		protoLines.emplace_back();
 		return *this;
 	}
+
+	IndexBlock getLastBlock() const
+	{
+		auto& l = protoLines.back();
+		return IndexBlock(IndexLine(l.eastMin, l.eastMax, l.northMin, l.northMax, l.resolution, l.data), 0);
+	}
 	
 	IndexBlocksBuilder& from(int eastMin, int northMin)
 	{

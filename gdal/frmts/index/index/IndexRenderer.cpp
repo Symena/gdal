@@ -4,37 +4,19 @@
 #include <boost/endian/conversion.hpp>
 #include <boost/geometry/algorithms/intersection.hpp>
 
-IndexRenderer::IndexRenderer(const IndexBlocks& blocks, const MapBox& region, int resolution,
-	GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm,
-	IndexWarnings& warnings)
-	: blocks(blocks)
-	, bounds(region)
-	, widthInPixels(width(region) / resolution)
-	, heightInPixels(height(region) / resolution)
-	, resolution(resolution)
-	, downsamplingAlgorithm(downsamplingAlgorithm)
-	, upsamplingAlgorithm(upsamplingAlgorithm)
-	, warnings(warnings)
-{
-	assert(widthInPixels * resolution == width(region));
-	assert(heightInPixels * resolution == height(region));
-
-	data = std::make_unique<PixelType[]>(getNumPixels());
-}
-
-IndexRenderer::IndexRenderer(const IndexBlocks& blocks, UniqueDataPtr data, int widthInPixels,
+IndexRenderer::IndexRenderer(const IndexBlocks& blocks, PixelType* data, int widthInPixels,
 	int heightInPixels, int resolution, MapPoint bottomLeftCornerInMeters,
 	GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm,
 	IndexWarnings& warnings)
 	: blocks(blocks)
 	, bounds(bottomLeftCornerInMeters, bottomLeftCornerInMeters + MapPoint(widthInPixels * resolution, heightInPixels * resolution))
+	, data(data)
 	, widthInPixels(widthInPixels)
 	, heightInPixels(heightInPixels)
 	, resolution(resolution)
 	, downsamplingAlgorithm(downsamplingAlgorithm)
 	, upsamplingAlgorithm(upsamplingAlgorithm)
 	, warnings(warnings)
-	, data(std::move(data))
 {}
 
 
@@ -89,7 +71,10 @@ IndexRenderer::UniqueDataPtr IndexRenderer::readBlock(const IndexBlock& block, M
 {
 	auto stream = block.getData(warnings);
 	if (!stream)
+	{
+		region = makeBox(0, 0, 0, 0);
 		return nullptr;
+	}
 
 	const auto& blockBounds = block.getBoundingBox();
 	const MapPoint blockTopLeft = upper_left(blockBounds);
@@ -192,7 +177,7 @@ void IndexRenderer::renderRegion(const PixelType* data, const MapBox& region)
 	// render
 	for (int y = srcPixelMinY; y < srcPixelMaxY; ++y)
 	{
-		PixelType* const dstRow = this->data.get() + (bottomPixelOffset + y) * this->widthInPixels + leftPixelOffset;
+		PixelType* const dstRow = this->data + (bottomPixelOffset + y) * this->widthInPixels + leftPixelOffset;
 		const PixelType* const srcRow = data + y * srcWidthInPixels;
 
 		for (int x = srcPixelMinX; x < srcPixelMaxX; ++x)

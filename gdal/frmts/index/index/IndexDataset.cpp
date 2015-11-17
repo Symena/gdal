@@ -186,14 +186,11 @@ bool IndexDataset::render(std::int16_t* dst, int dstWidth, int dstHeight, int ds
 	IndexWarnings warnings;
 	IndexWarningsReporter warningsReporter(warnings);
 
-	std::unique_ptr<std::int16_t[]> data(dst);
-
 	try
 	{
-		IndexRenderer renderer(blocks, std::move(data), dstWidth, dstHeight, dstResolution,
+		IndexRenderer renderer(blocks, dst, dstWidth, dstHeight, dstResolution,
 			bottomLeftCornerInMeters, downsamplingAlgorithm, upsamplingAlgorithm, warnings);
 		renderer.render();
-		renderer.getResult().release();
 	}
 	catch (const std::exception& e)
 	{

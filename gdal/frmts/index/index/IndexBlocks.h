@@ -45,8 +45,7 @@ class IndexBlocks
 	MapBox boundingBox; // in meters
 
 public:
-	IndexBlocks() : IndexBlocks(std::vector<IndexLine>()) {}
-	explicit IndexBlocks(const std::vector<IndexLine>& lines);
+	explicit IndexBlocks(const std::vector<IndexLine>& lines = {});
 
 	const MapBox& getBoundingBox() const { return boundingBox; }
 

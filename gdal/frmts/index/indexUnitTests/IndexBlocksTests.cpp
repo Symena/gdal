@@ -51,9 +51,6 @@ TEST(IndexBlocks, constructorSetsBoundingBox)
 	IndexBlocks blocks;
 	EXPECT_TRUE(blocks.getBoundingBox() == emptyBox);
 
-	blocks = IndexBlocks({});
-	EXPECT_TRUE(blocks.getBoundingBox() == emptyBox);
-
 	blocks = IndexBlocks({ makeLine(-3, 2, 7, 6, 2), makeLine(2, -4, 8, 2, 1) });
 	EXPECT_TRUE(blocks.getBoundingBox() == makeBox(-3, -4, 8, 6));
 }

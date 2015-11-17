@@ -9,6 +9,7 @@ using std::vector;
 struct IndexRendererTest : public testing::Test
 {
 	IndexBlocks blocks;
+	std::unique_ptr<int16_t[]> data;
 
 protected:
 	IndexBlocksBuilder builder;
@@ -19,22 +20,23 @@ protected:
 		GDALRIOResampleAlg upsamplingAlgorithm = GDALRIOResampleAlg::GRIORA_NearestNeighbour)
 	{
 		blocks = builder.create();
-		return IndexRenderer(blocks, region, resolution, downsamplingAlgorithm, upsamplingAlgorithm, warnings);
+
+		int widthInPixels = width(region) / resolution;
+		int heightInPixels = height(region) / resolution;
+		assert(widthInPixels * resolution == width(region));
+		assert(heightInPixels * resolution == height(region));
+
+		data = std::make_unique<int16_t[]>(static_cast<size_t>(widthInPixels) * heightInPixels);
+
+		return IndexRenderer(blocks, data.get(), widthInPixels, heightInPixels, resolution,
+			region.min_corner(), downsamplingAlgorithm, upsamplingAlgorithm, warnings);
 	}
 
 	static IndexBlock makeBlock(int minX, int minY, int maxX, int maxY, int resolution, vector<int16_t> topDownData)
 	{
-		for (auto& pixel : topDownData)
-			boost::endian::native_to_big_inplace(pixel);
-
-		const size_t numDataPixels = topDownData.size();
-
-		IndexBlock block(makeBox(minX, minY, maxX, maxY), resolution,
-			std::make_shared<VectorBackedStreamSource>(std::move(topDownData)), 0);
-
-		assert(numDataPixels == static_cast<size_t>(block.getWidthInPixels()) * block.getHeightInPixels());
-
-		return block;
+		IndexBlocksBuilder builder;
+		builder.addBlock().from(minX, minY).to(maxX, maxY).resolution(resolution).withData(std::move(topDownData));
+		return builder.getLastBlock();
 	}
 
 	static void checkPixels(IndexRenderer& renderer, const vector<int16_t>& expected)
@@ -42,13 +44,15 @@ protected:
 		const size_t numActualPixels = renderer.getNumPixels();
 		ASSERT_EQ(expected.size(), numActualPixels);
 
-		checkPixels(renderer.getResult(), expected);
+		std::unique_ptr<int16_t[]> dataPtr(renderer.getData());
+		checkPixels(dataPtr, expected);
+		dataPtr.release();
 	}
 
-	static void checkPixels(const IndexRenderer::UniqueDataPtr& actual, const vector<int16_t>& expected)
+	static void checkPixels(const std::unique_ptr<int16_t[]>& actual, const vector<int16_t>& expected)
 	{
 		for (size_t i = 0; i < expected.size(); ++i)
-			EXPECT_EQ(expected[i], actual[i]);
+			EXPECT_EQ(expected[i], actual[i]) << "Mismatching pixel at index " << i;
 	}
 };
 
@@ -58,8 +62,6 @@ protected:
 TEST_F(IndexRendererTest, fillWithNoDataValue)
 {
 	auto renderer = createRenderer(makeBox(0, 0, 4, 2), 2); // 2x1 pixels
-	EXPECT_EQ(2, renderer.getWidthInPixels());
-	EXPECT_EQ(1, renderer.getHeightInPixels());
 	EXPECT_EQ(2, renderer.getNumPixels());
 
 	renderer.fillWithNoDataValue();
@@ -113,8 +115,36 @@ TEST_F(IndexRendererTest, readBlock_returnsNullForNoBlockData)
 	auto actual = renderer.readBlock(block, region);
 
 	EXPECT_EQ(nullptr, actual);
-	EXPECT_TRUE(region == block.getBoundingBox()); // unchanged
+	EXPECT_TRUE(region == makeBox(0, 0, 0, 0));
 }
+
+TEST_F(IndexRendererTest, readBlock_throwsForIncompleteStream)
+{
+	auto renderer = createRenderer(MapBox());
+
+	auto block = makeBlock(0, 0, 2, 2, 1, { 0, 1, 2 });
+	auto region = block.getBoundingBox();
+
+	EXPECT_THROW(renderer.readBlock(block, region), std::ios_base::failure);
+}
+
+
+// resample()
+
+TEST_F(IndexRendererTest, resample_returnsNullIfTargetRegionSmallerThanQuarterOfAPixel)
+{
+	// coarse target resolution = 4
+	auto renderer = createRenderer(MapBox(), 4);
+
+	auto region = makeBox(0, 0, 1, 1);
+	int16_t dummy = 666;
+	auto actual = renderer.resample(&dummy, region, 1); // fine src resolution = 1
+
+	EXPECT_EQ(nullptr, actual);
+	EXPECT_TRUE(region == makeBox(0, 0, 0, 0));
+}
+
+// TODO: resample()ing integration tests (incl. exactly a quarter of a pixel)
 
 
 // renderRegion()

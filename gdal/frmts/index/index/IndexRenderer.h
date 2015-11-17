@@ -14,6 +14,7 @@ private:
 
 	const IndexBlocks& blocks;
 	MapBox bounds; // in meters
+	PixelType* data; // bottom-up
 	int widthInPixels;
 	int heightInPixels;
 	int resolution;
@@ -21,13 +22,8 @@ private:
 	GDALRIOResampleAlg upsamplingAlgorithm;
 	IndexWarnings& warnings;
 
-	UniqueDataPtr data; // bottom-up
-
 public:
-	IndexRenderer(const IndexBlocks& blocks, const MapBox& region, int resolution,
-		GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm,
-		IndexWarnings& warnings);
-	IndexRenderer(const IndexBlocks& blocks, UniqueDataPtr data, int widthInPixels,
+	IndexRenderer(const IndexBlocks& blocks, PixelType* data, int widthInPixels,
 		int heightInPixels, int resolution, MapPoint bottomLeftCornerInMeters,
 		GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm,
 		IndexWarnings& warnings);
@@ -36,10 +32,8 @@ public:
 
 	void render();
 
-	// Returns the bottom-up bitmap.
-	UniqueDataPtr getResult() { return std::move(data); }
-	int getWidthInPixels() const { return widthInPixels; }
-	int getHeightInPixels() const { return heightInPixels; }
+	PixelType* getData() const { return data; }
+
 	size_t getNumPixels() const { return static_cast<size_t>(widthInPixels) * heightInPixels; }
 
 	void fillWithNoDataValue();
