@@ -15,8 +15,8 @@ public:
 
 	IndexDataset& getData()
 	{
-		if(!dataSet)
-			dataSet = std::make_unique<IndexDataset>(file, std::unique_ptr<std::istream>{}, warnings);
+		if (!dataSet)
+			dataSet = std::make_unique<IndexDataset>(file, nullptr, warnings);
 
 		return *dataSet;
 	}
@@ -62,6 +62,18 @@ TEST_F(IndexDatasetTests, providesResolutionsAsMetadata)
 	EXPECT_EQ(nullptr, resolutions[2]);
 }
 
+TEST_F(IndexDatasetTests, providesARasterBandForEachResolution)
+{
+	addBlock(0, 0, 10, 10, 5);
+	addBlock(0, 0, 10, 10, 2);
+	addBlock(0, 0, 10, 10, 1);
+
+	auto& data = getData();
+
+	EXPECT_THAT(data.getResolutions(), testing::ElementsAre(1, 2, 5));
+	EXPECT_EQ(3, data.GetRasterCount());
+}
+
 TEST_F(IndexDatasetTests, setsGeoTransformAccordingToBoundingBox)
 {
 	addBlock(1, 3, 3, 4, 1);
@@ -74,11 +86,11 @@ TEST_F(IndexDatasetTests, setsGeoTransformAccordingToBoundingBox)
 
 	double expected[6];
 	expected[0] = 1; // east min
-	expected[1] = 1; // resolution is always 1;
+	expected[1] = 1; // resolution is always 1
 	expected[2] = 0;
 	expected[3] = 3; // north min
 	expected[4] = 0;
-	expected[5] = 1; // resolution is always 1;
+	expected[5] = 1; // resolution is always 1
 
 	ASSERT_THAT(actual, ::testing::ElementsAreArray(expected));
 }

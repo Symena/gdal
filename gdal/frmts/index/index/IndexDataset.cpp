@@ -112,8 +112,8 @@ IndexDataset::IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream
 
 	setBoundingBox();
 
-	//TODO
-	SetBand(1, new IndexRasterBand(this, 1, 666));
+	for (int i = 0; i < resolutions.size(); ++i)
+		SetBand(i + 1, new IndexRasterBand(this, i + 1, resolutions[i]));
 }
 
 void IndexDataset::setBoundingBox()
@@ -165,14 +165,16 @@ boost::optional<IndexClutterCodes> IndexDataset::readClutterCodes(std::unique_pt
 
 void IndexDataset::provideResolutionsAsMetadata(const std::vector<IndexLine>& lines)
 {
-	// resolution to number of blocks
-	std::map<int, int> resolutions;
+	std::map<int, int> resolution2numBlocks;
 
 	for (const auto& line : lines)
-		++resolutions[line.getResolution()];
+		++resolution2numBlocks[line.getResolution()];
 
-	for (auto pair : resolutions)
+	resolutions.reserve(resolution2numBlocks.size());
+	for (auto pair : resolution2numBlocks)
 	{
+		resolutions.push_back(pair.first);
+
 		auto sRes = std::to_string(pair.first) + "m";
 		auto sSize = std::to_string(pair.second) + " blocks";
 
@@ -194,7 +196,7 @@ bool IndexDataset::render(std::int16_t* dst, int dstWidth, int dstHeight, int ds
 	}
 	catch (const std::exception& e)
 	{
-		CPLError(CE_Failure, CPLE_AppDefined, "Rendering index file failed: %s", e.what());
+		CPLError(CE_Failure, CPLE_AppDefined, "Rendering index data set failed: %s", e.what());
 		return false;
 	}
 

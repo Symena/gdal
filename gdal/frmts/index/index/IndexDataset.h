@@ -25,6 +25,7 @@ public:
 	static bool Identify(const boost::filesystem::path& file, std::istream& header);
 
 	IndexBlocks& getBlocks() { return blocks; }
+	const std::vector<int>& getResolutions() const { return resolutions; }
 	boost::optional<IndexClutterCodes>& getClutterCodes() { return clutterCodes; }
 
 	bool render(std::int16_t* dst, int dstWidth, int dstHeight, int dstResolution,
@@ -40,6 +41,7 @@ protected:
 
 private:
 	IndexBlocks blocks;
+	std::vector<int> resolutions;
 	boost::optional<IndexClutterCodes> clutterCodes;
 
 	void setBoundingBox();
