@@ -76,13 +76,17 @@ TEST_F(IndexRendererTest, readBlock_full)
 {
 	auto renderer = createRenderer(MapBox());
 
-	auto block = makeBlock(0, 0, 4, 4, 2, { 0, 1, 2, 3 });
+	auto block = makeBlock(0, 0, 4, 4, 2,
+		{ 0, 1,
+		  2, 3 });
 	auto region = block.getBoundingBox();
 
 	auto actual = renderer.readBlock(block, region);
 
 	ASSERT_TRUE(region == block.getBoundingBox()); // unchanged
-	checkPixels(actual, { 2, 3, 0, 1 });           // rows are flipped (bottom-up)
+	checkPixels(actual,
+		{ 2, 3,    // rows are flipped (bottom-up)
+		  0, 1 });
 }
 
 TEST_F(IndexRendererTest, readBlock_partial)
@@ -131,23 +135,79 @@ TEST_F(IndexRendererTest, readBlock_throwsForIncompleteStream)
 
 // resample()
 
-TEST_F(IndexRendererTest, resample_returnsNullIfTargetRegionSmallerThanQuarterOfAPixel)
+TEST_F(IndexRendererTest, resample_downsampling)
+{
+	// coarse target resolution = 4
+	auto renderer = createRenderer(MapBox(), 4, GRIORA_Bilinear, GRIORA_NearestNeighbour);
+
+	auto region = makeBox(0, 0, 9, 6); // 3x2 pixels, finer resolution = 3
+	int16_t srcPixels[] =
+		{   0, 100, 200,
+		  300, 400, 500 };
+	auto actual = renderer.resample(srcPixels, region, 3);
+
+	ASSERT_TRUE(region == makeBox(0, 0, 8, 8)); // 2x2 pixels
+	checkPixels(actual,
+		{  38, 163,
+		  338, 463 });
+}
+
+TEST_F(IndexRendererTest, resample_upsampling)
+{
+	// fine target resolution = 3
+	auto renderer = createRenderer(MapBox(), 3, GRIORA_NearestNeighbour, GRIORA_Bilinear);
+
+	auto region = makeBox(0, 0, 8, 8); // 2x2 pixels, coarser resolution = 4
+	int16_t srcPixels[] =
+		{   0, 100,
+		  500, 600 };
+	auto actual = renderer.resample(srcPixels, region, 4);
+
+	ASSERT_TRUE(region == makeBox(0, 0, 9, 9)); // 3x3 pixels
+	checkPixels(actual,
+		{   0,  50, 100,
+		  250, 300, 350,
+		  500, 550, 600 });
+}
+
+TEST_F(IndexRendererTest, resample_targetRegionIsExactlyQuarterOfASourcePixel)
+{
+	// coarse target resolution = 2
+	auto renderer = createRenderer(MapBox(), 2);
+
+	auto region = makeBox(0, 0, 1, 1); // single pixel, finer resolution = 1
+	int16_t srcPixel = 666;
+	auto actual = renderer.resample(&srcPixel, region, 1);
+
+	ASSERT_TRUE(region == makeBox(0, 0, 2, 2)); // expanded
+	checkPixels(actual, { 666 });
+}
+
+TEST_F(IndexRendererTest, resample_returnsNullIfTargetRegionSmallerThanQuarterOfASourcePixel)
 {
 	// coarse target resolution = 4
 	auto renderer = createRenderer(MapBox(), 4);
 
-	auto region = makeBox(0, 0, 1, 1);
-	int16_t dummy = 666;
-	auto actual = renderer.resample(&dummy, region, 1); // fine src resolution = 1
+	auto region = makeBox(0, 0, 1, 1); // single pixel, finer resolution = 1
+	int16_t srcPixel = 666;
+	auto actual = renderer.resample(&srcPixel, region, 1);
 
+	EXPECT_TRUE(region == makeBox(0, 0, 0, 0)); // shrinked
 	EXPECT_EQ(nullptr, actual);
-	EXPECT_TRUE(region == makeBox(0, 0, 0, 0));
 }
-
-// TODO: resample()ing integration tests (incl. exactly a quarter of a pixel)
 
 
 // renderRegion()
+
+TEST_F(IndexRendererTest, renderRegion_supportsEmptyRegion)
+{
+	auto renderer = createRenderer(makeBox(0, 0, 2, 2), 2); // 1x1 pixels
+
+	renderer.fillWithNoDataValue();
+	renderer.renderRegion(nullptr, makeBox(0, 0, 0, 0));
+
+	checkPixels(renderer, { -9999 });
+}
 
 TEST_F(IndexRendererTest, renderRegion_doesNotCopyNoDataPixels)
 {
@@ -212,8 +272,6 @@ TEST_F(IndexRendererTest, renderRegion_sourceIsClipped)
 
 TEST_F(IndexRendererTest, render_noResampling)
 {
-	// resampling needs GDAL redistributable :/
-
 	const auto region = makeBox(0, 0, 8, 6); // 4x3 pixels
 
 	builder.addBlock().from(2, 0).to(8, 4).resolution(2).withData(
@@ -231,4 +289,27 @@ TEST_F(IndexRendererTest, render_noResampling)
 		{    12,     3,     4,     5, // bottom-up
 		     10,    11,     1,     2,
 		  -9999, -9999, -9999, -9999 });
+}
+
+TEST_F(IndexRendererTest, render_withResampling)
+{
+	const auto region = makeBox(0, 0, 8, 6); // 4x3 pixels
+
+	builder.addBlock().from(0, 0).to(4, 8).resolution(4).withData(
+		{ 0,
+		  1 });
+	builder.addBlock().from(2, 4).to(6, 6).resolution(2).withData(
+		{ 10, 11 });
+	builder.addBlock().from(6, 2).to(8, 4).resolution(1).withData(
+		{ 20, 22,
+		  24, 26 });
+
+	auto renderer = createRenderer(region, 2, GRIORA_Bilinear, GRIORA_NearestNeighbour);
+
+	renderer.render();
+
+	checkPixels(renderer,
+		{ 1,  1, -9999, -9999,
+		  1,  1, -9999,    23,
+		  0, 10,    11, -9999 });
 }

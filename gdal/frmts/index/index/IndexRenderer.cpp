@@ -30,14 +30,25 @@ void IndexRenderer::render()
 		// TODO: skip unnecessarily fine blocks?
 
 		MapBox srcRegion;
-		boost::geometry::intersection(bounds, block.getBoundingBox(), srcRegion);
+		auto& blockBounds = block.getBoundingBox();
+		boost::geometry::intersection(bounds, blockBounds, srcRegion);
 
-		auto srcData = readBlock(block, srcRegion);
+		try
+		{
+			auto srcData = readBlock(block, srcRegion);
 
-		if (block.getResolution() != resolution)
-			srcData = resample(srcData.get(), srcRegion, block.getResolution());
+			if (block.getResolution() != resolution)
+				srcData = resample(srcData.get(), srcRegion, block.getResolution());
 
-		renderRegion(srcData.get(), srcRegion);
+			renderRegion(srcData.get(), srcRegion);
+		}
+		catch (const std::exception& e)
+		{
+			warnings.add("Rendering block from (%d, %d) to (%d, %d) (index %d) failed: '%s', skipping",
+				blockBounds.min_corner().get<0>(), blockBounds.min_corner().get<1>(),
+				blockBounds.max_corner().get<0>(), blockBounds.max_corner().get<1>(),
+				block.getIndex(), e.what());
+		}
 	}
 }
 
@@ -136,7 +147,14 @@ IndexRenderer::UniqueDataPtr IndexRenderer::resample(const PixelType* data, MapB
 	const int newWidth = std::lround(srcWidth * scalingFactor);
 	const int newHeight = std::lround(srcHeight * scalingFactor);
 
-	auto newData = std::make_unique<PixelType[]>(static_cast<size_t>(newWidth) * newHeight);
+	const size_t numNewPixels = static_cast<size_t>(newWidth) * newHeight;
+	if (numNewPixels == 0)
+	{
+		region = makeBox(0, 0, 0, 0);
+		return nullptr;
+	}
+
+	auto newData = std::make_unique<PixelType[]>(numNewPixels);
 
 	const auto algorithm = (scalingFactor < 1 ? downsamplingAlgorithm : upsamplingAlgorithm);
 	::resample(data, srcWidth, srcHeight, newData.get(), newWidth, newHeight, GDALDataType::GDT_Int16, algorithm, noDataValue);
