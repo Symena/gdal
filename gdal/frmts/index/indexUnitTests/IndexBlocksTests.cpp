@@ -46,13 +46,24 @@ TEST(IndexBlock, constructors)
 
 TEST(IndexBlocks, constructorSetsBoundingBox)
 {
-	const auto emptyBox = makeBox(0, 0, 0, 0);
-
 	IndexBlocks blocks;
-	EXPECT_TRUE(blocks.getBoundingBox() == emptyBox);
+	EXPECT_TRUE(blocks.getBoundingBox() == makeBox(0, 0, 0, 0));
 
 	blocks = IndexBlocks({ makeLine(-3, 2, 7, 6, 2), makeLine(2, -4, 8, 2, 1) });
 	EXPECT_TRUE(blocks.getBoundingBox() == makeBox(-3, -4, 8, 6));
+}
+
+TEST(IndexBlocks, constructorSetsResolutions)
+{
+	vector<IndexLine> lines = {
+		makeLine(0, 0, 10, 10, 10),
+		makeLine(0, 0, 10, 10, 2),
+		makeLine(0, 0, 10, 10, 5),
+		makeLine(0, 0, 10, 10, 5),
+	};
+	IndexBlocks blocks(std::move(lines));
+
+	EXPECT_THAT(blocks.getResolutions(), testing::ElementsAre(2, 5, 10));
 }
 
 TEST(IndexBlocks, insertsAndQueriesBlocksCorrectly)

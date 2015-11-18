@@ -33,6 +33,8 @@ IndexBlocks::IndexBlocks(const std::vector<IndexLine>& lines)
 	{
 		auto block = IndexBlock(line, lineNr++);
 		blocksTree.insert(std::make_pair(block.getBoundingBox(), block));
+
+		resolutions.insert(line.getResolution());
 	}
 
 	boundingBox = (!blocksTree.empty() ? blocksTree.bounds() : makeBox(0, 0, 0, 0));

@@ -43,11 +43,14 @@ class IndexBlocks
 
 	boost::geometry::index::rtree<TreeEntry, boost::geometry::index::rstar<16>> blocksTree;
 	MapBox boundingBox; // in meters
+	std::set<int> resolutions;
 
 public:
 	explicit IndexBlocks(const std::vector<IndexLine>& lines = {});
 
 	const MapBox& getBoundingBox() const { return boundingBox; }
+
+	const std::set<int>& getResolutions() const { return resolutions; }
 
 	std::vector<IndexBlock> getIntersectingBlocks(const MapBox& box) const;
 };
