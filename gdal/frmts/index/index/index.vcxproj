@@ -165,13 +165,11 @@
     <ClCompile Include="IndexRegister.cpp" />
     <ClCompile Include="IndexRenderer.cpp" />
     <ClCompile Include="IndexStreamSource.cpp" />
-    <ClCompile Include="IndexTileWriter.cpp" />
     <ClCompile Include="IndexWarnings.cpp" />
     <ClCompile Include="Resampling.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IndexBlocks.h" />
-    <ClInclude Include="IndexConstants.h" />
     <ClInclude Include="IndexClutterCodes.h" />
     <ClInclude Include="IndexDataset.h" />
     <ClInclude Include="IndexGeometry.h" />
@@ -180,7 +178,6 @@
     <ClInclude Include="IndexRegister.h" />
     <ClInclude Include="IndexRenderer.h" />
     <ClInclude Include="IndexStreamSource.h" />
-    <ClInclude Include="IndexTileWriter.h" />
     <ClInclude Include="IndexWarningsReporter.h" />
     <ClInclude Include="IndexWarnings.h" />
     <ClInclude Include="Resampling.h" />

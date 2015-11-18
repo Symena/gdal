@@ -160,7 +160,6 @@
     <ClCompile Include="IndexLineTests.cpp" />
     <ClCompile Include="IndexRasterBandTests.cpp" />
     <ClCompile Include="IndexRendererTests.cpp" />
-    <ClCompile Include="IndexTileWriterTests.cpp" />
     <ClCompile Include="IndexWarningsTests.cpp" />
   </ItemGroup>
   <ItemGroup>
