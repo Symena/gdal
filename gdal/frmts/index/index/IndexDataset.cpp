@@ -232,7 +232,12 @@ CPLErr IndexDataset::IRasterIO(GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXS
 		return CPLErr::CE_Failure;
 	}
 
-	auto algorithm = (psExtraArg ? psExtraArg->eResampleAlg : GDALRIOResampleAlg::GRIORA_NearestNeighbour);
+	auto algorithm = (clutterCodes
+		? GDALRIOResampleAlg::GRIORA_Mode     // majority
+		: GDALRIOResampleAlg::GRIORA_Bilinear);
+	if (psExtraArg)
+		algorithm = psExtraArg->eResampleAlg;
+
 	bool success = render(static_cast<std::int16_t*>(pData), nBufXSize, nBufYSize, resX,
 		blocks.getBoundingBox().min_corner() + MapPoint(nXOff, nYOff), algorithm, algorithm);
 
