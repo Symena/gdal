@@ -20,12 +20,14 @@ class IndexDataset: public GDALPamDataset
 public:
 	IndexDataset(const boost::filesystem::path& indexFile, IndexWarnings& warnings);
 	IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream> clutterFile, IndexWarnings& warnings);
-	
+	IndexDataset(IndexBlocks blocks, std::unique_ptr<std::istream> clutterFile);
+
 	static GDALDataset* Open(GDALOpenInfo* openInfo);
 	static bool Identify(const boost::filesystem::path& file, std::istream& header);
 
-	IndexBlocks& getBlocks() { return blocks; }
-	const std::vector<int>& getResolutions() const { return resolutions; }
+	const auto& getBoundingBox() const { return blocks.getBoundingBox(); }
+	const auto& getResolutions() const { return blocks.getResolutions(); }
+
 	boost::optional<IndexClutterCodes>& getClutterCodes() { return clutterCodes; }
 
 	bool render(std::int16_t* dst, int dstWidth, int dstHeight, int dstResolution,
@@ -41,12 +43,9 @@ protected:
 
 private:
 	IndexBlocks blocks;
-	std::vector<int> resolutions;
 	boost::optional<IndexClutterCodes> clutterCodes;
 
 	void setBoundingBox();
-
-	std::vector<IndexLine> readLines(std::istream& indexFile, IndexWarnings& warnings);
-	boost::optional<IndexClutterCodes> readClutterCodes(std::unique_ptr<std::istream> clutterFile);
-	void provideResolutionsAsMetadata(const std::vector<IndexLine>& lines);
+	void provideResolutionsAsMetadata();
+	void addBands();
 };

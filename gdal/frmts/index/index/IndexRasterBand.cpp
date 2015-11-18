@@ -14,7 +14,7 @@ IndexRasterBand::IndexRasterBand(IndexDataset* owningDataSet, int bandIndex, int
 	// align the bounding box at multiples of the resolution, expanding it if need be
 	// (=> absolute origin (0, 0) will be a pixel corner)
 	// this matches the alignment requirements for blocks of this resolution
-	const auto& dsBounds = owningDataSet->getBlocks().getBoundingBox();
+	const auto& dsBounds = owningDataSet->getBoundingBox();
 	bounds = makeBox(
 		alignCoord(dsBounds.min_corner().get<0>(), true),
 		alignCoord(dsBounds.min_corner().get<1>(), true),

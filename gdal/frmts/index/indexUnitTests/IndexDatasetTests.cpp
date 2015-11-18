@@ -50,15 +50,14 @@ TEST_F(IndexDatasetTests, rasterSizeFromMultipleBlocks)
 TEST_F(IndexDatasetTests, providesResolutionsAsMetadata)
 {
 	addBlock(0, 2, 0, 2, 1);
-	addBlock(0, 2, 2, 3, 1);
 	addBlock(0, 4, 0, 2, 2);
 
 	auto& data = getData();
 
 	auto** resolutions = data.GetMetadata("Resolutions");
 
-	EXPECT_EQ("1m=2 blocks", std::string(resolutions[0]));
-	EXPECT_EQ("2m=1 blocks", std::string(resolutions[1]));
+	EXPECT_EQ("1m=", std::string(resolutions[0]));
+	EXPECT_EQ("2m=", std::string(resolutions[1]));
 	EXPECT_EQ(nullptr, resolutions[2]);
 }
 

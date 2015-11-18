@@ -12,6 +12,8 @@
 #include "IndexRenderer.h"
 #include "IndexWarningsReporter.h"
 
+namespace {
+
 struct membuf: public std::streambuf
 {
 	membuf(char* begin, size_t size)
@@ -19,6 +21,44 @@ struct membuf: public std::streambuf
 		this->setg(begin, begin, begin + size);
 	}
 };
+
+std::vector<IndexLine> readLines(std::istream& indexFile, IndexWarnings& warnings)
+{
+	if (!indexFile.good())
+		throw std::runtime_error("Index file is empty or stream is in a bad or failed state");
+
+	std::vector<IndexLine> lines;
+
+	size_t readLines = 0;
+	while (indexFile.good())
+	{
+		std::string line;
+		std::getline(indexFile, line);
+		++readLines;
+		IndexWarningsContext lineNumber(warnings, "Line %d: ", readLines);
+
+		if (line.empty())
+			continue;
+
+		lines.emplace_back(line, warnings);
+		if (!lines.back().isConsistent())
+			lines.pop_back();
+	}
+
+	return lines;
+}
+
+std::unique_ptr<std::istream> getClutterCodeStream(const boost::filesystem::path& indexFile)
+{
+	auto menuFile = indexFile.parent_path() / "menu.txt";
+
+	if (!boost::filesystem::exists(menuFile))
+		return nullptr;
+
+	return std::make_unique<std::ifstream>(menuFile.string());
+}
+
+}
 
 GDALDataset* IndexDataset::Open(GDALOpenInfo* openInfo)
 {
@@ -86,39 +126,29 @@ bool IndexDataset::Identify(const boost::filesystem::path& file, std::istream& h
 	return true;
 }
 
-std::unique_ptr<std::istream> getClutterCodeStream(const boost::filesystem::path& indexFile)
-{
-	auto menuFile = indexFile.parent_path() / "menu.txt";
-
-	if (!boost::filesystem::exists(menuFile))
-		return nullptr;
-
-	return std::make_unique<std::ifstream>(menuFile.string());
-}
-
 IndexDataset::IndexDataset(const boost::filesystem::path& indexFile, IndexWarnings& warnings)
 	: IndexDataset(std::ifstream(indexFile.string()), getClutterCodeStream(indexFile), warnings)
 {}
 
 IndexDataset::IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream> clutterFile, IndexWarnings& warnings)
+	: IndexDataset(IndexBlocks(readLines(indexFile, warnings)), std::move(clutterFile))
+{}
+
+IndexDataset::IndexDataset(IndexBlocks blocks, std::unique_ptr<std::istream> clutterFile)
+	: blocks(std::move(blocks))
 {
-	if (!indexFile.good())
-		throw std::runtime_error("Index file is empty or stream is in a bad or failed state");
-
-	auto lines = readLines(indexFile, warnings);
-	provideResolutionsAsMetadata(lines);
-
-	blocks = IndexBlocks(lines);
+	if (clutterFile)
+		clutterCodes = IndexClutterCodes(*clutterFile);
 
 	setBoundingBox();
-
-	for (int i = 0; i < resolutions.size(); ++i)
-		SetBand(i + 1, new IndexRasterBand(this, i + 1, resolutions[i]));
+	provideResolutionsAsMetadata();
+	addBands();
 }
+
 
 void IndexDataset::setBoundingBox()
 {
-	const auto& bounds = blocks.getBoundingBox();
+	const auto& bounds = getBoundingBox();
 	nRasterXSize = width(bounds);
 	nRasterYSize = height(bounds);
 
@@ -132,53 +162,22 @@ void IndexDataset::setBoundingBox()
 	SetGeoTransform(transformMatrix);
 }
 
-std::vector<IndexLine> IndexDataset::readLines(std::istream& indexFile, IndexWarnings& warnings)
+void IndexDataset::provideResolutionsAsMetadata()
 {
-	std::vector<IndexLine> lines;
-
-	size_t readLines = 0;
-	while (indexFile.good())
+	for (int res : getResolutions())
 	{
-		std::string line;
-		std::getline(indexFile, line);
-		++readLines;
-		IndexWarningsContext lineNumber(warnings, "Line %d: ", readLines);
-
-		if (line.empty())
-			continue;
-
-		lines.emplace_back(line, warnings);
-		if (!lines.back().isConsistent())
-			lines.pop_back();
+		auto item = std::to_string(res) + "m";
+		SetMetadataItem(item.c_str(), "", "Resolutions");
 	}
-
-	return lines;
 }
 
-boost::optional<IndexClutterCodes> IndexDataset::readClutterCodes(std::unique_ptr<std::istream> clutterFile)
+void IndexDataset::addBands()
 {
-	if (!clutterFile)
-		return {};
-
-	return IndexClutterCodes(*clutterFile);
-}
-
-void IndexDataset::provideResolutionsAsMetadata(const std::vector<IndexLine>& lines)
-{
-	std::map<int, int> resolution2numBlocks;
-
-	for (const auto& line : lines)
-		++resolution2numBlocks[line.getResolution()];
-
-	resolutions.reserve(resolution2numBlocks.size());
-	for (auto pair : resolution2numBlocks)
+	int i = 1;
+	for (int res : getResolutions())
 	{
-		resolutions.push_back(pair.first);
-
-		auto sRes = std::to_string(pair.first) + "m";
-		auto sSize = std::to_string(pair.second) + " blocks";
-
-		SetMetadataItem(sRes.c_str(), sSize.c_str(), "Resolutions");
+		SetBand(i, new IndexRasterBand(this, i, res));
+		++i;
 	}
 }
 
