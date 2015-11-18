@@ -77,26 +77,34 @@ TEST_F(IndexDatasetTests, rasterSizeFromMultipleBlocks)
 
 TEST_F(IndexDatasetTests, providesResolutionsAsMetadata)
 {
+	addBlock(0, 0, 5, 5, 5);
 	addBlock(0, 0, 2, 2, 1);
 	addBlock(0, 0, 4, 2, 2);
-
-	auto** resolutions = getDataset().GetMetadata("Resolutions");
-
-	EXPECT_EQ("1m=", std::string(resolutions[0]));
-	EXPECT_EQ("2m=", std::string(resolutions[1]));
-	EXPECT_EQ(nullptr, resolutions[2]);
-}
-
-TEST_F(IndexDatasetTests, providesARasterBandForEachResolution)
-{
-	addBlock(0, 0, 10, 10, 5);
-	addBlock(0, 0, 10, 10, 2);
-	addBlock(0, 0, 10, 10, 1);
 
 	auto& ds = getDataset();
 
 	EXPECT_THAT(ds.getResolutions(), testing::ElementsAre(1, 2, 5));
-	EXPECT_EQ(3, ds.GetRasterCount());
+
+	auto** resolutions = ds.GetMetadata("Resolutions");
+
+	EXPECT_EQ("1m=", std::string(resolutions[0]));
+	EXPECT_EQ("2m=", std::string(resolutions[1]));
+	EXPECT_EQ("5m=", std::string(resolutions[2]));
+	EXPECT_EQ(nullptr, resolutions[3]);
+}
+
+TEST_F(IndexDatasetTests, providesARasterBand)
+{
+	addBlock(0, 0, 20, 10, 5);
+
+	auto& ds = getDataset();
+
+	ASSERT_EQ(1, ds.GetRasterCount());
+
+	auto& band = *ds.GetRasterBand(1);
+	EXPECT_EQ(20, band.GetXSize());
+	EXPECT_EQ(10, band.GetYSize());
+	EXPECT_EQ(-9999, band.GetNoDataValue());
 }
 
 TEST_F(IndexDatasetTests, providesClutterCodes)

@@ -7,7 +7,7 @@
 class IndexRasterBand: public GDALPamRasterBand
 {
 public:
-	IndexRasterBand(IndexDataset* owningDataSet, int bandIndex, int resolution);
+	IndexRasterBand(IndexDataset* owningDataSet, int bandIndex = 1);
 	
 	virtual char** GetCategoryNames() override;
 
@@ -21,8 +21,5 @@ protected:
 		GSpacing nPixelSpace, GSpacing nLineSpace, GDALRasterIOExtraArg* psExtraArg) override;
 
 private:
-	MapBox bounds;
-	int resolution;
-
 	IndexDataset& getDataset() { return *static_cast<IndexDataset*>(poDS); }
 };

@@ -142,7 +142,11 @@ IndexDataset::IndexDataset(IndexBlocks blocks, std::unique_ptr<std::istream> clu
 
 	setBoundingBox();
 	provideResolutionsAsMetadata();
-	addBands();
+
+	// add a raster band (required for data type, no-data value and clutter names)
+	auto band = new IndexRasterBand(this, 1);
+	band->SetNoDataValue(-9999); // virtual function, must not be called in ctor
+	SetBand(1, band);
 }
 
 
@@ -168,16 +172,6 @@ void IndexDataset::provideResolutionsAsMetadata()
 	{
 		auto item = std::to_string(res) + "m";
 		SetMetadataItem(item.c_str(), "", "Resolutions");
-	}
-}
-
-void IndexDataset::addBands()
-{
-	int i = 1;
-	for (int res : getResolutions())
-	{
-		SetBand(i, new IndexRasterBand(this, i, res));
-		++i;
 	}
 }
 

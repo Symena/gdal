@@ -47,5 +47,4 @@ private:
 
 	void setBoundingBox();
 	void provideResolutionsAsMetadata();
-	void addBands();
 };
