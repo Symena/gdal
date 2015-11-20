@@ -10,7 +10,7 @@ std::unique_ptr<std::istream> IndexFileStreamSource::getStream(IndexWarnings& wa
 {
 	if(!boost::filesystem::exists(path))
 	{
-		warnings.add("File %1% could not be found", boost::filesystem::absolute(path));
+		warnings.add("File %1% could not be found", path);
 
 		return {};
 	}
@@ -19,7 +19,7 @@ std::unique_ptr<std::istream> IndexFileStreamSource::getStream(IndexWarnings& wa
 
 	if (actualFileSize != expectedFileSize)
 	{
-		warnings.add("File %1% has a size of %2% bytes, but should have %3% bytes, it will not be used", boost::filesystem::absolute(path), actualFileSize, expectedFileSize);
+		warnings.add("File %1% has a size of %2% bytes, but should have %3% bytes, it will not be used", path, actualFileSize, expectedFileSize);
 
 		return {};
 	}
@@ -28,7 +28,7 @@ std::unique_ptr<std::istream> IndexFileStreamSource::getStream(IndexWarnings& wa
 
 	if (!(*dataFile))
 	{
-		warnings.add("Could not open file %1%", boost::filesystem::absolute(path));
+		warnings.add("Could not open file %1%", path);
 
 		return {};
 	}

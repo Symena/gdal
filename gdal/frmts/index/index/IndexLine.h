@@ -1,5 +1,6 @@
 #pragma once
 
+#include <boost/filesystem/path.hpp>
 #include <iosfwd>
 #include <string>
 #include <memory>
@@ -20,7 +21,7 @@ class IndexLine
 	bool consistent = true;
 
 public:
-	IndexLine(const std::string& line, IndexWarnings& warnings);
+	IndexLine(const std::string& line, IndexWarnings& warnings, const boost::filesystem::path& dataRoot);
 	IndexLine(int eastMin, int eastMax, int northMin, int northMax, int resolution, std::shared_ptr<IndexStreamSource> dataSource)
 		: eastMin(eastMin)
 		, eastMax(eastMax)
@@ -42,6 +43,6 @@ public:
 	bool isConsistent() const { return consistent; }
 
 private:
-	void initializeMembers(const std::string& line);
+	void initializeMembers(const std::string& line, const boost::filesystem::path& dataRoot);
 	void checkMembers(IndexWarnings& warnings);
 };

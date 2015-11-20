@@ -4,15 +4,16 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
+#include <boost/filesystem/operations.hpp>
 
-IndexLine::IndexLine(const std::string& line, IndexWarnings& warnings)
+IndexLine::IndexLine(const std::string& line, IndexWarnings& warnings, const boost::filesystem::path& dataRoot)
 {
-	initializeMembers(line);
+	initializeMembers(line, dataRoot);
 
 	checkMembers(warnings);
 }
 
-void IndexLine::initializeMembers(const std::string& line)
+void IndexLine::initializeMembers(const std::string& line, const boost::filesystem::path& dataRoot)
 {
 	boost::char_separator<char> delim(" \t\r");
 	boost::tokenizer<boost::char_separator<char>> tokens(line, delim);
@@ -53,8 +54,9 @@ void IndexLine::initializeMembers(const std::string& line)
 		const auto dataWidth = (eastMax - eastMin) / resolution;
 		const auto dataHeight = (northMax - northMin) / resolution;
 		const auto expectedFileSize = dataWidth * dataHeight * sizeof(std::int16_t);
-
-		dataSource = std::make_shared<IndexFileStreamSource>(path, expectedFileSize);
+		
+		auto tilePath = path.is_absolute() ? path : (dataRoot / path);
+		dataSource = std::make_shared<IndexFileStreamSource>(tilePath, expectedFileSize);
 	}
 }
 

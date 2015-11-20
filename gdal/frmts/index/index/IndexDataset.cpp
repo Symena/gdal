@@ -21,8 +21,7 @@ struct membuf: public std::streambuf
 		this->setg(begin, begin, begin + size);
 	}
 };
-
-std::vector<IndexLine> readLines(std::istream& indexFile, IndexWarnings& warnings)
+std::vector<IndexLine> readLines(std::istream& indexFile, IndexWarnings& warnings, const boost::filesystem::path& dataRoot)
 {
 	if (!indexFile.good())
 		throw std::runtime_error("Index file is empty or stream is in a bad or failed state");
@@ -40,7 +39,7 @@ std::vector<IndexLine> readLines(std::istream& indexFile, IndexWarnings& warning
 		if (line.empty())
 			continue;
 
-		lines.emplace_back(line, warnings);
+		lines.emplace_back(line, warnings, dataRoot);
 		if (!lines.back().isConsistent())
 			lines.pop_back();
 	}
@@ -116,7 +115,7 @@ bool IndexDataset::Identify(const boost::filesystem::path& file, std::istream& h
 		std::string line;
 		std::getline(header, line);
 
-		IndexLine l(line, IndexWarnings());
+		IndexLine l(line, IndexWarnings(), file.parent_path());
 	}
 	catch (const std::runtime_error&)
 	{
@@ -127,15 +126,18 @@ bool IndexDataset::Identify(const boost::filesystem::path& file, std::istream& h
 }
 
 IndexDataset::IndexDataset(const boost::filesystem::path& indexFile, IndexWarnings& warnings)
-	: IndexDataset(std::ifstream(indexFile.string()), getClutterCodeStream(indexFile), warnings)
+	: IndexDataset(std::ifstream(indexFile.string()), getClutterCodeStream(indexFile), warnings, indexFile.parent_path())
 {}
 
-IndexDataset::IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream> clutterFile, IndexWarnings& warnings)
-	: IndexDataset(IndexBlocks(readLines(indexFile, warnings)), std::move(clutterFile))
+IndexDataset::IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream> clutterFile, IndexWarnings& warnings,
+	const boost::filesystem::path& dataRoot)
+	: IndexDataset(IndexBlocks(readLines(indexFile, warnings, dataRoot)), std::move(clutterFile), dataRoot)
 {}
 
-IndexDataset::IndexDataset(IndexBlocks blocks, std::unique_ptr<std::istream> clutterFile)
+IndexDataset::IndexDataset(IndexBlocks blocks, std::unique_ptr<std::istream> clutterFile,
+    const boost::filesystem::path& dataRoot)
 	: blocks(std::move(blocks))
+	, dataRoot(dataRoot)
 {
 	if (clutterFile)
 		clutterCodes = IndexClutterCodes(*clutterFile);
@@ -228,7 +230,9 @@ CPLErr IndexDataset::IRasterIO(GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXS
 	const int resY = std::lround(static_cast<double>(nYSize /* in meters */) / nBufYSize);
 	if (resX != resY)
 	{
-		CPLError(CPLErr::CE_Failure, CPLE_NotSupported, "Index data sets only support a uniform x/y resolution");
+		auto message = boost::format("Index data sets only support a uniform x/y resolution. resX=%1% resY=%2% nXSize=%3% nySize=%4% nBufXSize=%5% nBufYSize=%6%")
+			% resX % resY % nXSize % nYSize % nBufXSize % nBufYSize;
+		CPLError(CPLErr::CE_Failure, CPLE_NotSupported, message.str().c_str());
 		return CPLErr::CE_Failure;
 	}
 

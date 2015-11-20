@@ -8,9 +8,9 @@ public:
 
 	IndexWarnings warnings;
 
-	IndexLine getLine(const std::string& line)
+	IndexLine getLine(const std::string& line, const std::string& dataRootDir = {})
 	{
-		return IndexLine(line, warnings);
+		return IndexLine(line, warnings, dataRootDir);
 	}
 
 	size_t warningCount() const { return std::distance(warnings.begin(), warnings.end()); }
@@ -42,6 +42,22 @@ TEST_F(IndexLineTests, parsesRelativePathForwardSlash)
 	auto line = getLine(R"(path/to/file 0 0 0 0 1)");
 
 	EXPECT_EQ("path/to/file", line.getTileDataSource()->getStreamDescription());
+}
+
+TEST_F(IndexLineTests, parsesPathToParent)
+{
+	auto line = getLine(R"(../to/file 0 0 0 0 1)", "parent/path");
+
+	// With boost 1.60 could be changed to "parent/to/file"
+	// see: https://svn.boost.org/trac/boost/ticket/5897
+	EXPECT_EQ(R"(parent/path\../to/file)", line.getTileDataSource()->getStreamDescription());
+}
+
+TEST_F(IndexLineTests, parsesAbsolutePath)
+{
+	auto line = getLine(R"(a:\path\to\file 0 0 0 0 1)", "parent/path");
+
+	EXPECT_EQ(R"(a:\path\to\file)", line.getTileDataSource()->getStreamDescription());
 }
 
 TEST_F(IndexLineTests, parsesWithTabsAndMultipleSpacesAsSeparators)

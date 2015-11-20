@@ -15,7 +15,7 @@ protected:
 	IndexDataset& getDataset()
 	{
 		if (!dataset)
-			dataset = std::make_unique<IndexDataset>(builder.create(), std::move(clutterFile));
+			dataset = std::make_unique<IndexDataset>(builder.create(), std::move(clutterFile), "");
 
 		return *dataset;
 	}

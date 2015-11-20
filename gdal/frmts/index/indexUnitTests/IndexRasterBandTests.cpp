@@ -17,7 +17,7 @@ TEST(IndexRasterBand, dataType)
 
 TEST(IndexRasterBand, clutterNames)
 {
-	IndexDataset heightDataset(IndexBlocks(), nullptr);
+	IndexDataset heightDataset(IndexBlocks(), nullptr, "");
 	IndexRasterBand heightBand(&heightDataset);
 
 	EXPECT_EQ(nullptr, heightBand.GetCategoryNames());
@@ -25,7 +25,7 @@ TEST(IndexRasterBand, clutterNames)
 	auto clutterFile = std::make_unique<std::stringstream>();
 	*clutterFile << "0 sea\n1 rural\n";
 
-	IndexDataset clutterDataset(IndexBlocks(), std::move(clutterFile));
+	IndexDataset clutterDataset(IndexBlocks(), std::move(clutterFile), "");
 	IndexRasterBand clutterBand(&clutterDataset);
 	auto** names = clutterBand.GetCategoryNames();
 
@@ -51,7 +51,7 @@ TEST(IndexRasterBand, rasterIO)
 		{ 10, 12,
 		  14, 16 });
 
-	IndexDataset dataset(builder.create(), nullptr);
+	IndexDataset dataset(builder.create(), nullptr, "");
 	auto& band = *dataset.GetRasterBand(1);
 
 	auto readPixels = [&band](const MapBox& sourceRegion, int widthInPixels, int heightInPixels,

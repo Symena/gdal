@@ -19,8 +19,10 @@ class IndexDataset: public GDALPamDataset
 {
 public:
 	IndexDataset(const boost::filesystem::path& indexFile, IndexWarnings& warnings);
-	IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream> clutterFile, IndexWarnings& warnings);
-	IndexDataset(IndexBlocks blocks, std::unique_ptr<std::istream> clutterFile);
+	IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream> clutterFile, IndexWarnings& warnings,
+		const boost::filesystem::path& dataRoot);
+	IndexDataset(IndexBlocks blocks, std::unique_ptr<std::istream> clutterFile,
+	    const boost::filesystem::path& dataRoot);
 
 	static GDALDataset* Open(GDALOpenInfo* openInfo);
 	static bool Identify(const boost::filesystem::path& file, std::istream& header);
@@ -29,6 +31,7 @@ public:
 	const auto& getResolutions() const { return blocks.getResolutions(); }
 
 	boost::optional<IndexClutterCodes>& getClutterCodes() { return clutterCodes; }
+	const boost::filesystem::path dataRoot;
 
 	bool render(std::int16_t* dst, int dstWidth, int dstHeight, int dstResolution,
 		MapPoint bottomLeftCornerInMeters,
