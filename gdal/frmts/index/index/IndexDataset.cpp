@@ -146,9 +146,7 @@ IndexDataset::IndexDataset(IndexBlocks blocks, std::unique_ptr<std::istream> clu
 	provideResolutionsAsMetadata();
 
 	// add a raster band (required for data type, no-data value and clutter names)
-	auto band = new IndexRasterBand(this, 1);
-	band->SetNoDataValue(-9999); // virtual function, must not be called in ctor
-	SetBand(1, band);
+	SetBand(1, new IndexRasterBand(this, 1));
 }
 
 

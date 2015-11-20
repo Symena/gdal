@@ -35,7 +35,7 @@ TEST(IndexBlock, constructors)
 		if (i == 1)
 			block = IndexBlock(makeLine(-3, 2, 7, 6, 2), 1);
 
-		EXPECT_TRUE(box == block.getBoundingBox());
+		EXPECT_EQ(box, block.getBoundingBox());
 		EXPECT_EQ(10/2, block.getWidthInPixels());
 		EXPECT_EQ(4/2, block.getHeightInPixels());
 		EXPECT_EQ(2, block.getResolution());
@@ -47,10 +47,10 @@ TEST(IndexBlock, constructors)
 TEST(IndexBlocks, constructorSetsBoundingBox)
 {
 	IndexBlocks blocks;
-	EXPECT_TRUE(blocks.getBoundingBox() == makeBox(0, 0, 0, 0));
+	EXPECT_EQ(makeBox(0, 0, 0, 0), blocks.getBoundingBox());
 
 	blocks = IndexBlocks({ makeLine(-3, 2, 7, 6, 2), makeLine(2, -4, 8, 2, 1) });
-	EXPECT_TRUE(blocks.getBoundingBox() == makeBox(-3, -4, 8, 6));
+	EXPECT_EQ(makeBox(-3, -4, 8, 6), blocks.getBoundingBox());
 }
 
 TEST(IndexBlocks, constructorSetsResolutions)

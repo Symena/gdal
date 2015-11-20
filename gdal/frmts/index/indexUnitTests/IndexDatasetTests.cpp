@@ -104,7 +104,6 @@ TEST_F(IndexDatasetTests, providesARasterBand)
 	auto& band = *ds.GetRasterBand(1);
 	EXPECT_EQ(20, band.GetXSize());
 	EXPECT_EQ(10, band.GetYSize());
-	EXPECT_EQ(-9999, band.GetNoDataValue());
 }
 
 TEST_F(IndexDatasetTests, providesClutterCodes)
@@ -114,7 +113,7 @@ TEST_F(IndexDatasetTests, providesClutterCodes)
 
 	auto& actual = getDataset().getClutterCodes();
 
-	ASSERT_EQ(true, actual.is_initialized());
+	ASSERT_TRUE(actual.is_initialized());
 	EXPECT_EQ(2, actual->getNrOfClutterCodes());
 }
 

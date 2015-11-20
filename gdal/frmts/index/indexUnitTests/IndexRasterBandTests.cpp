@@ -3,16 +3,16 @@
 
 #include <gmock/gmock.h>
 
-TEST(IndexRasterBand, bandIndex)
+TEST(IndexRasterBand, constructor)
 {
-	IndexRasterBand band(nullptr, 666);
-	EXPECT_EQ(666, band.GetBand());
-}
+	IndexDataset dataset(IndexBlocks(), nullptr);
+	IndexRasterBand band(&dataset, 666);
 
-TEST(IndexRasterBand, dataType)
-{
-	IndexRasterBand band(nullptr);
+	EXPECT_EQ(666, band.GetBand());
 	EXPECT_EQ(GDALDataType::GDT_Int16, band.GetRasterDataType());
+	EXPECT_EQ(-9999, band.GetNoDataValue());
+
+	EXPECT_EQ(GDALColorInterp::GCI_GrayIndex, band.GetColorInterpretation());
 }
 
 TEST(IndexRasterBand, clutterNames)
@@ -33,12 +33,6 @@ TEST(IndexRasterBand, clutterNames)
 	EXPECT_EQ("sea", std::string(names[0]));
 	EXPECT_EQ("rural", std::string(names[1]));
 	EXPECT_EQ(nullptr, names[2]);
-}
-
-TEST(IndexRasterBand, colorInterpretation)
-{
-	IndexRasterBand band(nullptr);
-	EXPECT_EQ(GDALColorInterp::GCI_GrayIndex, band.GetColorInterpretation());
 }
 
 TEST(IndexRasterBand, rasterIO)

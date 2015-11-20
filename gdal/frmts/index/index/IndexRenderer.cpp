@@ -24,8 +24,7 @@ void IndexRenderer::render()
 {
 	fillWithNoDataValue();
 
-	const auto intersectingBlocks = blocks.getIntersectingBlocks(bounds);
-	for (auto& block : intersectingBlocks)
+	for (auto& block : blocks.getIntersectingBlocks(bounds))
 	{
 		// TODO: skip unnecessarily fine blocks?
 

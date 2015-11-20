@@ -119,7 +119,7 @@ TEST_F(IndexRendererTest, readBlock_returnsNullForNoBlockData)
 	auto actual = renderer.readBlock(block, region);
 
 	EXPECT_EQ(nullptr, actual);
-	EXPECT_TRUE(region == makeBox(0, 0, 0, 0));
+	EXPECT_EQ(makeBox(0, 0, 0, 0), region);
 }
 
 TEST_F(IndexRendererTest, readBlock_throwsForIncompleteStream)
@@ -192,7 +192,7 @@ TEST_F(IndexRendererTest, resample_returnsNullIfTargetRegionSmallerThanQuarterOf
 	int16_t srcPixel = 666;
 	auto actual = renderer.resample(&srcPixel, region, 1);
 
-	EXPECT_TRUE(region == makeBox(0, 0, 0, 0)); // shrinked
+	EXPECT_EQ(makeBox(0, 0, 0, 0), region); // shrunk
 	EXPECT_EQ(nullptr, actual);
 }
 

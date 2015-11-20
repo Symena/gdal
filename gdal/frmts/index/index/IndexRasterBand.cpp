@@ -7,6 +7,8 @@ IndexRasterBand::IndexRasterBand(IndexDataset* owningDataSet, int bandIndex)
 	eDataType = GDT_Int16;
 
 	// nRasterXSize & nRasterYSize are set to the dataset size by GDALDataset::SetBand()
+
+	SetNoDataValue(-9999);
 }
 
 char** IndexRasterBand::GetCategoryNames()
