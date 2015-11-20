@@ -5,7 +5,7 @@
 
 TEST(IndexRasterBand, constructor)
 {
-	IndexDataset dataset(IndexBlocks(), nullptr);
+	IndexDataset dataset(IndexBlocks(), nullptr, "");
 	IndexRasterBand band(&dataset, 666);
 
 	EXPECT_EQ(666, band.GetBand());
