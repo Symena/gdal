@@ -112,11 +112,11 @@ IndexRenderer::UniqueDataPtr IndexRenderer::readBlock(const IndexBlock& block, M
 	auto result = std::make_unique<PixelType[]>(numRegionPixels);
 
 	// read the raw data, flipping the row order (first result row is bottom row)
-	stream->seekg((topPixelOffset * block.getWidthInPixels() + leftPixelOffset) * sizeof(PixelType));
+	stream->seekg((static_cast<size_t>(topPixelOffset) * block.getWidthInPixels() + leftPixelOffset) * sizeof(PixelType));
 	const size_t rowSkip = (block.getWidthInPixels() - regionWidthInPixels) * sizeof(PixelType);
 	for (int y = 0; y < regionHeightInPixels; ++y)
 	{
-		const int flippedY = regionHeightInPixels-1 - y;
+		const size_t flippedY = regionHeightInPixels-1 - y;
 		stream->read(reinterpret_cast<char*>(result.get() + flippedY * regionWidthInPixels),
 			regionWidthInPixels * sizeof(PixelType));
 
@@ -194,8 +194,8 @@ void IndexRenderer::renderRegion(const PixelType* data, const MapBox& region)
 	// render
 	for (int y = srcPixelMinY; y < srcPixelMaxY; ++y)
 	{
-		PixelType* const dstRow = this->data + (bottomPixelOffset + y) * this->widthInPixels + leftPixelOffset;
-		const PixelType* const srcRow = data + y * srcWidthInPixels;
+		PixelType* const dstRow = this->data + static_cast<size_t>(bottomPixelOffset + y) * this->widthInPixels + leftPixelOffset;
+		const PixelType* const srcRow = data + static_cast<size_t>(y) * srcWidthInPixels;
 
 		for (int x = srcPixelMinX; x < srcPixelMaxX; ++x)
 		{
