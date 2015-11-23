@@ -11,6 +11,7 @@
 
 #include "IndexBlocks.h"
 #include "IndexClutterCodes.h"
+#include "IndexDataOrientation.h"
 #include "IndexWarnings.h"
 
 class IndexLine;
@@ -33,7 +34,7 @@ public:
 	boost::optional<IndexClutterCodes>& getClutterCodes() { return clutterCodes; }
 	const boost::filesystem::path dataRoot;
 
-	bool render(std::int16_t* dst, int dstWidth, int dstHeight, int dstResolution,
+	bool render(std::int16_t* dst, IndexDataOrientation dataOrientation, int dstWidth, int dstHeight, int dstResolution,
 		MapPoint bottomLeftCornerInMeters,
 		GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm);
 

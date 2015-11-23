@@ -175,7 +175,7 @@ void IndexDataset::provideResolutionsAsMetadata()
 	}
 }
 
-bool IndexDataset::render(std::int16_t* dst, int dstWidth, int dstHeight, int dstResolution,
+bool IndexDataset::render(std::int16_t* dst, IndexDataOrientation dataOrientation, int dstWidth, int dstHeight, int dstResolution,
 	MapPoint bottomLeftCornerInMeters, GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm)
 {
 	IndexWarnings warnings;
@@ -183,7 +183,7 @@ bool IndexDataset::render(std::int16_t* dst, int dstWidth, int dstHeight, int ds
 
 	try
 	{
-		IndexRenderer renderer(blocks, dst, dstWidth, dstHeight, dstResolution,
+		IndexRenderer renderer(blocks, dst, dataOrientation, dstWidth, dstHeight, dstResolution,
 			bottomLeftCornerInMeters, downsamplingAlgorithm, upsamplingAlgorithm, warnings);
 		renderer.render();
 	}
@@ -240,7 +240,7 @@ CPLErr IndexDataset::IRasterIO(GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXS
 	if (psExtraArg)
 		algorithm = psExtraArg->eResampleAlg;
 
-	bool success = render(static_cast<std::int16_t*>(pData), nBufXSize, nBufYSize, resX,
+	bool success = render(static_cast<std::int16_t*>(pData), IndexDataOrientation::TopDown, nBufXSize, nBufYSize, resX,
 		blocks.getBoundingBox().min_corner() + MapPoint(nXOff, nYOff), algorithm, algorithm);
 
 	return success ? CPLErr::CE_None : CPLErr::CE_Failure;

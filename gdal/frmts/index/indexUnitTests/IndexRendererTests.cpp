@@ -28,7 +28,7 @@ protected:
 
 		data = std::make_unique<int16_t[]>(static_cast<size_t>(widthInPixels) * heightInPixels);
 
-		return IndexRenderer(blocks, data.get(), widthInPixels, heightInPixels, resolution,
+		return IndexRenderer(blocks, data.get(), IndexDataOrientation::BottomUp, widthInPixels, heightInPixels, resolution,
 			region.min_corner(), downsamplingAlgorithm, upsamplingAlgorithm, warnings);
 	}
 

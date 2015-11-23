@@ -4,13 +4,14 @@
 #include <boost/endian/conversion.hpp>
 #include <boost/geometry/algorithms/intersection.hpp>
 
-IndexRenderer::IndexRenderer(const IndexBlocks& blocks, PixelType* data, int widthInPixels,
+IndexRenderer::IndexRenderer(const IndexBlocks& blocks, PixelType* data, IndexDataOrientation dataOrientation, int widthInPixels,
 	int heightInPixels, int resolution, MapPoint bottomLeftCornerInMeters,
 	GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm,
 	IndexWarnings& warnings)
 	: blocks(blocks)
 	, bounds(bottomLeftCornerInMeters, bottomLeftCornerInMeters + MapPoint(widthInPixels * resolution, heightInPixels * resolution))
 	, data(data)
+	, dataOrientation(dataOrientation)
 	, widthInPixels(widthInPixels)
 	, heightInPixels(heightInPixels)
 	, resolution(resolution)
@@ -194,14 +195,15 @@ void IndexRenderer::renderRegion(const PixelType* data, const MapBox& region)
 	// render
 	for (int y = srcPixelMinY; y < srcPixelMaxY; ++y)
 	{
-		PixelType* const dstRow = this->data + static_cast<size_t>(bottomPixelOffset + y) * this->widthInPixels + leftPixelOffset;
+		size_t dstRow = dataOrientation == BottomUp ? (bottomPixelOffset + y) : (heightInPixels - (bottomPixelOffset + y) - 1);
+		PixelType* const dstStart = this->data + dstRow * this->widthInPixels + leftPixelOffset;
 		const PixelType* const srcRow = data + static_cast<size_t>(y) * srcWidthInPixels;
 
 		for (int x = srcPixelMinX; x < srcPixelMaxX; ++x)
 		{
 			const PixelType pixel = srcRow[x];
 			if (pixel != noDataValue)
-				dstRow[x] = pixel;
+				dstStart[x] = pixel;
 		}
 	}
 }

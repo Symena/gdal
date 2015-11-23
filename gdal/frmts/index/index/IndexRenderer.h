@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IndexBlocks.h"
+#include "IndexDataOrientation.h"
 #include "gdal.h"
 
 class IndexRenderer
@@ -14,7 +15,8 @@ private:
 
 	const IndexBlocks& blocks;
 	MapBox bounds; // in meters
-	PixelType* data; // bottom-up
+	PixelType* data;
+	IndexDataOrientation dataOrientation;
 	int widthInPixels;
 	int heightInPixels;
 	int resolution;
@@ -23,7 +25,7 @@ private:
 	IndexWarnings& warnings;
 
 public:
-	IndexRenderer(const IndexBlocks& blocks, PixelType* data, int widthInPixels,
+	IndexRenderer(const IndexBlocks& blocks, PixelType* data, IndexDataOrientation dataOrientation, int widthInPixels,
 		int heightInPixels, int resolution, MapPoint bottomLeftCornerInMeters,
 		GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm,
 		IndexWarnings& warnings);
