@@ -137,19 +137,20 @@ TEST_F(IndexRendererTest, readBlock_throwsForIncompleteStream)
 
 TEST_F(IndexRendererTest, resample_downsampling)
 {
-	// coarse target resolution = 4
-	auto renderer = createRenderer(MapBox(), 4, GRIORA_Bilinear, GRIORA_NearestNeighbour);
+	// coarse target resolution = 5
+	auto renderer = createRenderer(MapBox(), 5, GRIORA_Bilinear, GRIORA_NearestNeighbour);
 
-	auto region = makeBox(0, 0, 9, 6); // 3x2 pixels, finer resolution = 3
+	auto region = makeBox(0, 0, 9, 9); // 3x3 pixels, finer resolution = 3
 	int16_t srcPixels[] =
 		{   0, 100, 200,
-		  300, 400, 500 };
+		  300, 400, 500,
+		  600, 700, 800 };
 	auto actual = renderer.resample(srcPixels, region, 3);
 
-	ASSERT_TRUE(region == makeBox(0, 0, 8, 8)); // 2x2 pixels
+	ASSERT_TRUE(region == makeBox(0, 0, 10, 10)); // 2x2 pixels
 	checkPixels(actual,
-		{  38, 163,
-		  338, 463 });
+		{ 150, 275,
+		  525, 650 });
 }
 
 TEST_F(IndexRendererTest, resample_upsampling)
@@ -170,20 +171,7 @@ TEST_F(IndexRendererTest, resample_upsampling)
 		  500, 550, 600 });
 }
 
-TEST_F(IndexRendererTest, resample_targetRegionIsExactlyQuarterOfASourcePixel)
-{
-	// coarse target resolution = 2
-	auto renderer = createRenderer(MapBox(), 2);
-
-	auto region = makeBox(0, 0, 1, 1); // single pixel, finer resolution = 1
-	int16_t srcPixel = 666;
-	auto actual = renderer.resample(&srcPixel, region, 1);
-
-	ASSERT_TRUE(region == makeBox(0, 0, 2, 2)); // expanded
-	checkPixels(actual, { 666 });
-}
-
-TEST_F(IndexRendererTest, resample_returnsNullIfTargetRegionSmallerThanQuarterOfASourcePixel)
+TEST_F(IndexRendererTest, resample_regionIsCeiled)
 {
 	// coarse target resolution = 4
 	auto renderer = createRenderer(MapBox(), 4);
@@ -192,8 +180,8 @@ TEST_F(IndexRendererTest, resample_returnsNullIfTargetRegionSmallerThanQuarterOf
 	int16_t srcPixel = 666;
 	auto actual = renderer.resample(&srcPixel, region, 1);
 
-	EXPECT_EQ(makeBox(0, 0, 0, 0), region); // shrunk
-	EXPECT_EQ(nullptr, actual);
+	EXPECT_EQ(makeBox(0, 0, 4, 4), region); // expanded
+	checkPixels(actual, { 666 });
 }
 
 

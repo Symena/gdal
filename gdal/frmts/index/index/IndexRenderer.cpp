@@ -144,8 +144,8 @@ IndexRenderer::UniqueDataPtr IndexRenderer::resample(const PixelType* data, MapB
 	const int srcHeight = height(region) / srcResolution;
 
 	const double scalingFactor = static_cast<double>(srcResolution) / resolution;
-	const int newWidth = std::lround(srcWidth * scalingFactor);
-	const int newHeight = std::lround(srcHeight * scalingFactor);
+	const int newWidth = static_cast<int>(std::ceil(srcWidth * scalingFactor));
+	const int newHeight = static_cast<int>(std::ceil(srcHeight * scalingFactor));
 
 	const size_t numNewPixels = static_cast<size_t>(newWidth) * newHeight;
 	if (numNewPixels == 0)
@@ -195,15 +195,18 @@ void IndexRenderer::renderRegion(const PixelType* data, const MapBox& region)
 	// render
 	for (int y = srcPixelMinY; y < srcPixelMaxY; ++y)
 	{
-		size_t dstRow = dataOrientation == BottomUp ? (bottomPixelOffset + y) : (heightInPixels - (bottomPixelOffset + y) - 1);
-		PixelType* const dstStart = this->data + dstRow * this->widthInPixels + leftPixelOffset;
+		size_t dstY = bottomPixelOffset + y;
+		if (dataOrientation == IndexDataOrientation::TopDown)
+			dstY = this->heightInPixels - 1 - dstY;
+
+		PixelType* const dstRow = this->data + dstY * this->widthInPixels + leftPixelOffset;
 		const PixelType* const srcRow = data + static_cast<size_t>(y) * srcWidthInPixels;
 
 		for (int x = srcPixelMinX; x < srcPixelMaxX; ++x)
 		{
 			const PixelType pixel = srcRow[x];
 			if (pixel != noDataValue)
-				dstStart[x] = pixel;
+				dstRow[x] = pixel;
 		}
 	}
 }

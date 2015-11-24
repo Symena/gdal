@@ -72,14 +72,12 @@ TEST(IndexRasterBand, rasterIO)
 	auto pixels = readPixels(makeBox(0, 0, 4, 4), 2, 2, GDALRIOResampleAlg::GRIORA_Bilinear);
 	EXPECT_THAT(pixels, testing::ElementsAre(
 		0, 1, // top-down
-		2, 13 
-		));
+		2, 13));
 
 	// a region with resolution = 1
 	pixels = readPixels(makeBox(2, 1, 4, 4), 2, 3, GDALRIOResampleAlg::GRIORA_NearestNeighbour);
 	EXPECT_THAT(pixels, testing::ElementsAre(
-		1, 1, 
 		1, 1,
-		10, 12
-		));
+		1, 1,
+		10, 12));
 }

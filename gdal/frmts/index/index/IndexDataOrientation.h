@@ -1,6 +1,6 @@
 #pragma once
 
-enum IndexDataOrientation
+enum class IndexDataOrientation
 {
 	TopDown,
 	BottomUp
