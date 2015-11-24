@@ -123,7 +123,7 @@ Renderer::UniqueDataPtr Renderer::readBlock(const Block& block, MapBox& region) 
 		stream->read(reinterpret_cast<char*>(result.get() + flippedY * regionWidthInPixels),
 			regionWidthInPixels * sizeof(PixelType));
 
-		if (flippedY != 0)
+		if (flippedY != 0 && rowSkip)
 			stream->seekg(rowSkip, std::ios_base::cur);
 	}
 
