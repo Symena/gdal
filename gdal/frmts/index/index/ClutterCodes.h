@@ -9,14 +9,16 @@
 
 #include <cpl_string.h>
 
-class IndexClutterCodes
+namespace aircom_map {
+
+class ClutterCodes
 {
 	int maxIndex;
 	CPLStringList gdalClutterCodes;
 
 public:
-	IndexClutterCodes(const boost::filesystem::path& menuFile);
-	IndexClutterCodes(std::istream& menuFile);
+	ClutterCodes(const boost::filesystem::path& menuFile);
+	ClutterCodes(std::istream& menuFile);
 
 	char** getClutterCodes() { return gdalClutterCodes.List(); }
 	size_t getNrOfClutterCodes() { return gdalClutterCodes.size(); }
@@ -27,3 +29,5 @@ private:
 	void createClutterList(std::map<int, std::string>& clutterCodesMap);
 
 };
+
+}

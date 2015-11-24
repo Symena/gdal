@@ -1,12 +1,14 @@
-#include "IndexRasterBand.h"
-#include "IndexBlocksBuilder.h"
+#include "RasterBand.h"
+#include "BlocksBuilder.h"
 
 #include <gmock/gmock.h>
 
-TEST(IndexRasterBand, constructor)
+namespace aircom_map {
+
+TEST(RasterBand, constructor)
 {
-	IndexDataset dataset(IndexBlocks(), nullptr, "");
-	IndexRasterBand band(&dataset, 666);
+	Dataset dataset(Blocks(), nullptr, "");
+	RasterBand band(&dataset, 666);
 
 	EXPECT_EQ(666, band.GetBand());
 	EXPECT_EQ(GDALDataType::GDT_Int16, band.GetRasterDataType());
@@ -15,18 +17,18 @@ TEST(IndexRasterBand, constructor)
 	EXPECT_EQ(GDALColorInterp::GCI_GrayIndex, band.GetColorInterpretation());
 }
 
-TEST(IndexRasterBand, clutterNames)
+TEST(RasterBand, clutterNames)
 {
-	IndexDataset heightDataset(IndexBlocks(), nullptr, "");
-	IndexRasterBand heightBand(&heightDataset);
+	Dataset heightDataset(Blocks(), nullptr, "");
+	RasterBand heightBand(&heightDataset);
 
 	EXPECT_EQ(nullptr, heightBand.GetCategoryNames());
 
 	auto clutterFile = std::make_unique<std::stringstream>();
 	*clutterFile << "0 sea\n1 rural\n";
 
-	IndexDataset clutterDataset(IndexBlocks(), std::move(clutterFile), "");
-	IndexRasterBand clutterBand(&clutterDataset);
+	Dataset clutterDataset(Blocks(), std::move(clutterFile), "");
+	RasterBand clutterBand(&clutterDataset);
 	auto** names = clutterBand.GetCategoryNames();
 
 	ASSERT_NE(nullptr, names);
@@ -35,9 +37,9 @@ TEST(IndexRasterBand, clutterNames)
 	EXPECT_EQ(nullptr, names[2]);
 }
 
-TEST(IndexRasterBand, rasterIO)
+TEST(RasterBand, rasterIO)
 {
-	IndexBlocksBuilder builder;
+	BlocksBuilder builder;
 	builder.addBlock().from(0, 0).to(4, 4).resolution(2).withData(
 		{ 0, 1, // top-down!
 		  2, 3 });
@@ -45,7 +47,7 @@ TEST(IndexRasterBand, rasterIO)
 		{ 10, 12,
 		  14, 16 });
 
-	IndexDataset dataset(builder.create(), nullptr, "");
+	Dataset dataset(builder.create(), nullptr, "");
 	auto& band = *dataset.GetRasterBand(1);
 
 	auto readPixels = [&band](const MapBox& sourceRegion, int widthInPixels, int heightInPixels,
@@ -80,4 +82,6 @@ TEST(IndexRasterBand, rasterIO)
 		1, 1,
 		1, 1,
 		10, 12));
+}
+
 }

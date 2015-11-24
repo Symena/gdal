@@ -1,17 +1,17 @@
-#include "IndexBlocks.h"
+#include "Blocks.h"
 
 #include <gmock/gmock.h>
 
 using std::vector;
 
-namespace {
+namespace aircom_map { namespace {
 
-IndexLine makeLine(int minX, int minY, int maxX, int maxY, int resolution = 1)
+Line makeLine(int minX, int minY, int maxX, int maxY, int resolution = 1)
 {
-	return IndexLine(minX, maxX, minY, maxY, resolution, nullptr);
+	return Line(minX, maxX, minY, maxY, resolution, nullptr);
 }
 
-vector<int> getIndicesOfIntersectingBlocks(IndexBlocks& blocks, int minX, int minY, int maxX, int maxY)
+vector<int> getIndicesOfIntersectingBlocks(Blocks& blocks, int minX, int minY, int maxX, int maxY)
 {
 	auto intersectingBlocks = blocks.getIntersectingBlocks(makeBox(minX, minY, maxX, maxY));
 
@@ -23,17 +23,15 @@ vector<int> getIndicesOfIntersectingBlocks(IndexBlocks& blocks, int minX, int mi
 	return indices;
 }
 
-}
-
-TEST(IndexBlock, constructors)
+TEST(Block, constructors)
 {
 	const auto box = makeBox(-3, 2, 7, 6);
-	IndexBlock block(box, 2, nullptr, 1);
+	Block block(box, 2, nullptr, 1);
 
 	for (int i = 0; i < 2; ++i)
 	{
 		if (i == 1)
-			block = IndexBlock(makeLine(-3, 2, 7, 6, 2), 1);
+			block = Block(makeLine(-3, 2, 7, 6, 2), 1);
 
 		EXPECT_EQ(box, block.getBoundingBox());
 		EXPECT_EQ(10/2, block.getWidthInPixels());
@@ -44,38 +42,38 @@ TEST(IndexBlock, constructors)
 }
 
 
-TEST(IndexBlocks, constructorSetsBoundingBox)
+TEST(Blocks, constructorSetsBoundingBox)
 {
-	IndexBlocks blocks;
+	Blocks blocks;
 	EXPECT_EQ(makeBox(0, 0, 0, 0), blocks.getBoundingBox());
 
-	blocks = IndexBlocks({ makeLine(-3, 2, 7, 6, 2), makeLine(2, -4, 8, 2, 1) });
+	blocks = Blocks({ makeLine(-3, 2, 7, 6, 2), makeLine(2, -4, 8, 2, 1) });
 	EXPECT_EQ(makeBox(-3, -4, 8, 6), blocks.getBoundingBox());
 }
 
-TEST(IndexBlocks, constructorSetsResolutions)
+TEST(Blocks, constructorSetsResolutions)
 {
-	vector<IndexLine> lines = {
+	vector<Line> lines = {
 		makeLine(0, 0, 10, 10, 10),
 		makeLine(0, 0, 10, 10, 2),
 		makeLine(0, 0, 10, 10, 5),
 		makeLine(0, 0, 10, 10, 5),
 	};
-	IndexBlocks blocks(std::move(lines));
+	Blocks blocks(std::move(lines));
 
 	EXPECT_THAT(blocks.getResolutions(), testing::ElementsAre(2, 5, 10));
 }
 
-TEST(IndexBlocks, insertsAndQueriesBlocksCorrectly)
+TEST(Blocks, insertsAndQueriesBlocksCorrectly)
 {
 	// overall: square from (0,0) to (2,2) with 3 differently sized blocks of identical resolution;
 	// upper-right quadrant is overlapping
-	vector<IndexLine> lines = {
+	vector<Line> lines = {
 		makeLine(0, 1, 2, 2),
 		makeLine(0, 0, 1, 1),
 		makeLine(1, 0, 2, 2)
 	};
-	IndexBlocks blocks(std::move(lines));
+	Blocks blocks(std::move(lines));
 
 	auto all = getIndicesOfIntersectingBlocks(blocks, 0, 0, 2, 2);
 	EXPECT_THAT(all, testing::ElementsAre(0, 1, 2));
@@ -99,15 +97,17 @@ TEST(IndexBlocks, insertsAndQueriesBlocksCorrectly)
 	EXPECT_EQ(true, adjacentRight.empty());
 }
 
-TEST(IndexBlocks, queriedBlocksAreOrderedByResolutionAndIndex)
+TEST(Blocks, queriedBlocksAreOrderedByResolutionAndIndex)
 {
-	vector<IndexLine> lines = {
+	vector<Line> lines = {
 		makeLine(0, 0, 1, 1, 1),
 		makeLine(0, 0, 2, 2, 2),
 		makeLine(0, 0, 2, 2, 2)
 	};
-	IndexBlocks blocks(std::move(lines));
+	Blocks blocks(std::move(lines));
 
 	auto indices = getIndicesOfIntersectingBlocks(blocks, 0, 0, 1, 1);
 	EXPECT_THAT(indices, testing::ElementsAre(1, 2, 0));
 }
+
+}}

@@ -1,21 +1,23 @@
-#include "IndexDataset.h"
+#include "Dataset.h"
 
-#include "IndexBlocksBuilder.h"
+#include "BlocksBuilder.h"
 
 #include <gmock/gmock.h>
 
-class IndexDatasetTests : public testing::Test
+namespace aircom_map {
+
+class DatasetTests : public testing::Test
 {
 	std::unique_ptr<std::stringstream> clutterFile;
-	std::unique_ptr<IndexDataset> dataset;
+	std::unique_ptr<Dataset> dataset;
 
 protected:
-	IndexBlocksBuilder builder;
+	BlocksBuilder builder;
 
-	IndexDataset& getDataset()
+	Dataset& getDataset()
 	{
 		if (!dataset)
-			dataset = std::make_unique<IndexDataset>(builder.create(), std::move(clutterFile), "");
+			dataset = std::make_unique<Dataset>(builder.create(), std::move(clutterFile), "");
 
 		return *dataset;
 	}
@@ -55,7 +57,7 @@ protected:
 	}
 };
 
-TEST_F(IndexDatasetTests, sizeOfInitialRasterIsZero)
+TEST_F(DatasetTests, sizeOfInitialRasterIsZero)
 {
 	auto& ds = getDataset();
 
@@ -63,7 +65,7 @@ TEST_F(IndexDatasetTests, sizeOfInitialRasterIsZero)
 	EXPECT_EQ(0, ds.GetRasterYSize());
 }
 
-TEST_F(IndexDatasetTests, rasterSizeFromMultipleBlocks)
+TEST_F(DatasetTests, rasterSizeFromMultipleBlocks)
 {
 	addBlock( 0, 0, 1, 2, 1);
 	addBlock(-1, 4, 0, 6, 1);
@@ -75,7 +77,7 @@ TEST_F(IndexDatasetTests, rasterSizeFromMultipleBlocks)
 	EXPECT_EQ(14, ds.GetRasterYSize());
 }
 
-TEST_F(IndexDatasetTests, providesResolutionsAsMetadata)
+TEST_F(DatasetTests, providesResolutionsAsMetadata)
 {
 	addBlock(0, 0, 5, 5, 5);
 	addBlock(0, 0, 2, 2, 1);
@@ -93,7 +95,7 @@ TEST_F(IndexDatasetTests, providesResolutionsAsMetadata)
 	EXPECT_EQ(nullptr, resolutions[3]);
 }
 
-TEST_F(IndexDatasetTests, providesARasterBand)
+TEST_F(DatasetTests, providesARasterBand)
 {
 	addBlock(0, 0, 20, 10, 5);
 
@@ -106,7 +108,7 @@ TEST_F(IndexDatasetTests, providesARasterBand)
 	EXPECT_EQ(10, band.GetYSize());
 }
 
-TEST_F(IndexDatasetTests, providesClutterCodes)
+TEST_F(DatasetTests, providesClutterCodes)
 {
 	addClutter(0, "sea");
 	addClutter(1, "rural");
@@ -117,7 +119,7 @@ TEST_F(IndexDatasetTests, providesClutterCodes)
 	EXPECT_EQ(2, actual->getNrOfClutterCodes());
 }
 
-TEST_F(IndexDatasetTests, setsGeoTransformAccordingToBoundingBox)
+TEST_F(DatasetTests, setsGeoTransformAccordingToBoundingBox)
 {
 	addBlock(1, 3, 3, 4, 1);
 	addBlock(3, 4, 4, 6, 1);
@@ -136,7 +138,7 @@ TEST_F(IndexDatasetTests, setsGeoTransformAccordingToBoundingBox)
 	ASSERT_THAT(actual, ::testing::ElementsAreArray(expected));
 }
 
-TEST_F(IndexDatasetTests, rasterIO)
+TEST_F(DatasetTests, rasterIO)
 {
 	builder.addBlock().from(0, 0).to(4, 4).resolution(2).withData(
 		{ 0, 1, // top-down!
@@ -160,7 +162,7 @@ TEST_F(IndexDatasetTests, rasterIO)
 }
 
 
-class IndexDatasetIdentifyTests : public ::testing::Test
+class DatasetIdentifyTests : public ::testing::Test
 {
 	boost::filesystem::path fileName = "index.txt";
 	std::stringstream header;
@@ -171,32 +173,34 @@ public:
 
 	bool identify()
 	{
-		return IndexDataset::Identify(fileName, header);
+		return Dataset::Identify(fileName, header);
 	}
 };
 
-TEST_F(IndexDatasetIdentifyTests, IdentificationFailsOnWrongFileName)
+TEST_F(DatasetIdentifyTests, IdentificationFailsOnWrongFileName)
 {
 	setFileName("afile.txt");
 
 	EXPECT_FALSE(identify());
 }
 
-TEST_F(IndexDatasetIdentifyTests, IdentificationFailsOnEmptyHeader)
+TEST_F(DatasetIdentifyTests, IdentificationFailsOnEmptyHeader)
 {
 	EXPECT_FALSE(identify());
 }
 
-TEST_F(IndexDatasetIdentifyTests, IdentificationFailsOnMalformedHeader)
+TEST_F(DatasetIdentifyTests, IdentificationFailsOnMalformedHeader)
 {
 	setHeader("asdklöfjöasldkfj");
 
 	EXPECT_FALSE(identify());
 }
 
-TEST_F(IndexDatasetIdentifyTests, IdentificationWorksIfFirstLineCanBeParsed)
+TEST_F(DatasetIdentifyTests, IdentificationWorksIfFirstLineCanBeParsed)
 {
 	setHeader("file 0 1 0 1 1 \n garbage");
 
 	EXPECT_TRUE(identify());
+}
+
 }

@@ -1,4 +1,4 @@
-#include "IndexDataset.h"
+#include "Dataset.h"
 
 #include <iostream>
 #include <sstream>
@@ -8,9 +8,11 @@
 #include <boost/filesystem.hpp>
 #include <boost/range/algorithm.hpp>
 
-#include "IndexRasterBand.h"
-#include "IndexRenderer.h"
-#include "IndexWarningsReporter.h"
+#include "RasterBand.h"
+#include "Renderer.h"
+#include "WarningsReporter.h"
+
+namespace aircom_map {
 
 namespace {
 
@@ -21,12 +23,12 @@ struct membuf: public std::streambuf
 		this->setg(begin, begin, begin + size);
 	}
 };
-std::vector<IndexLine> readLines(std::istream& indexFile, IndexWarnings& warnings, const boost::filesystem::path& dataRoot)
+std::vector<Line> readLines(std::istream& indexFile, Warnings& warnings, const boost::filesystem::path& dataRoot)
 {
 	if (!indexFile.good())
 		throw std::runtime_error("Index file is empty or stream is in a bad or failed state");
 
-	std::vector<IndexLine> lines;
+	std::vector<Line> lines;
 
 	size_t readLines = 0;
 	while (indexFile.good())
@@ -34,7 +36,7 @@ std::vector<IndexLine> readLines(std::istream& indexFile, IndexWarnings& warning
 		std::string line;
 		std::getline(indexFile, line);
 		++readLines;
-		IndexWarningsContext lineNumber(warnings, "Line %d: ", readLines);
+		WarningsContext lineNumber(warnings, "Line %d: ", readLines);
 
 		if (line.empty())
 			continue;
@@ -59,7 +61,7 @@ std::unique_ptr<std::istream> getClutterCodeStream(const boost::filesystem::path
 
 }
 
-GDALDataset* IndexDataset::Open(GDALOpenInfo* openInfo)
+GDALDataset* Dataset::Open(GDALOpenInfo* openInfo)
 {
 	if (openInfo->pszFilename == nullptr || openInfo->pabyHeader == nullptr || openInfo->fpL == nullptr)
 		return nullptr;
@@ -81,15 +83,15 @@ GDALDataset* IndexDataset::Open(GDALOpenInfo* openInfo)
 	if (!Identify(indexFile, header))
 		return nullptr;
 
-	IndexWarnings warnings;
-	IndexWarningsReporter warningsReporter(warnings);
+	Warnings warnings;
+	WarningsReporter warningsReporter(warnings);
 
-	std::unique_ptr<IndexDataset> dataSet;
+	std::unique_ptr<Dataset> dataSet;
 
 	try
 	{
-		IndexWarningsContext context(warnings, boost::filesystem::absolute(indexFile).string() + ": ");
-		dataSet = std::make_unique<IndexDataset>(indexFile, warnings);
+		WarningsContext context(warnings, boost::filesystem::absolute(indexFile).string() + ": ");
+		dataSet = std::make_unique<Dataset>(indexFile, warnings);
 	}
 	catch (const std::runtime_error& e)
 	{
@@ -105,7 +107,7 @@ GDALDataset* IndexDataset::Open(GDALOpenInfo* openInfo)
 	return dataSet.release();
 }
 
-bool IndexDataset::Identify(const boost::filesystem::path& file, std::istream& header)
+bool Dataset::Identify(const boost::filesystem::path& file, std::istream& header)
 {
 	if (file.filename() != "index.txt")
 		return false;
@@ -115,7 +117,7 @@ bool IndexDataset::Identify(const boost::filesystem::path& file, std::istream& h
 		std::string line;
 		std::getline(header, line);
 
-		IndexLine l(line, IndexWarnings(), file.parent_path());
+		Line l(line, Warnings(), file.parent_path());
 	}
 	catch (const std::runtime_error&)
 	{
@@ -125,32 +127,32 @@ bool IndexDataset::Identify(const boost::filesystem::path& file, std::istream& h
 	return true;
 }
 
-IndexDataset::IndexDataset(const boost::filesystem::path& indexFile, IndexWarnings& warnings)
-	: IndexDataset(std::ifstream(indexFile.string()), getClutterCodeStream(indexFile), warnings, indexFile.parent_path())
+Dataset::Dataset(const boost::filesystem::path& indexFile, Warnings& warnings)
+	: Dataset(std::ifstream(indexFile.string()), getClutterCodeStream(indexFile), warnings, indexFile.parent_path())
 {}
 
-IndexDataset::IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream> clutterFile, IndexWarnings& warnings,
+Dataset::Dataset(std::istream& indexFile, std::unique_ptr<std::istream> clutterFile, Warnings& warnings,
 	const boost::filesystem::path& dataRoot)
-	: IndexDataset(IndexBlocks(readLines(indexFile, warnings, dataRoot)), std::move(clutterFile), dataRoot)
+	: Dataset(Blocks(readLines(indexFile, warnings, dataRoot)), std::move(clutterFile), dataRoot)
 {}
 
-IndexDataset::IndexDataset(IndexBlocks blocks, std::unique_ptr<std::istream> clutterFile,
+Dataset::Dataset(Blocks blocks, std::unique_ptr<std::istream> clutterFile,
     const boost::filesystem::path& dataRoot)
 	: blocks(std::move(blocks))
 	, dataRoot(dataRoot)
 {
 	if (clutterFile)
-		clutterCodes = IndexClutterCodes(*clutterFile);
+		clutterCodes = ClutterCodes(*clutterFile);
 
 	setBoundingBox();
 	provideResolutionsAsMetadata();
 
 	// add a raster band (required for data type, no-data value and clutter names)
-	SetBand(1, new IndexRasterBand(this, 1));
+	SetBand(1, new RasterBand(this, 1));
 }
 
 
-void IndexDataset::setBoundingBox()
+void Dataset::setBoundingBox()
 {
 	const auto& bounds = getBoundingBox();
 	nRasterXSize = width(bounds);
@@ -166,7 +168,7 @@ void IndexDataset::setBoundingBox()
 	SetGeoTransform(transformMatrix);
 }
 
-void IndexDataset::provideResolutionsAsMetadata()
+void Dataset::provideResolutionsAsMetadata()
 {
 	for (int res : getResolutions())
 	{
@@ -175,15 +177,15 @@ void IndexDataset::provideResolutionsAsMetadata()
 	}
 }
 
-bool IndexDataset::render(std::int16_t* dst, IndexDataOrientation dataOrientation, int dstWidth, int dstHeight, int dstResolution,
+bool Dataset::render(std::int16_t* dst, DataOrientation dataOrientation, int dstWidth, int dstHeight, int dstResolution,
 	MapPoint bottomLeftCornerInMeters, GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm)
 {
-	IndexWarnings warnings;
-	IndexWarningsReporter warningsReporter(warnings);
+	Warnings warnings;
+	WarningsReporter warningsReporter(warnings);
 
 	try
 	{
-		IndexRenderer renderer(blocks, dst, dataOrientation, dstWidth, dstHeight, dstResolution,
+		Renderer renderer(blocks, dst, dataOrientation, dstWidth, dstHeight, dstResolution,
 			bottomLeftCornerInMeters, downsamplingAlgorithm, upsamplingAlgorithm, warnings);
 		renderer.render();
 	}
@@ -196,7 +198,7 @@ bool IndexDataset::render(std::int16_t* dst, IndexDataOrientation dataOrientatio
 	return true;
 }
 
-CPLErr IndexDataset::IRasterIO(GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXSize, int nYSize,
+CPLErr Dataset::IRasterIO(GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXSize, int nYSize,
 	void* pData, int nBufXSize, int nBufYSize, GDALDataType eBufType,
 	int nBandCount, int *panBandMap,
 	GSpacing nPixelSpace, GSpacing nLineSpace, GSpacing nBandSpace,
@@ -240,8 +242,10 @@ CPLErr IndexDataset::IRasterIO(GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXS
 	if (psExtraArg)
 		algorithm = psExtraArg->eResampleAlg;
 
-	bool success = render(static_cast<std::int16_t*>(pData), IndexDataOrientation::TopDown, nBufXSize, nBufYSize, resX,
+	bool success = render(static_cast<std::int16_t*>(pData), DataOrientation::TopDown, nBufXSize, nBufYSize, resX,
 		blocks.getBoundingBox().min_corner() + MapPoint(nXOff, nYOff), algorithm, algorithm);
 
 	return success ? CPLErr::CE_None : CPLErr::CE_Failure;
+}
+
 }

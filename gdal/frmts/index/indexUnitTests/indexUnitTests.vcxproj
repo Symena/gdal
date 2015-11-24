@@ -154,13 +154,13 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="IndexBlocksTests.cpp" />
-    <ClCompile Include="IndexClutterCodesTests.cpp" />
-    <ClCompile Include="IndexDatasetTests.cpp" />
-    <ClCompile Include="IndexLineTests.cpp" />
-    <ClCompile Include="IndexRasterBandTests.cpp" />
-    <ClCompile Include="IndexRendererTests.cpp" />
-    <ClCompile Include="IndexWarningsTests.cpp" />
+    <ClCompile Include="BlocksTests.cpp" />
+    <ClCompile Include="ClutterCodesTests.cpp" />
+    <ClCompile Include="DatasetTests.cpp" />
+    <ClCompile Include="LineTests.cpp" />
+    <ClCompile Include="RasterBandTests.cpp" />
+    <ClCompile Include="RendererTests.cpp" />
+    <ClCompile Include="WarningsTests.cpp" />
     <ClCompile Include="ResamplingTests.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -169,7 +169,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="IndexBlocksBuilder.h" />
+    <ClInclude Include="BlocksBuilder.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

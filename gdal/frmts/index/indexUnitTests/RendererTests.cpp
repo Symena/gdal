@@ -1,21 +1,23 @@
-#include "IndexRenderer.h"
-#include "IndexBlocksBuilder.h"
+#include "Renderer.h"
+#include "BlocksBuilder.h"
 
 #include <gmock/gmock.h>
 
 using std::int16_t;
 using std::vector;
 
-struct IndexRendererTest : public testing::Test
+namespace aircom_map {
+
+struct RendererTest : public testing::Test
 {
-	IndexBlocks blocks;
+	Blocks blocks;
 	std::unique_ptr<int16_t[]> data;
 
 protected:
-	IndexBlocksBuilder builder;
-	IndexWarnings warnings;
+	BlocksBuilder builder;
+	Warnings warnings;
 
-	IndexRenderer createRenderer(const MapBox& region, int resolution = 1,
+	Renderer createRenderer(const MapBox& region, int resolution = 1,
 		GDALRIOResampleAlg downsamplingAlgorithm = GDALRIOResampleAlg::GRIORA_NearestNeighbour,
 		GDALRIOResampleAlg upsamplingAlgorithm = GDALRIOResampleAlg::GRIORA_NearestNeighbour)
 	{
@@ -28,18 +30,18 @@ protected:
 
 		data = std::make_unique<int16_t[]>(static_cast<size_t>(widthInPixels) * heightInPixels);
 
-		return IndexRenderer(blocks, data.get(), IndexDataOrientation::BottomUp, widthInPixels, heightInPixels, resolution,
+		return Renderer(blocks, data.get(), DataOrientation::BottomUp, widthInPixels, heightInPixels, resolution,
 			region.min_corner(), downsamplingAlgorithm, upsamplingAlgorithm, warnings);
 	}
 
-	static IndexBlock makeBlock(int minX, int minY, int maxX, int maxY, int resolution, vector<int16_t> topDownData)
+	static Block makeBlock(int minX, int minY, int maxX, int maxY, int resolution, vector<int16_t> topDownData)
 	{
-		IndexBlocksBuilder builder;
+		BlocksBuilder builder;
 		builder.addBlock().from(minX, minY).to(maxX, maxY).resolution(resolution).withData(std::move(topDownData));
 		return builder.getLastBlock();
 	}
 
-	static void checkPixels(IndexRenderer& renderer, const vector<int16_t>& expected)
+	static void checkPixels(Renderer& renderer, const vector<int16_t>& expected)
 	{
 		const size_t numActualPixels = renderer.getNumPixels();
 		ASSERT_EQ(expected.size(), numActualPixels);
@@ -59,7 +61,7 @@ protected:
 
 // fillWithNoDataValue()
 
-TEST_F(IndexRendererTest, fillWithNoDataValue)
+TEST_F(RendererTest, fillWithNoDataValue)
 {
 	auto renderer = createRenderer(makeBox(0, 0, 4, 2), 2); // 2x1 pixels
 	EXPECT_EQ(2, renderer.getNumPixels());
@@ -72,7 +74,7 @@ TEST_F(IndexRendererTest, fillWithNoDataValue)
 
 // readBlock()
 
-TEST_F(IndexRendererTest, readBlock_full)
+TEST_F(RendererTest, readBlock_full)
 {
 	auto renderer = createRenderer(MapBox());
 
@@ -89,7 +91,7 @@ TEST_F(IndexRendererTest, readBlock_full)
 		  0, 1 });
 }
 
-TEST_F(IndexRendererTest, readBlock_partial)
+TEST_F(RendererTest, readBlock_partial)
 {
 	auto renderer = createRenderer(MapBox());
 
@@ -109,11 +111,11 @@ TEST_F(IndexRendererTest, readBlock_partial)
 		   6,  7 });
 }
 
-TEST_F(IndexRendererTest, readBlock_returnsNullForNoBlockData)
+TEST_F(RendererTest, readBlock_returnsNullForNoBlockData)
 {
 	auto renderer = createRenderer(MapBox());
 
-	IndexBlock block(makeBox(0, 0, 1, 1), 1, nullptr, 0);
+	Block block(makeBox(0, 0, 1, 1), 1, nullptr, 0);
 	auto region = block.getBoundingBox();
 
 	auto actual = renderer.readBlock(block, region);
@@ -122,7 +124,7 @@ TEST_F(IndexRendererTest, readBlock_returnsNullForNoBlockData)
 	EXPECT_EQ(makeBox(0, 0, 0, 0), region);
 }
 
-TEST_F(IndexRendererTest, readBlock_throwsForIncompleteStream)
+TEST_F(RendererTest, readBlock_throwsForIncompleteStream)
 {
 	auto renderer = createRenderer(MapBox());
 
@@ -135,7 +137,7 @@ TEST_F(IndexRendererTest, readBlock_throwsForIncompleteStream)
 
 // resample()
 
-TEST_F(IndexRendererTest, resample_downsampling)
+TEST_F(RendererTest, resample_downsampling)
 {
 	// coarse target resolution = 5
 	auto renderer = createRenderer(MapBox(), 5, GRIORA_Bilinear, GRIORA_NearestNeighbour);
@@ -153,7 +155,7 @@ TEST_F(IndexRendererTest, resample_downsampling)
 		  525, 650 });
 }
 
-TEST_F(IndexRendererTest, resample_upsampling)
+TEST_F(RendererTest, resample_upsampling)
 {
 	// fine target resolution = 3
 	auto renderer = createRenderer(MapBox(), 3, GRIORA_NearestNeighbour, GRIORA_Bilinear);
@@ -171,7 +173,7 @@ TEST_F(IndexRendererTest, resample_upsampling)
 		  500, 550, 600 });
 }
 
-TEST_F(IndexRendererTest, resample_regionIsCeiled)
+TEST_F(RendererTest, resample_regionIsCeiled)
 {
 	// coarse target resolution = 4
 	auto renderer = createRenderer(MapBox(), 4);
@@ -187,7 +189,7 @@ TEST_F(IndexRendererTest, resample_regionIsCeiled)
 
 // renderRegion()
 
-TEST_F(IndexRendererTest, renderRegion_supportsEmptyRegion)
+TEST_F(RendererTest, renderRegion_supportsEmptyRegion)
 {
 	auto renderer = createRenderer(makeBox(0, 0, 2, 2), 2); // 1x1 pixels
 
@@ -197,7 +199,7 @@ TEST_F(IndexRendererTest, renderRegion_supportsEmptyRegion)
 	checkPixels(renderer, { -9999 });
 }
 
-TEST_F(IndexRendererTest, renderRegion_doesNotCopyNoDataPixels)
+TEST_F(RendererTest, renderRegion_doesNotCopyNoDataPixels)
 {
 	auto renderer = createRenderer(makeBox(0, 0, 6, 2), 2); // 3x1 pixels
 
@@ -211,7 +213,7 @@ TEST_F(IndexRendererTest, renderRegion_doesNotCopyNoDataPixels)
 	checkPixels(renderer, { 2, -9999, 1 });
 }
 
-TEST_F(IndexRendererTest, renderRegion_realignsSourceCorrectly)
+TEST_F(RendererTest, renderRegion_realignsSourceCorrectly)
 {
 	auto renderer = createRenderer(makeBox(0, 0, 12, 8), 4); // 3x2 pixels
 
@@ -230,7 +232,7 @@ TEST_F(IndexRendererTest, renderRegion_realignsSourceCorrectly)
 		  3, 4, 5 });
 }
 
-TEST_F(IndexRendererTest, renderRegion_sourceIsClipped)
+TEST_F(RendererTest, renderRegion_sourceIsClipped)
 {
 	auto renderer = createRenderer(makeBox(0, 0, 12, 8), 4); // 3x2 pixels
 
@@ -258,7 +260,7 @@ TEST_F(IndexRendererTest, renderRegion_sourceIsClipped)
 
 // render()
 
-TEST_F(IndexRendererTest, render_noResampling)
+TEST_F(RendererTest, render_noResampling)
 {
 	const auto region = makeBox(0, 0, 8, 6); // 4x3 pixels
 
@@ -279,7 +281,7 @@ TEST_F(IndexRendererTest, render_noResampling)
 		  -9999, -9999, -9999, -9999 });
 }
 
-TEST_F(IndexRendererTest, render_withResampling)
+TEST_F(RendererTest, render_withResampling)
 {
 	const auto region = makeBox(0, 0, 8, 6); // 4x3 pixels
 
@@ -300,4 +302,6 @@ TEST_F(IndexRendererTest, render_withResampling)
 		{ 1,  1, -9999, -9999,
 		  1,  1, -9999,    23,
 		  0, 10,    11, -9999 });
+}
+
 }

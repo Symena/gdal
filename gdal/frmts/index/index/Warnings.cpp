@@ -1,18 +1,19 @@
-#include "IndexWarnings.h"
+#include "Warnings.h"
 
+namespace aircom_map {
 
-void IndexWarnings::add(const std::string& warning)
+void Warnings::add(const std::string& warning)
 {
 	warnings.push_back(currentContext + warning);
 }
 
-void IndexWarnings::pushContext(const std::string& context)
+void Warnings::pushContext(const std::string& context)
 {
 	this->currentContext += context;
 	activeContexts.push_back(context);
 }
 
-void IndexWarnings::popContext()
+void Warnings::popContext()
 {
 	activeContexts.pop_back();
 
@@ -20,4 +21,6 @@ void IndexWarnings::popContext()
 
 	for(const auto& context : activeContexts)
 		currentContext += context;
+}
+
 }

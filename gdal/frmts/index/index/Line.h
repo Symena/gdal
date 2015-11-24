@@ -5,10 +5,12 @@
 #include <string>
 #include <memory>
 
-#include "IndexStreamSource.h"
-#include "IndexWarnings.h"
+#include "StreamSource.h"
+#include "Warnings.h"
 
-class IndexLine
+namespace aircom_map {
+
+class Line
 {
 	int eastMin = 0;
 	int eastMax = 0;
@@ -16,13 +18,13 @@ class IndexLine
 	int northMax = 0;
 	int resolution = 0;
 
-	std::shared_ptr<IndexStreamSource> dataSource;
+	std::shared_ptr<StreamSource> dataSource;
 
 	bool consistent = true;
 
 public:
-	IndexLine(const std::string& line, IndexWarnings& warnings, const boost::filesystem::path& dataRoot);
-	IndexLine(int eastMin, int eastMax, int northMin, int northMax, int resolution, std::shared_ptr<IndexStreamSource> dataSource)
+	Line(const std::string& line, Warnings& warnings, const boost::filesystem::path& dataRoot);
+	Line(int eastMin, int eastMax, int northMin, int northMax, int resolution, std::shared_ptr<StreamSource> dataSource)
 		: eastMin(eastMin)
 		, eastMax(eastMax)
 		, northMin(northMin)
@@ -31,7 +33,7 @@ public:
 		, dataSource(std::move(dataSource))
 	{}
 
-	const std::shared_ptr<IndexStreamSource>& getTileDataSource() const { return dataSource; }
+	const std::shared_ptr<StreamSource>& getTileDataSource() const { return dataSource; }
 
 	int getTileEastMin() const { return eastMin; }
 	int getTileEastMax() const { return eastMax; }
@@ -44,5 +46,7 @@ public:
 
 private:
 	void initializeMembers(const std::string& line, const boost::filesystem::path& dataRoot);
-	void checkMembers(IndexWarnings& warnings);
+	void checkMembers(Warnings& warnings);
 };
+
+}

@@ -1,4 +1,4 @@
-#include "IndexLine.h"
+#include "Line.h"
 
 #include <string>
 
@@ -6,14 +6,16 @@
 #include <boost/tokenizer.hpp>
 #include <boost/filesystem/operations.hpp>
 
-IndexLine::IndexLine(const std::string& line, IndexWarnings& warnings, const boost::filesystem::path& dataRoot)
+namespace aircom_map {
+
+Line::Line(const std::string& line, Warnings& warnings, const boost::filesystem::path& dataRoot)
 {
 	initializeMembers(line, dataRoot);
 
 	checkMembers(warnings);
 }
 
-void IndexLine::initializeMembers(const std::string& line, const boost::filesystem::path& dataRoot)
+void Line::initializeMembers(const std::string& line, const boost::filesystem::path& dataRoot)
 {
 	boost::char_separator<char> delim(" \t\r");
 	boost::tokenizer<boost::char_separator<char>> tokens(line, delim);
@@ -56,11 +58,11 @@ void IndexLine::initializeMembers(const std::string& line, const boost::filesyst
 		const auto expectedFileSize = dataWidth * dataHeight * sizeof(std::int16_t);
 		
 		auto tilePath = path.is_absolute() ? path : (dataRoot / path);
-		dataSource = std::make_shared<IndexFileStreamSource>(tilePath, expectedFileSize);
+		dataSource = std::make_shared<FileStreamSource>(tilePath, expectedFileSize);
 	}
 }
 
-void IndexLine::checkMembers(IndexWarnings& warnings)
+void Line::checkMembers(Warnings& warnings)
 {
 	if (resolution < 1)
 	{
@@ -81,4 +83,6 @@ void IndexLine::checkMembers(IndexWarnings& warnings)
 			consistent = false;
 		}
 	}
+}
+
 }

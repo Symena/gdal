@@ -1,13 +1,15 @@
-#include "IndexRenderer.h"
+#include "Renderer.h"
 #include "Resampling.h"
 
 #include <boost/endian/conversion.hpp>
 #include <boost/geometry/algorithms/intersection.hpp>
 
-IndexRenderer::IndexRenderer(const IndexBlocks& blocks, PixelType* data, IndexDataOrientation dataOrientation, int widthInPixels,
+namespace aircom_map {
+
+Renderer::Renderer(const Blocks& blocks, PixelType* data, DataOrientation dataOrientation, int widthInPixels,
 	int heightInPixels, int resolution, MapPoint bottomLeftCornerInMeters,
 	GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm,
-	IndexWarnings& warnings)
+	Warnings& warnings)
 	: blocks(blocks)
 	, bounds(bottomLeftCornerInMeters, bottomLeftCornerInMeters + MapPoint(widthInPixels * resolution, heightInPixels * resolution))
 	, data(data)
@@ -21,7 +23,7 @@ IndexRenderer::IndexRenderer(const IndexBlocks& blocks, PixelType* data, IndexDa
 {}
 
 
-void IndexRenderer::render()
+void Renderer::render()
 {
 	fillWithNoDataValue();
 
@@ -52,7 +54,7 @@ void IndexRenderer::render()
 	}
 }
 
-void IndexRenderer::fillWithNoDataValue()
+void Renderer::fillWithNoDataValue()
 {
 	const size_t numPixels = getNumPixels();
 
@@ -78,7 +80,7 @@ void IndexRenderer::fillWithNoDataValue()
 		data[i] = noDataValue;
 }
 
-IndexRenderer::UniqueDataPtr IndexRenderer::readBlock(const IndexBlock& block, MapBox& region) const
+Renderer::UniqueDataPtr Renderer::readBlock(const Block& block, MapBox& region) const
 {
 	auto stream = block.getData(warnings);
 	if (!stream)
@@ -138,7 +140,7 @@ IndexRenderer::UniqueDataPtr IndexRenderer::readBlock(const IndexBlock& block, M
 	return result;
 }
 
-IndexRenderer::UniqueDataPtr IndexRenderer::resample(const PixelType* data, MapBox& region, int srcResolution) const
+Renderer::UniqueDataPtr Renderer::resample(const PixelType* data, MapBox& region, int srcResolution) const
 {
 	const int srcWidth = width(region) / srcResolution;
 	const int srcHeight = height(region) / srcResolution;
@@ -157,14 +159,14 @@ IndexRenderer::UniqueDataPtr IndexRenderer::resample(const PixelType* data, MapB
 	auto newData = std::make_unique<PixelType[]>(numNewPixels);
 
 	const auto algorithm = (scalingFactor < 1 ? downsamplingAlgorithm : upsamplingAlgorithm);
-	::resample(data, srcWidth, srcHeight, newData.get(), newWidth, newHeight, GDALDataType::GDT_Int16, algorithm, noDataValue);
+	aircom_map::resample(data, srcWidth, srcHeight, newData.get(), newWidth, newHeight, GDALDataType::GDT_Int16, algorithm, noDataValue);
 
 	region.max_corner() = region.min_corner() + MapPoint(newWidth * resolution, newHeight * resolution);
 
 	return newData;
 }
 
-void IndexRenderer::renderRegion(const PixelType* data, const MapBox& region)
+void Renderer::renderRegion(const PixelType* data, const MapBox& region)
 {
 	const int res = this->resolution;
 
@@ -196,7 +198,7 @@ void IndexRenderer::renderRegion(const PixelType* data, const MapBox& region)
 	for (int y = srcPixelMinY; y < srcPixelMaxY; ++y)
 	{
 		size_t dstY = bottomPixelOffset + y;
-		if (dataOrientation == IndexDataOrientation::TopDown)
+		if (dataOrientation == DataOrientation::TopDown)
 			dstY = this->heightInPixels - 1 - dstY;
 
 		PixelType* const dstRow = this->data + dstY * this->widthInPixels + leftPixelOffset;
@@ -209,4 +211,6 @@ void IndexRenderer::renderRegion(const PixelType* data, const MapBox& region)
 				dstRow[x] = pixel;
 		}
 	}
+}
+
 }

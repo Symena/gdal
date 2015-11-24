@@ -7,9 +7,11 @@
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/stream.hpp>
 
-#include "IndexBlocks.h"
+#include "Blocks.h"
 
-class VectorBackedStreamSource: public IndexStreamSource
+namespace aircom_map {
+
+class VectorBackedStreamSource: public StreamSource
 {
 	std::vector<std::int16_t> entries;
 
@@ -18,7 +20,7 @@ public:
 		: entries(std::move(entries))
 	{}
 
-	virtual std::unique_ptr<std::istream> getStream(IndexWarnings& /*warnings*/) const override
+	virtual std::unique_ptr<std::istream> getStream(Warnings& /*warnings*/) const override
 	{
 		using Device = boost::iostreams::basic_array<char>;
 		auto inputStream = std::make_unique<boost::iostreams::stream<Device>>(const_cast<char*>(reinterpret_cast<const char*>(entries.data())),
@@ -35,7 +37,7 @@ public:
 	}
 };
 
-class IndexBlocksBuilder
+class BlocksBuilder
 {
 	struct ProtoLine
 	{
@@ -44,25 +46,25 @@ class IndexBlocksBuilder
 		int northMin = 0;
 		int northMax = 0;
 		int resolution = 1;
-		std::shared_ptr<IndexStreamSource> data;
+		std::shared_ptr<StreamSource> data;
 	};
 
 	std::vector<ProtoLine> protoLines;
 
 public:
-	IndexBlocksBuilder& addBlock()
+	BlocksBuilder& addBlock()
 	{
 		protoLines.emplace_back();
 		return *this;
 	}
 
-	IndexBlock getLastBlock() const
+	Block getLastBlock() const
 	{
 		auto& l = protoLines.back();
-		return IndexBlock(IndexLine(l.eastMin, l.eastMax, l.northMin, l.northMax, l.resolution, l.data), 0);
+		return Block(Line(l.eastMin, l.eastMax, l.northMin, l.northMax, l.resolution, l.data), 0);
 	}
 	
-	IndexBlocksBuilder& from(int eastMin, int northMin)
+	BlocksBuilder& from(int eastMin, int northMin)
 	{
 		protoLines.back().eastMin = eastMin;
 		protoLines.back().northMin = northMin;
@@ -70,7 +72,7 @@ public:
 		return *this;
 	}
 
-	IndexBlocksBuilder& to(int eastMax, int northMax)
+	BlocksBuilder& to(int eastMax, int northMax)
 	{
 		protoLines.back().eastMax = eastMax;
 		protoLines.back().northMax = northMax;
@@ -78,13 +80,13 @@ public:
 		return *this;
 	}
 
-	IndexBlocksBuilder& resolution(int resolution)
+	BlocksBuilder& resolution(int resolution)
 	{
 		protoLines.back().resolution = resolution;
 		return *this;
 	}
 
-	IndexBlocksBuilder& withData(std::vector<std::int16_t> topDownData)
+	BlocksBuilder& withData(std::vector<std::int16_t> topDownData)
 	{
 		for (auto& entry : topDownData)
 			boost::endian::native_to_big_inplace(entry);
@@ -94,14 +96,16 @@ public:
 		return *this;
 	}
 
-	IndexBlocks create() const
+	Blocks create() const
 	{
-		std::vector<IndexLine> lines;
+		std::vector<Line> lines;
 		lines.reserve(protoLines.size());
 
 		for (auto& protoLine : protoLines)
 			lines.emplace_back(protoLine.eastMin, protoLine.eastMax, protoLine.northMin, protoLine.northMax, protoLine.resolution, protoLine.data);
 
-		return IndexBlocks(lines);
+		return Blocks(lines);
 	}
 };
+
+}

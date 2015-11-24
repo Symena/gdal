@@ -1,12 +1,14 @@
 #include <gmock/gmock.h>
 
-#include "IndexClutterCodes.h"
+#include "ClutterCodes.h"
 
-class IndexClutterCodesTests : public ::testing::Test
+namespace aircom_map {
+
+class ClutterCodesTests : public ::testing::Test
 {
 	std::stringstream menu;
 	std::vector<std::string> clutterCodes;
-	std::unique_ptr<IndexClutterCodes> indexClutterCodes;
+	std::unique_ptr<ClutterCodes> indexClutterCodes;
 
 public:
 	void addClutter(std::string clutter)
@@ -19,7 +21,7 @@ public:
 		if (indexClutterCodes)
 			return;
 
-		indexClutterCodes = std::make_unique<IndexClutterCodes>(menu);
+		indexClutterCodes = std::make_unique<ClutterCodes>(menu);
 		
 		const auto nrCodes = indexClutterCodes->getNrOfClutterCodes();
 
@@ -54,26 +56,26 @@ public:
 	}
 };
 
-TEST_F(IndexClutterCodesTests, initializesWithEmptyList)
+TEST_F(ClutterCodesTests, initializesWithEmptyList)
 {
 	EXPECT_EQ(0, getClutterCodes().size());
 }
 
-TEST_F(IndexClutterCodesTests, throwsIfIndexIsNotInteger)
+TEST_F(ClutterCodesTests, throwsIfIsNotInteger)
 {
 	addClutter("one water");
 
 	EXPECT_THROW(buildClutterCodes(), std::runtime_error);
 }
 
-TEST_F(IndexClutterCodesTests, readsSingleClutter)
+TEST_F(ClutterCodesTests, readsSingleClutter)
 {
 	addClutter("1 water");
 
 	EXPECT_EQ("water", getClutterCode(1));
 }
 
-TEST_F(IndexClutterCodesTests, readsMultipleClutter)
+TEST_F(ClutterCodesTests, readsMultipleClutter)
 {
 	addClutter("0 water");
 	addClutter("1 land");
@@ -82,14 +84,14 @@ TEST_F(IndexClutterCodesTests, readsMultipleClutter)
 	EXPECT_EQ("land", getClutterCode(1));
 }
 
-TEST_F(IndexClutterCodesTests, readsMultipleWordsClutter)
+TEST_F(ClutterCodesTests, readsMultipleWordsClutter)
 {
 	addClutter("0 supports multiple words");
 
 	EXPECT_EQ("supports multiple words", getClutterCode(0));
 }
 
-TEST_F(IndexClutterCodesTests, handlesUndefinedClutterValues)
+TEST_F(ClutterCodesTests, handlesUndefinedClutterValues)
 {
 	addClutter("0 water");
 	addClutter("2 land");
@@ -97,14 +99,14 @@ TEST_F(IndexClutterCodesTests, handlesUndefinedClutterValues)
 	EXPECT_EQ("", getClutterCode(1));
 }
 
-TEST_F(IndexClutterCodesTests, readsNumbersInClutterName)
+TEST_F(ClutterCodesTests, readsNumbersInClutterName)
 {
 	addClutter("0 supports 1 numbers 20 in 303 name 4567");
 
 	EXPECT_EQ("supports 1 numbers 20 in 303 name 4567", getClutterCode(0));
 }
 
-TEST_F(IndexClutterCodesTests, supportsTabAndSpaceSeperatedIndex)
+TEST_F(ClutterCodesTests, supportsTabAndSpaceSeperatedIndex)
 {
 	addClutter("0\t\twater");
 	addClutter("1    land");
@@ -115,35 +117,35 @@ TEST_F(IndexClutterCodesTests, supportsTabAndSpaceSeperatedIndex)
 	EXPECT_EQ("mountain", getClutterCode(2));
 }
 
-TEST_F(IndexClutterCodesTests, supportsTabAndSpaceSeperatedName)
+TEST_F(ClutterCodesTests, supportsTabAndSpaceSeperatedName)
 {
 	addClutter("0\t supports  \t\t   tab    and\t\tspace seperated \t  \t   words");
 
 	EXPECT_EQ("supports tab and space seperated words", getClutterCode(0));
 }
 
-TEST_F(IndexClutterCodesTests, throwsIfIndexIsNegative)
+TEST_F(ClutterCodesTests, throwsIfIsNegative)
 {
 	addClutter("-1 water");
 
 	EXPECT_THROW(buildClutterCodes(), std::runtime_error);
 }
 
-TEST_F(IndexClutterCodesTests, throwsIfIndexTooBig)
+TEST_F(ClutterCodesTests, throwsIfTooBig)
 {
 	addClutter("32768 water");
 
 	EXPECT_THROW(buildClutterCodes(), std::runtime_error);
 }
 
-TEST_F(IndexClutterCodesTests, throwsIfNoIndexOrNameIsDefined)
+TEST_F(ClutterCodesTests, throwsIfNoOrNameIsDefined)
 {
 	addClutter("0");
 
 	EXPECT_THROW(buildClutterCodes(), std::runtime_error);
 }
 
-TEST_F(IndexClutterCodesTests, supportsGDALClutterCodes)
+TEST_F(ClutterCodesTests, supportsGDALClutterCodes)
 {
 	addClutter("0 water");
 	addClutter("2 mountain");
@@ -151,4 +153,6 @@ TEST_F(IndexClutterCodesTests, supportsGDALClutterCodes)
 	EXPECT_EQ("water", getGdalClutterCode(0));
 	EXPECT_EQ("", getGdalClutterCode(1));
 	EXPECT_EQ("mountain", getGdalClutterCode(2));
+}
+
 }

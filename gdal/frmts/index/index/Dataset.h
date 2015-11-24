@@ -9,20 +9,22 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/optional.hpp>
 
-#include "IndexBlocks.h"
-#include "IndexClutterCodes.h"
-#include "IndexDataOrientation.h"
-#include "IndexWarnings.h"
+#include "Blocks.h"
+#include "ClutterCodes.h"
+#include "DataOrientation.h"
+#include "Warnings.h"
 
-class IndexLine;
+namespace aircom_map {
 
-class IndexDataset: public GDALPamDataset
+class Line;
+
+class Dataset: public GDALPamDataset
 {
 public:
-	IndexDataset(const boost::filesystem::path& indexFile, IndexWarnings& warnings);
-	IndexDataset(std::istream& indexFile, std::unique_ptr<std::istream> clutterFile, IndexWarnings& warnings,
+	Dataset(const boost::filesystem::path& indexFile, Warnings& warnings);
+	Dataset(std::istream& indexFile, std::unique_ptr<std::istream> clutterFile, Warnings& warnings,
 		const boost::filesystem::path& dataRoot);
-	IndexDataset(IndexBlocks blocks, std::unique_ptr<std::istream> clutterFile,
+	Dataset(Blocks blocks, std::unique_ptr<std::istream> clutterFile,
 	    const boost::filesystem::path& dataRoot);
 
 	static GDALDataset* Open(GDALOpenInfo* openInfo);
@@ -31,10 +33,10 @@ public:
 	const auto& getBoundingBox() const { return blocks.getBoundingBox(); }
 	const auto& getResolutions() const { return blocks.getResolutions(); }
 
-	boost::optional<IndexClutterCodes>& getClutterCodes() { return clutterCodes; }
+	boost::optional<ClutterCodes>& getClutterCodes() { return clutterCodes; }
 	const boost::filesystem::path dataRoot;
 
-	bool render(std::int16_t* dst, IndexDataOrientation dataOrientation, int dstWidth, int dstHeight, int dstResolution,
+	bool render(std::int16_t* dst, DataOrientation dataOrientation, int dstWidth, int dstHeight, int dstResolution,
 		MapPoint bottomLeftCornerInMeters,
 		GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm);
 
@@ -46,9 +48,11 @@ protected:
 		GDALRasterIOExtraArg* psExtraArg) override;
 
 private:
-	IndexBlocks blocks;
-	boost::optional<IndexClutterCodes> clutterCodes;
+	Blocks blocks;
+	boost::optional<ClutterCodes> clutterCodes;
 
 	void setBoundingBox();
 	void provideResolutionsAsMetadata();
 };
+
+}

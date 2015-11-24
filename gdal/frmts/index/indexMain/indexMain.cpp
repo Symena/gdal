@@ -1,4 +1,4 @@
-#include "IndexDataset.h"
+#include "Dataset.h"
 #include "ogr_srs_api.h"
 
 #include <ios>
@@ -146,7 +146,7 @@ int main()
 {
  	GDALOpenInfo openInfo(R"(q:\Data\Scenarios\Work\Asset\GSM Drive Test data\GSM\Height\Height Data\index.txt)", GA_ReadOnly);
 
- 	auto dataset = IndexDataset::Open(&openInfo);
+ 	auto dataset = aircom_map::Dataset::Open(&openInfo);
 
 	GDALInfoPrintMetadata(dataset, NULL, "Metadata", "");
 	PrintAdditionalMetadata(dataset);

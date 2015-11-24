@@ -4,6 +4,8 @@
 #include <cassert>
 #include <boost/optional.hpp>
 
+namespace aircom_map {
+
 void resample(const void* src, int srcWidth, int srcHeight,
               void* dst, int dstWidth, int dstHeight,
               GDALDataType pixelType, GDALRIOResampleAlg algorithm,
@@ -49,4 +51,6 @@ void resample(const void* src, int srcWidth, int srcHeight,
 {
 	return resample(src, srcWidth, srcHeight, dst, dstWidth, dstHeight,
 		pixelType, algorithm, boost::optional<double>(noDataValue));
+}
+
 }

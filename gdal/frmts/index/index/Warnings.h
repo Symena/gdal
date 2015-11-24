@@ -4,7 +4,9 @@
 #include <deque>
 #include <boost/format.hpp>
 
-class IndexWarnings
+namespace aircom_map {
+
+class Warnings
 {
 	std::deque<std::string> warnings;
 	std::deque<std::string> activeContexts;
@@ -47,27 +49,29 @@ private:
 		internalFormat(format, otherArgs...);
 	}
 
-	friend class IndexWarningsContext;
+	friend class WarningsContext;
 };
 
-class IndexWarningsContext
+class WarningsContext
 {
-	IndexWarnings& warnings;
+	Warnings& warnings;
 
 public:
-	IndexWarningsContext(IndexWarnings& warnings, const std::string& context) : warnings(warnings)
+	WarningsContext(Warnings& warnings, const std::string& context) : warnings(warnings)
 	{
 		this->warnings.pushContext(context);
 	}
 
 	template <class... ArgumentTypes>
-	IndexWarningsContext(IndexWarnings& warnings, const std::string& contextFormatString, const ArgumentTypes& ... args) : warnings(warnings)
+	WarningsContext(Warnings& warnings, const std::string& contextFormatString, const ArgumentTypes& ... args) : warnings(warnings)
 	{
 		this->warnings.pushContext(contextFormatString, args...);
 	}
 
-	~IndexWarningsContext()
+	~WarningsContext()
 	{
 		warnings.popContext();
 	}
 };
+
+}

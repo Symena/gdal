@@ -1,4 +1,4 @@
-#include "IndexStreamSource.h"
+#include "StreamSource.h"
 
 #include <fstream>
 
@@ -6,7 +6,9 @@
 
 #include <cpl_error.h>
 
-std::unique_ptr<std::istream> IndexFileStreamSource::getStream(IndexWarnings& warnings) const 
+namespace aircom_map {
+
+std::unique_ptr<std::istream> FileStreamSource::getStream(Warnings& warnings) const 
 {
 	if(!boost::filesystem::exists(path))
 	{
@@ -38,7 +40,9 @@ std::unique_ptr<std::istream> IndexFileStreamSource::getStream(IndexWarnings& wa
 	return dataFile;
 }
 
-std::string IndexFileStreamSource::getStreamDescription() const 
+std::string FileStreamSource::getStreamDescription() const 
 {
 	return path.string();
+}
+
 }

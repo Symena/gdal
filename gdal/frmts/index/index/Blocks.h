@@ -5,11 +5,13 @@
 
 #include <boost/geometry/index/rtree.hpp>
 
-#include "IndexLine.h"
-#include "IndexGeometry.h"
-#include "IndexStreamSource.h"
+#include "Line.h"
+#include "Geometry.h"
+#include "StreamSource.h"
 
-class IndexBlock
+namespace aircom_map {
+
+class Block
 {
 	MapBox boundingBox; // in meters
 
@@ -19,11 +21,11 @@ class IndexBlock
 
 	int index;
 
-	std::shared_ptr<IndexStreamSource> dataStream;
+	std::shared_ptr<StreamSource> dataStream;
 
 public:
-	IndexBlock(const MapBox& boundingBox, int resolution, std::shared_ptr<IndexStreamSource> dataStream, int index);
-	IndexBlock(const IndexLine& line, int index);
+	Block(const MapBox& boundingBox, int resolution, std::shared_ptr<StreamSource> dataStream, int index);
+	Block(const Line& line, int index);
 
 	const MapBox& getBoundingBox() const { return boundingBox; }
 
@@ -31,26 +33,28 @@ public:
 	int getHeightInPixels() const { return heightInPixels; }
 	int getResolution() const { return resolution; }
 
-	std::unique_ptr<std::istream> getData(IndexWarnings& warnings) const { return dataStream ? dataStream->getStream(warnings) : nullptr; }
+	std::unique_ptr<std::istream> getData(Warnings& warnings) const { return dataStream ? dataStream->getStream(warnings) : nullptr; }
 
 	int getIndex() const { return index; }
 };
 
 
-class IndexBlocks
+class Blocks
 {
-	using TreeEntry = std::pair<MapBox, IndexBlock>;
+	using TreeEntry = std::pair<MapBox, Block>;
 
 	boost::geometry::index::rtree<TreeEntry, boost::geometry::index::rstar<16>> blocksTree;
 	MapBox boundingBox; // in meters
 	std::set<int> resolutions;
 
 public:
-	explicit IndexBlocks(const std::vector<IndexLine>& lines = {});
+	explicit Blocks(const std::vector<Line>& lines = {});
 
 	const MapBox& getBoundingBox() const { return boundingBox; }
 
 	const std::set<int>& getResolutions() const { return resolutions; }
 
-	std::vector<IndexBlock> getIntersectingBlocks(const MapBox& box) const;
+	std::vector<Block> getIntersectingBlocks(const MapBox& box) const;
 };
+
+}

@@ -1,10 +1,12 @@
 #pragma once
 
-#include "IndexBlocks.h"
-#include "IndexDataOrientation.h"
+#include "Blocks.h"
+#include "DataOrientation.h"
 #include "gdal.h"
 
-class IndexRenderer
+namespace aircom_map {
+
+class Renderer
 {
 public:
 	using PixelType = std::int16_t;
@@ -13,22 +15,22 @@ public:
 private:
 	const PixelType noDataValue = -9999;
 
-	const IndexBlocks& blocks;
+	const Blocks& blocks;
 	MapBox bounds; // in meters
 	PixelType* data;
-	IndexDataOrientation dataOrientation;
+	DataOrientation dataOrientation;
 	int widthInPixels;
 	int heightInPixels;
 	int resolution;
 	GDALRIOResampleAlg downsamplingAlgorithm;
 	GDALRIOResampleAlg upsamplingAlgorithm;
-	IndexWarnings& warnings;
+	Warnings& warnings;
 
 public:
-	IndexRenderer(const IndexBlocks& blocks, PixelType* data, IndexDataOrientation dataOrientation, int widthInPixels,
+	Renderer(const Blocks& blocks, PixelType* data, DataOrientation dataOrientation, int widthInPixels,
 		int heightInPixels, int resolution, MapPoint bottomLeftCornerInMeters,
 		GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm,
-		IndexWarnings& warnings);
+		Warnings& warnings);
 
 	const MapBox& getBoundingBox() const { return bounds; }
 
@@ -43,7 +45,7 @@ public:
 	// Reads a region (in meters) from a block, in its original resolution.
 	// The region may be adjusted (expanded and/or re-aligned).
 	// The data will be in native endianness and stored bottom-up.
-	UniqueDataPtr readBlock(const IndexBlock& block, MapBox& region) const;
+	UniqueDataPtr readBlock(const Block& block, MapBox& region) const;
 
 	// Resamples a block region to the target resolution.
 	// The region may be adjusted.
@@ -52,3 +54,5 @@ public:
 	// Renders a region (in meters) in the target resolution into the result bitmap.
 	void renderRegion(const PixelType* data, const MapBox& region);
 };
+
+}

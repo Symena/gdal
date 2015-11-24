@@ -1,12 +1,14 @@
 #include <gmock/gmock.h>
 
-#include "IndexWarnings.h"
+#include "Warnings.h"
 
 #include <boost/format.hpp>
 
-TEST(IndexWarningsTests, addSingleWarningWorks)
+namespace aircom_map {
+
+TEST(WarningsTests, addSingleWarningWorks)
 {
-	IndexWarnings w;
+	Warnings w;
 
 	w.add("This is a warning!");
 
@@ -19,9 +21,9 @@ TEST(IndexWarningsTests, addSingleWarningWorks)
 	}
 }
 
-TEST(IndexWarningsTests, addMultipleWarningWorks)
+TEST(WarningsTests, addMultipleWarningWorks)
 {
-	IndexWarnings w;
+	Warnings w;
 
 	w.add("w1");
 	w.add("w2");
@@ -33,50 +35,50 @@ TEST(IndexWarningsTests, addMultipleWarningWorks)
 	EXPECT_EQ("w3", *(w.begin() + 2));
 }
 
-TEST(IndexWarningTests, warningContextCanBeSet)
+TEST(WarningTests, warningContextCanBeSet)
 {
-	IndexWarnings w;
-	IndexWarningsContext warningContext(w, "C1: ");
+	Warnings w;
+	WarningsContext warningContext(w, "C1: ");
 	w.add("W1");
 
 	EXPECT_EQ("C1: W1", *w.begin());
 }
 
-TEST(IndexWarningTests, multiplewarningContextsCanBeSet)
+TEST(WarningTests, multiplewarningContextsCanBeSet)
 {
-	IndexWarnings w;
-	IndexWarningsContext warningContext1(w, "C1: ");
-	IndexWarningsContext warningContext2(w, "C2: ");
+	Warnings w;
+	WarningsContext warningContext1(w, "C1: ");
+	WarningsContext warningContext2(w, "C2: ");
 	w.add("W1");
 
 	EXPECT_EQ("C1: C2: W1", *w.begin());
 }
 
-TEST(IndexWarningTests, warningContextIsScoped)
+TEST(WarningTests, warningContextIsScoped)
 {
-	IndexWarnings w;
+	Warnings w;
 	{
-		IndexWarningsContext warningContext(w, "C1: ");
+		WarningsContext warningContext(w, "C1: ");
 	}
 	w.add("W1");
 
 	EXPECT_EQ("W1", *w.begin());
 }
 
-TEST(IndexWarningTests, warningContextIsAStack)
+TEST(WarningTests, warningContextIsAStack)
 {
-	IndexWarnings w;
+	Warnings w;
 	w.add("W1");
 	{
-		IndexWarningsContext warningContext(w, "C1: ");
+		WarningsContext warningContext(w, "C1: ");
 		w.add("W2");
 		{
-			IndexWarningsContext warningContext(w, "C2: ");
+			WarningsContext warningContext(w, "C2: ");
 			w.add("W3");
 		}
 		w.add("W4");
 		{
-			IndexWarningsContext warningContext(w, "C3: ");
+			WarningsContext warningContext(w, "C3: ");
 			w.add("W5");
 		}
 		w.add("W6");
@@ -92,19 +94,21 @@ TEST(IndexWarningTests, warningContextIsAStack)
 	EXPECT_EQ("W7", *(w.begin() + 6));
 }
 
-TEST(IndexWarningTests, formattedWarnings)
+TEST(WarningTests, formattedWarnings)
 {
-	IndexWarnings w;
+	Warnings w;
 	w.add("%d %d %s %s", 1, 1.5, "hello", std::string("mystring"));
 
 	EXPECT_EQ("1 1.5 hello mystring", *(w.begin()));
 }
 
-TEST(IndexWarningTests, formattedContext)
+TEST(WarningTests, formattedContext)
 {
-	IndexWarnings w;
-	IndexWarningsContext warningContext(w, "%d %d %s %s", 1, 1.5, "hello", std::string("mystring"));
+	Warnings w;
+	WarningsContext warningContext(w, "%d %d %s %s", 1, 1.5, "hello", std::string("mystring"));
 	w.add("W1");
 
 	EXPECT_EQ("1 1.5 hello mystringW1", *w.begin());
+}
+
 }

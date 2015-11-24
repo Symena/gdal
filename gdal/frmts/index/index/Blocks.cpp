@@ -1,9 +1,11 @@
-#include "IndexBlocks.h"
+#include "Blocks.h"
 
 #include <boost/geometry/algorithms/intersection.hpp>
 #include <boost/range/algorithm/sort.hpp>
 
-IndexBlock::IndexBlock(const MapBox& boundingBox, int resolution, std::shared_ptr<IndexStreamSource> dataStream, int index)
+namespace aircom_map {
+
+Block::Block(const MapBox& boundingBox, int resolution, std::shared_ptr<StreamSource> dataStream, int index)
 	: boundingBox(boundingBox)
 	, widthInPixels(width(boundingBox) / resolution)
 	, heightInPixels(height(boundingBox) / resolution)
@@ -13,25 +15,22 @@ IndexBlock::IndexBlock(const MapBox& boundingBox, int resolution, std::shared_pt
 {
 	if (widthInPixels * resolution != width(boundingBox) ||
 	    heightInPixels * resolution != height(boundingBox))
-		throw std::runtime_error("IndexBlock::IndexBlock(): bounding box doesn't match resolution");
+		throw std::runtime_error("Block::Block(): bounding box doesn't match resolution");
 }
 
-IndexBlock::IndexBlock(const IndexLine& line, int index)
-	: IndexBlock(makeBox(line.getTileEastMin(), line.getTileNorthMin(), line.getTileEastMax(), line.getTileNorthMax()),
+Block::Block(const Line& line, int index)
+	: Block(makeBox(line.getTileEastMin(), line.getTileNorthMin(), line.getTileEastMax(), line.getTileNorthMax()),
 	             line.getResolution(), line.getTileDataSource(), index)
 {}
 
 
 
-static_assert(std::is_move_constructible<IndexBlocks>::value, "IndexBlocks should be move constructible");
-static_assert(std::is_move_assignable<IndexBlocks>::value, "IndexBlocks should be move assignable");
-
-IndexBlocks::IndexBlocks(const std::vector<IndexLine>& lines)
+Blocks::Blocks(const std::vector<Line>& lines)
 {
 	int lineNr = 0;
 	for (const auto& line : lines)
 	{
-		auto block = IndexBlock(line, lineNr++);
+		auto block = Block(line, lineNr++);
 		blocksTree.insert(std::make_pair(block.getBoundingBox(), block));
 
 		resolutions.insert(line.getResolution());
@@ -40,7 +39,7 @@ IndexBlocks::IndexBlocks(const std::vector<IndexLine>& lines)
 	boundingBox = (!blocksTree.empty() ? blocksTree.bounds() : makeBox(0, 0, 0, 0));
 }
 
-std::vector<IndexBlock> IndexBlocks::getIntersectingBlocks(const MapBox& box) const
+std::vector<Block> Blocks::getIntersectingBlocks(const MapBox& box) const
 {
 	auto isNotOnlyBorderMatch = [&box](const TreeEntry& entry)
 	{
@@ -56,7 +55,7 @@ std::vector<IndexBlock> IndexBlocks::getIntersectingBlocks(const MapBox& box) co
 	                 && boost::geometry::index::satisfies(isNotOnlyBorderMatch),
 	                 std::back_inserter(intersectingEntries));
 
-	std::vector<IndexBlock> result;
+	std::vector<Block> result;
 	result.reserve(intersectingEntries.size());
 	for (auto& entry : intersectingEntries)
 		result.push_back(std::move(entry.second));
@@ -71,4 +70,6 @@ std::vector<IndexBlock> IndexBlocks::getIntersectingBlocks(const MapBox& box) co
 	boost::range::sort(result, comparer);
 
 	return result;
+}
+
 }

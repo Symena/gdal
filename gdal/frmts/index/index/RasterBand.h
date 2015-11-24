@@ -2,12 +2,14 @@
 
 #include "gdal_pam.h"
 
-#include "IndexDataset.h"
+#include "Dataset.h"
 
-class IndexRasterBand: public GDALPamRasterBand
+namespace aircom_map {
+
+class RasterBand: public GDALPamRasterBand
 {
 public:
-	IndexRasterBand(IndexDataset* owningDataSet, int bandIndex = 1);
+	RasterBand(Dataset* owningDataSet, int bandIndex = 1);
 	
 	virtual char** GetCategoryNames() override;
 
@@ -21,5 +23,7 @@ protected:
 		GSpacing nPixelSpace, GSpacing nLineSpace, GDALRasterIOExtraArg* psExtraArg) override;
 
 private:
-	IndexDataset& getDataset() { return *static_cast<IndexDataset*>(poDS); }
+	Dataset& getDataset() { return *static_cast<Dataset*>(poDS); }
 };
+
+}

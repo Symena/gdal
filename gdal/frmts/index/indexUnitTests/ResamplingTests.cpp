@@ -2,6 +2,8 @@
 
 #include <gmock/gmock.h>
 
+namespace aircom_map {
+
 TEST(Resampling, bilinearDownsampling)
 {
 	// 2x2 pixels => single pixel
@@ -117,4 +119,6 @@ TEST(Resampling, bilinearDownsampling_onlyNoDataValues)
 	EXPECT_THAT(dst, testing::ElementsAre(
 		99, 99,
 		99, 99));
+}
+
 }

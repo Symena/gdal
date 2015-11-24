@@ -153,30 +153,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="IndexBlocks.cpp" />
-    <ClCompile Include="IndexClutterCodes.cpp" />
-    <ClCompile Include="IndexDataset.cpp" />
-    <ClCompile Include="IndexLine.cpp" />
-    <ClCompile Include="IndexRasterBand.cpp" />
-    <ClCompile Include="IndexRegister.cpp" />
-    <ClCompile Include="IndexRenderer.cpp" />
-    <ClCompile Include="IndexStreamSource.cpp" />
-    <ClCompile Include="IndexWarnings.cpp" />
+    <ClCompile Include="Blocks.cpp" />
+    <ClCompile Include="ClutterCodes.cpp" />
+    <ClCompile Include="Dataset.cpp" />
+    <ClCompile Include="Line.cpp" />
+    <ClCompile Include="RasterBand.cpp" />
+    <ClCompile Include="Register.cpp" />
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="StreamSource.cpp" />
+    <ClCompile Include="Warnings.cpp" />
     <ClCompile Include="Resampling.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="IndexDataOrientation.h" />
-    <ClInclude Include="IndexBlocks.h" />
-    <ClInclude Include="IndexClutterCodes.h" />
-    <ClInclude Include="IndexDataset.h" />
-    <ClInclude Include="IndexGeometry.h" />
-    <ClInclude Include="IndexLine.h" />
-    <ClInclude Include="IndexRasterBand.h" />
-    <ClInclude Include="IndexRegister.h" />
-    <ClInclude Include="IndexRenderer.h" />
-    <ClInclude Include="IndexStreamSource.h" />
-    <ClInclude Include="IndexWarningsReporter.h" />
-    <ClInclude Include="IndexWarnings.h" />
+    <ClInclude Include="DataOrientation.h" />
+    <ClInclude Include="Blocks.h" />
+    <ClInclude Include="ClutterCodes.h" />
+    <ClInclude Include="Dataset.h" />
+    <ClInclude Include="Geometry.h" />
+    <ClInclude Include="Line.h" />
+    <ClInclude Include="RasterBand.h" />
+    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="StreamSource.h" />
+    <ClInclude Include="WarningsReporter.h" />
+    <ClInclude Include="Warnings.h" />
     <ClInclude Include="Resampling.h" />
   </ItemGroup>
   <ItemGroup>

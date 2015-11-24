@@ -1,14 +1,16 @@
-#include "IndexClutterCodes.h"
+#include "ClutterCodes.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 
-IndexClutterCodes::IndexClutterCodes(const boost::filesystem::path& menuFile)
-	: IndexClutterCodes(std::ifstream(menuFile.string()))
+namespace aircom_map {
+
+ClutterCodes::ClutterCodes(const boost::filesystem::path& menuFile)
+	: ClutterCodes(std::ifstream(menuFile.string()))
 {}
 
-IndexClutterCodes::IndexClutterCodes(std::istream& menuFile)
+ClutterCodes::ClutterCodes(std::istream& menuFile)
 {
 	std::map<int, std::string> clutterCodesMap;
 
@@ -17,7 +19,7 @@ IndexClutterCodes::IndexClutterCodes(std::istream& menuFile)
 	createClutterList(clutterCodesMap);
 }
 
-void IndexClutterCodes::readClutterMenuFile(std::istream& menuFile, std::map<int, std::string>& clutterCodesMap)
+void ClutterCodes::readClutterMenuFile(std::istream& menuFile, std::map<int, std::string>& clutterCodesMap)
 {
 	if (!menuFile.good())
 		throw std::runtime_error("Clutter menu file is empty or stream is in a bad or failed state");
@@ -36,7 +38,7 @@ void IndexClutterCodes::readClutterMenuFile(std::istream& menuFile, std::map<int
 	}
 }
 
-std::pair<int, std::string> IndexClutterCodes::readClutterLine(std::string line)
+std::pair<int, std::string> ClutterCodes::readClutterLine(std::string line)
 {
 	boost::char_separator<char> delim(" \t\r");
 	boost::tokenizer<boost::char_separator<char>> tokens(line, delim);
@@ -78,7 +80,7 @@ std::pair<int, std::string> IndexClutterCodes::readClutterLine(std::string line)
 	return std::make_pair(index, clutterName);
 }
 
-void IndexClutterCodes::createClutterList(std::map<int, std::string>& clutterCodesMap)
+void ClutterCodes::createClutterList(std::map<int, std::string>& clutterCodesMap)
 {
 	int currentIndex = 0;
 
@@ -93,4 +95,6 @@ void IndexClutterCodes::createClutterList(std::map<int, std::string>& clutterCod
 		gdalClutterCodes.AddString(clutterCode.second.c_str());
 		++currentIndex;
 	}
+}
+
 }
