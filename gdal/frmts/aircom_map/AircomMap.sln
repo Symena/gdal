@@ -3,11 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "index", "index\index.vcxproj", "{7CDC6946-464F-4559-81BD-19EDF2272452}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AircomMap", "AircomMap\AircomMap.vcxproj", "{7CDC6946-464F-4559-81BD-19EDF2272452}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "indexMain", "indexMain\indexMain.vcxproj", "{ACDCE555-95D4-455E-8D70-74BC144FD440}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "indexUnitTests", "indexUnitTests\indexUnitTests.vcxproj", "{DDBF433A-92EF-4653-BFB0-16CE7858D388}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTests", "UnitTests\UnitTests.vcxproj", "{DDBF433A-92EF-4653-BFB0-16CE7858D388}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,18 +35,6 @@ Global
 		{7CDC6946-464F-4559-81BD-19EDF2272452}.Release|Win32.Build.0 = Release|Win32
 		{7CDC6946-464F-4559-81BD-19EDF2272452}.Release|x64.ActiveCfg = Release|x64
 		{7CDC6946-464F-4559-81BD-19EDF2272452}.Release|x64.Build.0 = Release|x64
-		{ACDCE555-95D4-455E-8D70-74BC144FD440}.Debug_LibOnly|Win32.ActiveCfg = Debug|Win32
-		{ACDCE555-95D4-455E-8D70-74BC144FD440}.Debug_LibOnly|x64.ActiveCfg = Debug|x64
-		{ACDCE555-95D4-455E-8D70-74BC144FD440}.Debug|Win32.ActiveCfg = Debug|Win32
-		{ACDCE555-95D4-455E-8D70-74BC144FD440}.Debug|Win32.Build.0 = Debug|Win32
-		{ACDCE555-95D4-455E-8D70-74BC144FD440}.Debug|x64.ActiveCfg = Debug|x64
-		{ACDCE555-95D4-455E-8D70-74BC144FD440}.Debug|x64.Build.0 = Debug|x64
-		{ACDCE555-95D4-455E-8D70-74BC144FD440}.Release_LibOnly|Win32.ActiveCfg = Release|Win32
-		{ACDCE555-95D4-455E-8D70-74BC144FD440}.Release_LibOnly|x64.ActiveCfg = Release|x64
-		{ACDCE555-95D4-455E-8D70-74BC144FD440}.Release|Win32.ActiveCfg = Release|Win32
-		{ACDCE555-95D4-455E-8D70-74BC144FD440}.Release|Win32.Build.0 = Release|Win32
-		{ACDCE555-95D4-455E-8D70-74BC144FD440}.Release|x64.ActiveCfg = Release|x64
-		{ACDCE555-95D4-455E-8D70-74BC144FD440}.Release|x64.Build.0 = Release|x64
 		{DDBF433A-92EF-4653-BFB0-16CE7858D388}.Debug_LibOnly|Win32.ActiveCfg = Debug|Win32
 		{DDBF433A-92EF-4653-BFB0-16CE7858D388}.Debug_LibOnly|x64.ActiveCfg = Debug|x64
 		{DDBF433A-92EF-4653-BFB0-16CE7858D388}.Debug|Win32.ActiveCfg = Debug|Win32

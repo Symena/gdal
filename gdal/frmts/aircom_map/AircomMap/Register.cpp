@@ -2,9 +2,9 @@
 
 #include "Dataset.h"
 
-void CPL_DLL GDALRegister_AIRCOM_MAP()
+extern "C" void CPL_DLL GDALRegister_AIRCOM_MAP()
 {
-	GDALDriver  *driver;
+	GDALDriver* driver;
 	if (!GDAL_CHECK_VERSION("AIRCOM_MAP"))
 		return;
 	if (GDALGetDriverByName("AIRCOM_MAP") == NULL)

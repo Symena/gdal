@@ -743,7 +743,7 @@ EXTERNAL_LIBS =	$(OGDILIB) $(XERCES_LIB) $(EXPAT_LIB) $(OCI_LIB) $(PG_LIB) \
 
 	
 # Determine set architecture and configuration in the symena way to build
-# index support with msbuild
+# AircomMap support with msbuild
 !IFDEF DEBUG
 CONFIGURATION=Debug
 LIBPART=-gd
@@ -757,8 +757,8 @@ ARCHITECTURE=x64
 ARCHITECTURE=Win32
 !ENDIF	
 
-# Additional library dependencies for index
-LINKER_FLAGS = /LIBPATH:$(GDAL_HOME)\..\gdal\frmts\index\packages\ $(LINKER_FLAGS)
+# Additional library dependencies for AircomMap
+LINKER_FLAGS = /LIBPATH:$(GDAL_HOME)\..\gdal\frmts\aircom_map\packages\ $(LINKER_FLAGS)
 EXTERNAL_LIBS = boost-filesystem-symena.1.59.0.1\build\native\lib\$(ARCHITECTURE)\$(CONFIGURATION)\v140\libboost_filesystem-vc140-mt$(LIBPART)-1_59.lib $(EXTERNAL_LIBS)
 EXTERNAL_LIBS = boost-system-symena.1.59.0.1\build\native\lib\$(ARCHITECTURE)\$(CONFIGURATION)\v140\libboost_system-vc140-mt$(LIBPART)-1_59.lib $(EXTERNAL_LIBS)
 

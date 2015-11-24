@@ -22,7 +22,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DDBF433A-92EF-4653-BFB0-16CE7858D388}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>indexUnitTests</RootNamespace>
+    <RootNamespace>aircom_map</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -89,7 +89,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../index</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../AircomMap</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251;4503</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -104,7 +104,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../index</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../AircomMap</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251;4503</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -121,7 +121,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../index</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../AircomMap</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251;4503</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -140,7 +140,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>../index</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../AircomMap</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251;4503</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -164,7 +164,7 @@
     <ClCompile Include="ResamplingTests.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\index\index.vcxproj">
+    <ProjectReference Include="..\AircomMap\AircomMap.vcxproj">
       <Project>{7cdc6946-464f-4559-81bd-19edf2272452}</Project>
     </ProjectReference>
   </ItemGroup>

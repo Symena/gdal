@@ -5,8 +5,8 @@ goto :begin
 exit /b %errorlevel%
 
 :begin
-@echo Removing index packages folder
-rmdir /S /Q gdal\frmts\index\packages || goto :error
+@echo Removing AircomMap packages folder
+rmdir /S /Q gdal\frmts\aircom_map\packages || goto :error
 
 @echo Building NuGet packages
 PowerShell.exe -Command Write-NuGetPackage -Verbose .\gdal.autopkg || goto :error

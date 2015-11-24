@@ -1,0 +1,19 @@
+GDAL_ROOT	=	..\..
+
+!INCLUDE $(GDAL_ROOT)\nmake.opt
+
+default:	build-lib
+	xcopy /D /Y $(ARCHITECTURE)\$(CONFIGURATION)\AircomMap.lib ..\o
+	if exist $(ARCHITECTURE)\$(CONFIGURATION)\AircomMap.pdb xcopy /D /Y $(ARCHITECTURE)\$(CONFIGURATION)\AircomMap.pdb ..\o
+
+build-lib:
+	nuget restore AircomMap\packages.config -SolutionDirectory .
+	msbuild AircomMap.sln /t:Rebuild /p:Configuration=$(CONFIGURATION)_LibOnly;Platform=$(ARCHITECTURE) /m:6
+
+build:
+	nuget install gdal-symena -SolutionDirectory . -Source $(MAKEDIR)\..\..\..
+	nuget restore AircomMap.sln
+	msbuild AircomMap.sln /t:Rebuild /p:Configuration=$(CONFIGURATION);Platform=$(ARCHITECTURE) /m:6
+
+clean:
+	msbuild AircomMap.sln /t:Clean /p:Configuration=$(CONFIGURATION);Platform=$(ARCHITECTURE) /m:6
