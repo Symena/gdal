@@ -17,5 +17,5 @@ x64*
 *.opensdf
 *.suo
 *.user
-gdal/frmts/index/packages/*
+gdal/frmts/aircom_map/packages/*
 *.ilk

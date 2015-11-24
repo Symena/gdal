@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AircomMap", "AircomMap\Airc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTests", "UnitTests\UnitTests.vcxproj", "{DDBF433A-92EF-4653-BFB0-16CE7858D388}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IntegrationTests", "IntegrationTests\IntegrationTests.vcxproj", "{AE33DBD8-5AC5-4F6E-8CD3-354F219D1168}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug_LibOnly|Win32 = Debug_LibOnly|Win32
@@ -47,6 +49,18 @@ Global
 		{DDBF433A-92EF-4653-BFB0-16CE7858D388}.Release|Win32.Build.0 = Release|Win32
 		{DDBF433A-92EF-4653-BFB0-16CE7858D388}.Release|x64.ActiveCfg = Release|x64
 		{DDBF433A-92EF-4653-BFB0-16CE7858D388}.Release|x64.Build.0 = Release|x64
+		{AE33DBD8-5AC5-4F6E-8CD3-354F219D1168}.Debug_LibOnly|Win32.ActiveCfg = Debug|Win32
+		{AE33DBD8-5AC5-4F6E-8CD3-354F219D1168}.Debug_LibOnly|x64.ActiveCfg = Debug|x64
+		{AE33DBD8-5AC5-4F6E-8CD3-354F219D1168}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AE33DBD8-5AC5-4F6E-8CD3-354F219D1168}.Debug|Win32.Build.0 = Debug|Win32
+		{AE33DBD8-5AC5-4F6E-8CD3-354F219D1168}.Debug|x64.ActiveCfg = Debug|x64
+		{AE33DBD8-5AC5-4F6E-8CD3-354F219D1168}.Debug|x64.Build.0 = Debug|x64
+		{AE33DBD8-5AC5-4F6E-8CD3-354F219D1168}.Release_LibOnly|Win32.ActiveCfg = Release|Win32
+		{AE33DBD8-5AC5-4F6E-8CD3-354F219D1168}.Release_LibOnly|x64.ActiveCfg = Release|x64
+		{AE33DBD8-5AC5-4F6E-8CD3-354F219D1168}.Release|Win32.ActiveCfg = Release|Win32
+		{AE33DBD8-5AC5-4F6E-8CD3-354F219D1168}.Release|Win32.Build.0 = Release|Win32
+		{AE33DBD8-5AC5-4F6E-8CD3-354F219D1168}.Release|x64.ActiveCfg = Release|x64
+		{AE33DBD8-5AC5-4F6E-8CD3-354F219D1168}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

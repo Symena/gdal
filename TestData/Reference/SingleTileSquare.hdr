@@ -1,0 +1,9 @@
+ncols 4
+nrows 4
+ulxmap 5.5
+ulymap 38.5
+xdim 11
+ydim 11
+nbits 16
+pixeltype SIGNEDINT
+undefined_values -9999

@@ -1,0 +1,9 @@
+..\..\Blocks\4x4.dat	0	40	0	40	10
+..\..\Blocks\4x4.dat	40	80	0	40	10
+..\..\Blocks\4x4.dat	80	120	0	40	10
+..\..\Blocks\4x4.dat	0	40	40	80	10
+..\..\Blocks\4x4.dat	40	80	40	80	10
+..\..\Blocks\4x4.dat	80	120	40	80	10
+..\..\Blocks\4x4.dat	0	40	80	120	10
+..\..\Blocks\4x4.dat	40	80	80	120	10
+..\..\Blocks\4x4.dat	80	120	80	120	10
