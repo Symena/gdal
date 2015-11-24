@@ -18,3 +18,6 @@ msbuild AircomMap.sln /t:Rebuild /p:Configuration=Release;Platform=x64 /m:6 || g
 
 @echo Running unit tests
 x64\Release\UnitTests.exe || goto :error
+
+@echo Running integration tests
+x64\Release\IntegrationTests.exe || goto :error
