@@ -41,6 +41,9 @@ public:
 		GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm);
 
 protected:
+	// If you want to use an explicit resampling algorithm, set psExtraArg->nVersion to something
+	// higher than RASTERIO_EXTRA_ARG_CURRENT_VERSION when calling RasterIO().
+	// Otherwise, a default algorithm (height: bilinear, clutter: majority) is used automagically.
 	virtual CPLErr IRasterIO(GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXSize, int nYSize,
 		void* pData, int nBufXSize, int nBufYSize, GDALDataType eBufType,
 		int nBandCount, int *panBandMap,
