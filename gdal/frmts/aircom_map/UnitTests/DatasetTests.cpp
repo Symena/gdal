@@ -41,7 +41,7 @@ protected:
 		std::vector<std::int16_t> pixels(static_cast<size_t>(widthInPixels) * heightInPixels);
 
 		GDALRasterIOExtraArg extraArg = { 0 };
-		extraArg.nVersion = RASTERIO_EXTRA_ARG_CURRENT_VERSION;
+		extraArg.nVersion = RASTERIO_EXTRA_ARG_CURRENT_VERSION + 1;
 		extraArg.eResampleAlg = algorithm;
 
 		auto error = getDataset().RasterIO(GDALRWFlag::GF_Read,
