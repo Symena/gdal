@@ -18,14 +18,14 @@ namespace aircom_map {
 
 class Line;
 
-class Dataset: public GDALPamDataset
+class Dataset : public GDALPamDataset
 {
 public:
 	Dataset(const boost::filesystem::path& indexFile, Warnings& warnings);
 	Dataset(std::istream& indexFile, std::unique_ptr<std::istream> clutterFile, Warnings& warnings,
 		const boost::filesystem::path& dataRoot);
 	Dataset(Blocks blocks, std::unique_ptr<std::istream> clutterFile,
-	    const boost::filesystem::path& dataRoot);
+		const boost::filesystem::path& dataRoot);
 
 	static GDALDataset* Open(GDALOpenInfo* openInfo);
 	static bool Identify(const boost::filesystem::path& file, std::istream& header);
@@ -41,9 +41,9 @@ public:
 		GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm);
 
 protected:
-	// If you want to use an explicit resampling algorithm, set psExtraArg->nVersion to something
-	// higher than RASTERIO_EXTRA_ARG_CURRENT_VERSION when calling RasterIO().
-	// Otherwise, a default algorithm (height: bilinear, clutter: majority) is used automagically.
+	// NOTE: psExtraArg is ignored, as there is no clean way to detect whether the struct comes
+	//       from the user or is GDAL's default struct (set in non-overridable RasterIO()).
+	//       So the resampling algorithm is fixed (height: bilinear, clutter: majority).
 	virtual CPLErr IRasterIO(GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXSize, int nYSize,
 		void* pData, int nBufXSize, int nBufYSize, GDALDataType eBufType,
 		int nBandCount, int *panBandMap,

@@ -240,12 +240,6 @@ CPLErr Dataset::IRasterIO(GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXSize, 
 		? GDALRIOResampleAlg::GRIORA_Mode     // majority
 		: GDALRIOResampleAlg::GRIORA_Bilinear);
 
-	// GDAL currently always passes a non-null psExtraArg pointer to a default struct
-	// to be able to detect this default struct, force the user to use a higher version
-	// and only then use that resampling algorithm
-	if (psExtraArg && psExtraArg->nVersion > RASTERIO_EXTRA_ARG_CURRENT_VERSION)
-		algorithm = psExtraArg->eResampleAlg;
-
 	bool success = render(static_cast<std::int16_t*>(pData), DataOrientation::TopDown, nBufXSize, nBufYSize, resX,
 		blocks.getBoundingBox().min_corner() + MapPoint(nXOff, nYOff), algorithm, algorithm);
 

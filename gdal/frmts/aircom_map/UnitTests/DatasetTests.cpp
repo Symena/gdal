@@ -35,14 +35,9 @@ protected:
 		*clutterFile << std::to_string(code) << " " << name.c_str() << "\n";
 	}
 
-	std::vector<std::int16_t> readPixels(const MapBox& sourceRegion, int widthInPixels, int heightInPixels,
-		GDALRIOResampleAlg algorithm)
+	std::vector<std::int16_t> readPixels(const MapBox& sourceRegion, int widthInPixels, int heightInPixels)
 	{
 		std::vector<std::int16_t> pixels(static_cast<size_t>(widthInPixels) * heightInPixels);
-
-		GDALRasterIOExtraArg extraArg = { 0 };
-		extraArg.nVersion = RASTERIO_EXTRA_ARG_CURRENT_VERSION + 1;
-		extraArg.eResampleAlg = algorithm;
 
 		auto error = getDataset().RasterIO(GDALRWFlag::GF_Read,
 			sourceRegion.min_corner().get<0>(), sourceRegion.min_corner().get<1>(),
@@ -50,7 +45,7 @@ protected:
 			pixels.data(), widthInPixels, heightInPixels, GDALDataType::GDT_Int16,
 			1, nullptr, // 1 band is required
 			0, 0, 0,
-			&extraArg);
+			nullptr);
 		EXPECT_EQ(CPLErr::CE_None, error);
 
 		return pixels;
@@ -148,16 +143,16 @@ TEST_F(DatasetTests, rasterIO)
 		  14, 16 });
 
 	// whole bounding box with resolution = 2
-	auto pixels = readPixels(makeBox(0, 0, 4, 4), 2, 2, GDALRIOResampleAlg::GRIORA_Bilinear);
+	auto pixels = readPixels(makeBox(0, 0, 4, 4), 2, 2);
 	EXPECT_THAT(pixels, testing::ElementsAre(
 		0, 1, // top-down
 		2, 13));
 
 	// a region with resolution = 1
-	pixels = readPixels(makeBox(2, 1, 4, 4), 2, 3, GDALRIOResampleAlg::GRIORA_NearestNeighbour);
+	pixels = readPixels(makeBox(2, 1, 4, 4), 2, 3);
 	EXPECT_THAT(pixels, testing::ElementsAre(
 		1, 1,
-		1, 1,
+		2, 2,
 		10, 12));
 }
 
