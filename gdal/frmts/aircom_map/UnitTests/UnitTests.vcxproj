@@ -177,7 +177,7 @@
     <Import Project="..\packages\boost-headers-symena.1.59.0.1\build\native\boost-headers-symena.targets" Condition="Exists('..\packages\boost-headers-symena.1.59.0.1\build\native\boost-headers-symena.targets')" />
     <Import Project="..\packages\boost-system-symena.1.59.0.1\build\native\boost-system-symena.targets" Condition="Exists('..\packages\boost-system-symena.1.59.0.1\build\native\boost-system-symena.targets')" />
     <Import Project="..\packages\boost-filesystem-symena.1.59.0.1\build\native\boost-filesystem-symena.targets" Condition="Exists('..\packages\boost-filesystem-symena.1.59.0.1\build\native\boost-filesystem-symena.targets')" />
-    <Import Project="..\packages\gdal-symena.redist.2.0.20.0\build\native\gdal-symena.redist.targets" Condition="Exists('..\packages\gdal-symena.redist.2.0.20.0\build\native\gdal-symena.redist.targets')" />
-    <Import Project="..\packages\gdal-symena.2.0.20.0\build\native\gdal-symena.targets" Condition="Exists('..\packages\gdal-symena.2.0.20.0\build\native\gdal-symena.targets')" />
+    <Import Project="..\packages\gdal-symena.redist.2.0.21.0\build\native\gdal-symena.redist.targets" Condition="Exists('..\packages\gdal-symena.redist.2.0.21.0\build\native\gdal-symena.redist.targets')" />
+    <Import Project="..\packages\gdal-symena.2.0.21.0\build\native\gdal-symena.targets" Condition="Exists('..\packages\gdal-symena.2.0.21.0\build\native\gdal-symena.targets')" />
   </ImportGroup>
 </Project>
