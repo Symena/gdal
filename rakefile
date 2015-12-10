@@ -1,0 +1,22 @@
+require 'symenabuild'
+require 'fileutils'
+
+task :build do
+  Symenabuild.prepare_working_directory
+  Symenabuild.launch_checked("build.bat")
+end
+
+task :build_package => :build do
+  FileUtils.rm_r 'gdal/frmts/aircom_map/packages'
+  Symenabuild.launch_checked("PowerShell.exe -Command Write-NuGetPackage -Verbose ./gdal.autopkg")
+end
+
+task :test_package => :build_package do
+  Symenabuild.launch_checked("test.bat")
+end
+
+task :publish_package => :test_package do
+  Symenabuild.launch_checked("nuget push -Source http://sbuild01:8080/nuget/Default -ApiKey Admin:Admin *.nupkg")
+end
+
+task :default => :publish_package
