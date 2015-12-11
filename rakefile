@@ -1,12 +1,31 @@
 require 'symenabuild'
 require 'fileutils'
 
+ENV['GO_SERVER_URL'] = 'http://svgo01:8153/go' # Unconditional, https supplied by Go doesn't work due to certificate issues.
+ENV['GO_USER'] ||= 'vie.sim'
+ENV['GO_PASSWORD'] ||= 'Salabim123!'
+ENV['GO_PIPELINE_NAME'] ||= 'GDAL'
+ENV['GO_PIPELINE_COUNTER'] ||= '10'
+ENV['GO_STAGE_NAME'] ||= 'Build'
+ENV['GO_STAGE_COUNTER'] ||= '1'
+ENV['GO_JOB_NAME'] ||= 'BuildAndPackage'
+ENV['Verbose'] ||= '3'
+
+require 'gocd/rake'
+
 task :build do
-  Symenabuild.prepare_working_directory
+  Dir.chdir '..' do  
+    Symenabuild.prepare_working_directory
+  end
+  
   Symenabuild.launch_checked("build.bat")
 end
 
-task :build_package => :build do
+task :process_executables => :build do
+  Symenabuild.post_process_executables(*Dir.glob('build*/bin/gdal200.dll'))
+end
+
+task :build_package => :process_executables do
   FileUtils.rm_r 'gdal/frmts/aircom_map/packages'
   Symenabuild.launch_checked("PowerShell.exe -Command Write-NuGetPackage -Verbose ./gdal.autopkg")
 end
@@ -19,4 +38,18 @@ task :publish_package => :test_package do
   Symenabuild.launch_checked("nuget push -Source http://sbuild01:8080/nuget/Default -ApiKey Admin:Admin *.nupkg")
 end
 
-task :default => :publish_package
+task :upload_artifacts => :test_package do
+  result_artifact('buildd32/bin/gdal200.dll', 'x86/debug/gdal200.dll')
+  result_artifact('buildo32/bin/gdal200.dll', 'x86/gdal200.dll')
+  result_artifact('buildd64/bin/gdal200.dll', 'debug/gdal200.dll')
+  result_artifact('buildo64/bin/gdal200.dll', 'gdal200.dll')
+  
+  result_artifact('buildd32/lib/gdal_i.lib',  'x86/debug/gdal_i.lib')
+  result_artifact('buildo32/lib/gdal_i.lib',  'x86/gdal_i.lib')
+  result_artifact('buildd64/lib/gdal_i.lib',  'debug/gdal_i.lib')
+  result_artifact('buildo64/lib/gdal_i.lib',  'gdal_i.lib')
+  
+  result_artifacts('gdal/data/*','gdal/')
+end
+
+task :default => [:publish_package, :upload_artifacts]
