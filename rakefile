@@ -1,17 +1,18 @@
-require 'symenabuild'
 require 'fileutils'
 
 ENV['GO_SERVER_URL'] = 'http://svgo01:8153/go' # Unconditional, https supplied by Go doesn't work due to certificate issues.
 ENV['GO_USER'] ||= 'vie.sim'
 ENV['GO_PASSWORD'] ||= 'Salabim123!'
 ENV['GO_PIPELINE_NAME'] ||= 'GDAL'
-ENV['GO_PIPELINE_COUNTER'] ||= '10'
+#ENV['GO_PIPELINE_COUNTER'] ||= '10'
 ENV['GO_STAGE_NAME'] ||= 'Build'
 ENV['GO_STAGE_COUNTER'] ||= '1'
 ENV['GO_JOB_NAME'] ||= 'BuildAndPackage'
 ENV['Verbose'] ||= '3'
 
-require 'gocd/rake'
+require 'symenarequire'
+require_version 'symenabuild', '=1.0'
+require_version 'gocd/rake', '=1.1.0'
 
 task :build do
   Dir.chdir '..' do  
