@@ -9,7 +9,7 @@ ENV['Verbose'] ||= '3'
 
 require 'symenarequire'
 require_version 'symenabuild', '~>1.3'
-require_version 'gocd/rake', '~>1.3', '>1.3.1'
+require_version 'gocd/rake', '~>1.3', '>=1.3.1'
 
 task :build do
   Symenabuild.prepare_working_directory '..'
