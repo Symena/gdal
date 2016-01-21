@@ -1,0 +1,15 @@
+﻿{
+  "dependencies": {
+    "boost-filesystem-symena": "1.59.0.1",
+    "boost-headers-symena": "1.59.0.1",
+    "gdal-symena": "2.0.21.0",
+    "gdal-symena.redist":"2.0.21.0"
+  },
+  "frameworks": {
+    "native": {}
+  },
+  "runtimes": {
+    "win-x64": {},
+    "win-x86": {}
+  }
+}

@@ -19,3 +19,6 @@ x64*
 *.user
 gdal/frmts/aircom_map/packages/*
 *.ilk
+*.lock.json
+*.nuget.props
+*.nuget.targets
