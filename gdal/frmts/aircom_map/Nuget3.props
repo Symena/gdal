@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+	<!-- NuGetTargetMoniker is currently set incorrectly to net40, so we need to fix it with this hack -->
+    <NuGetTargetMoniker Condition="'$(Language)' == 'C++'">native,Version=v0.0</NuGetTargetMoniker>
+	<Nuget3Imported>true</Nuget3Imported>
+  </PropertyGroup>
+</Project>
