@@ -22,7 +22,6 @@ task :process_executables => :build do
 end
 
 task :build_package => :process_executables do
-  FileUtils.rm_r 'gdal/frmts/aircom_map/packages'
   Symenabuild.launch_checked("PowerShell.exe -Command Write-NuGetPackage -Verbose ./gdal.autopkg")
 end
 

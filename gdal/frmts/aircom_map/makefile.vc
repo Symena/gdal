@@ -7,7 +7,7 @@ default:	build-lib
 	if exist $(ARCHITECTURE)\$(CONFIGURATION)\AircomMap.pdb xcopy /D /Y $(ARCHITECTURE)\$(CONFIGURATION)\AircomMap.pdb ..\o
 
 build-lib:
-	nuget restore AircomMap\packages.config -SolutionDirectory .
+	nuget restore AircomMap\project.json
 	msbuild AircomMap.sln /t:Rebuild /p:Configuration=$(CONFIGURATION)_LibOnly;Platform=$(ARCHITECTURE) /m:6
 
 build:
