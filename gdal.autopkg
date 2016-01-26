@@ -1,7 +1,7 @@
 nuget {
   nuspec {
     id = gdal-symena;
-    version: 2.0.21.0;
+    version: 2.0.0.${GO_PIPELINE_COUNTER};
     title: "GDAL Library, Symena Edition";
     authors: {Various};
     owners: {};
@@ -12,7 +12,7 @@ nuget {
     description: @"A library for reading and writing a multitude of geospatial
 information formats. This NuGet package is created by Symena.";
     releaseNotes: @"Initial release.";
-    copyright: Copyright 2015;
+    copyright: {};
     tags: { gdal };
   };
 
@@ -52,10 +52,10 @@ information formats. This NuGet package is created by Symena.";
       bin: buildo32\bin\gdal200.dll;
     };
     
-    net40 += {
+	net += {
       #output { package = redist; };
-      "net40\gdal-symena.redist.targets";
-      #destination : { \build\net40 };
+      #destination: { \build\net };
+      "net\gdal-symena.redist.targets";
     };
   };
 

@@ -1,7 +1,7 @@
 require 'fileutils'
 
 ENV['GO_PIPELINE_NAME'] ||= 'GDAL'
-#ENV['GO_PIPELINE_COUNTER'] ||= '10'
+ENV['GO_PIPELINE_COUNTER'] ||= '61'
 ENV['GO_STAGE_NAME'] ||= 'Build'
 ENV['GO_STAGE_COUNTER'] ||= '1'
 ENV['GO_JOB_NAME'] ||= 'BuildAndPackage'
