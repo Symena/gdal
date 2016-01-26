@@ -1,6 +1,6 @@
 nuget {
   nuspec {
-    id = gdal-symena;
+    id: gdal-symena;
     version: 2.0.0.${GO_PIPELINE_COUNTER};
     title: "GDAL Library, Symena Edition";
     authors: {Various};
