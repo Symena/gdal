@@ -1,15 +1,12 @@
-require 'fileutils'
-
 ENV['GO_PIPELINE_NAME'] ||= 'GDAL'
-ENV['GO_PIPELINE_COUNTER'] ||= '61'
+ENV['GO_PIPELINE_COUNTER'] ||= '64'
 ENV['GO_STAGE_NAME'] ||= 'Build'
 ENV['GO_STAGE_COUNTER'] ||= '1'
 ENV['GO_JOB_NAME'] ||= 'BuildAndPackage'
 ENV['Verbose'] ||= '3'
 
 require 'symenarequire'
-require_version 'symenabuild', '~>1.3'
-require_version 'gocd/rake', '~>1.3', '>=1.3.1'
+require_version 'symenabuild', '~>2.2'
 
 task :clean_directory do
   Symenabuild.prepare_working_directory ".."
@@ -23,32 +20,38 @@ task :process_executables => :build do
   Symenabuild.post_process_executables(*Dir.glob('build*/bin/gdal200.dll'))
 end
 
-task :build_package => :process_executables do
-  Symenabuild.launch_checked("PowerShell.exe -Command Write-NuGetPackage -Verbose ./gdal.autopkg")
+task :build_package => :process_executables do #for testing we require a built (but not published) nuget package
+  Symenabuild.launch_checked("PowerShell.exe -Command Write-NuGetPackage -Verbose gdal.autopkg")
 end
 
 task :test_package => :build_package do
-  Symenabuild.launch_checked("test.bat")
+  id , version = Symenabuild.get_package_id_and_version(File.read('gdal.autopkg'))
+  versionmapping = {id => version, id+'.redist' => version}
+  package_location = Dir.pwd
+  
+  Dir.chdir "gdal/frmts/aircom_map" do
+    Symenabuild.build('AircomMap.sln', versionmapping, package_location)
+    Symenabuild.run_test('x64\Release\UnitTests.exe')
+    Symenabuild.launch_checked('x64\Release\IntegrationTests.exe "..\..\..\TestData" test')
+  end
 end
 
-task :publish_package => :test_package do
-  Symenabuild.launch_checked("nuget push -Source http://sbuild01:8080/nuget/Default -ApiKey Admin:Admin *.nupkg")
+task :publish_package => :test_package do #here we build again, and then publish
+  Symenabuild.create_nuget_package('gdal.autopkg')
 end
 
 task :upload_artifacts => :test_package do
-	if Symenabuild::OnGO
-	  result_artifact('buildd32/bin/gdal200.dll', 'x86/debug/gdal200.dll')
-	  result_artifact('buildo32/bin/gdal200.dll', 'x86/gdal200.dll')
-	  result_artifact('buildd64/bin/gdal200.dll', 'debug/gdal200.dll')
-	  result_artifact('buildo64/bin/gdal200.dll', 'gdal200.dll')
-	  
-	  result_artifact('buildd32/lib/gdal_i.lib',  'x86/debug/gdal_i.lib')
-	  result_artifact('buildo32/lib/gdal_i.lib',  'x86/gdal_i.lib')
-	  result_artifact('buildd64/lib/gdal_i.lib',  'debug/gdal_i.lib')
-	  result_artifact('buildo64/lib/gdal_i.lib',  'gdal_i.lib')
-	  
-	  result_artifacts('gdal/data/*','gdal/')
-	end
+  result_artifact('buildd32/bin/gdal200.dll', 'x86/debug/gdal200.dll')
+  result_artifact('buildo32/bin/gdal200.dll', 'x86/gdal200.dll')
+  result_artifact('buildd64/bin/gdal200.dll', 'debug/gdal200.dll')
+  result_artifact('buildo64/bin/gdal200.dll', 'gdal200.dll')
+  
+  result_artifact('buildd32/lib/gdal_i.lib',  'x86/debug/gdal_i.lib')
+  result_artifact('buildo32/lib/gdal_i.lib',  'x86/gdal_i.lib')
+  result_artifact('buildd64/lib/gdal_i.lib',  'debug/gdal_i.lib')
+  result_artifact('buildo64/lib/gdal_i.lib',  'gdal_i.lib')
+  
+  result_artifacts('gdal/data/*','gdal/')
 end
 
 task :default => [:publish_package, :upload_artifacts]
