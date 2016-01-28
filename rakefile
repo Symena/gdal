@@ -54,7 +54,7 @@ task :build_package => :process_executables do #for testing we require a built (
   Symenabuild.launch_checked("PowerShell.exe -Command Write-NuGetPackage -Verbose gdal.autopkg")
 end
 
-task :test_package do => :build_package do
+task :test_package => :build_package do
   id , version = Symenabuild.get_package_id_and_version(File.read('gdal.autopkg'))
   versionmapping = {id => version, id+'.redist' => version}
   package_location = Dir.pwd
