@@ -6,7 +6,7 @@ ENV['GO_JOB_NAME'] ||= 'BuildAndPackage'
 ENV['Verbose'] ||= '3'
 
 require 'symenarequire'
-require_version 'symenabuild', '~>2.2', '>=2.2.2'
+require_version 'symenabuild', '~>2.2', '>=2.2.3'
 
 task :clean_directory do
   Symenabuild.prepare_working_directory ".."
@@ -21,7 +21,7 @@ task :prepare_build_environment => :clean_directory do
   
   ENV['GDAL_LINK_BOOST_VERSION'] = boost_version
   ENV['GDAL_LINK_BOOST_MAJOR_MINOR'] = boost_major_minor
-   
+ 
   FileUtils.copy_entry 'gdal', 'gdal_32_debug'
   FileUtils.copy_entry 'gdal', 'gdal_32_release'
   FileUtils.copy_entry 'gdal', 'gdal_64_debug'
