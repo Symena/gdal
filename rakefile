@@ -6,7 +6,7 @@ ENV['GO_JOB_NAME'] ||= 'BuildAndPackage'
 ENV['Verbose'] ||= '3'
 
 require 'symenarequire'
-require_version 'symenabuild', '~>2.2', '>=2.2.3'
+require_version 'symenabuild', '~>2.2', '>=2.2.4'
 
 task :clean_directory do
   Symenabuild.prepare_working_directory ".."
