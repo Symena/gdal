@@ -6,15 +6,45 @@ ENV['GO_JOB_NAME'] ||= 'BuildAndPackage'
 ENV['Verbose'] ||= '3'
 
 require 'symenarequire'
-require_version 'symenabuild', '~>2.2'
+require_version 'symenabuild', '~>2.2', '>=2.2.2'
 
 task :clean_directory do
   Symenabuild.prepare_working_directory ".."
 end
 
-task :build => :clean_directory do 
-  Symenabuild.launch_checked("build.bat")
+task :prepare_build_environment => :clean_directory do
+  boost_version = $run.dependencies.nuget_packages['boost-headers-symena']
+  
+  version_parts = boost_version.split '.'
+  
+  boost_major_minor = version_parts[0]+'_'+version_parts[1]
+  
+  ENV['GDAL_LINK_BOOST_VERSION'] = boost_version
+  ENV['GDAL_LINK_BOOST_MAJOR_MINOR'] = boost_major_minor
+   
+  FileUtils.copy_entry 'gdal', 'gdal_32_debug'
+  FileUtils.copy_entry 'gdal', 'gdal_32_release'
+  FileUtils.copy_entry 'gdal', 'gdal_64_debug'
+  FileUtils.copy_entry 'gdal', 'gdal_64_release'
 end
+
+task :build_32_debug => :prepare_build_environment do
+  Symenabuild.launch_checked("build_32_debug.bat")
+end
+
+task :build_32_release => :prepare_build_environment do
+  Symenabuild.launch_checked("build_32_release.bat")
+end
+
+task :build_64_debug => :prepare_build_environment do
+  Symenabuild.launch_checked("build_64_debug.bat")
+end
+
+task :build_64_release => :prepare_build_environment do
+  Symenabuild.launch_checked("build_64_release.bat")
+end
+
+multitask :build => [:build_32_debug, :build_32_release, :build_64_debug, :build_64_release]
 
 task :process_executables => :build do
   Symenabuild.post_process_executables(*Dir.glob('build*/bin/gdal200.dll'))
@@ -24,12 +54,12 @@ task :build_package => :process_executables do #for testing we require a built (
   Symenabuild.launch_checked("PowerShell.exe -Command Write-NuGetPackage -Verbose gdal.autopkg")
 end
 
-task :test_package => :build_package do
+task :test_package do => :build_package do
   id , version = Symenabuild.get_package_id_and_version(File.read('gdal.autopkg'))
   versionmapping = {id => version, id+'.redist' => version}
   package_location = Dir.pwd
   
-  Dir.chdir "gdal/frmts/aircom_map" do
+  Dir.chdir "gdal_64_release/frmts/aircom_map" do
     Symenabuild.build('AircomMap.sln', versionmapping, package_location)
     Symenabuild.run_test('x64\Release\UnitTests.exe')
     Symenabuild.launch_checked('x64\Release\IntegrationTests.exe "..\..\..\TestData" test')

@@ -1,5 +1,4 @@
 syntax: glob
-build*
 *.obj
 *.exe
 *.lib
@@ -21,3 +20,7 @@ x64*
 *.lock.json
 *.nuget.props
 *.nuget.targets
+gdal_*_*
+.rake/*
+buildd*
+buildo*

@@ -761,6 +761,6 @@ NUGET_PACKAGE_ROOT=$(USERPROFILE)\.nuget\packages\
 
 # Additional library dependencies for AircomMap
 LINKER_FLAGS = /LIBPATH:$(NUGET_PACKAGE_ROOT) $(LINKER_FLAGS)
-EXTERNAL_LIBS = boost-filesystem-symena\1.59.0.1\build\native\lib\$(ARCHITECTURE)\$(CONFIGURATION)\v140\libboost_filesystem-vc140-mt$(LIBPART)-1_59.lib $(EXTERNAL_LIBS)
-EXTERNAL_LIBS = boost-system-symena\1.59.0.1\build\native\lib\$(ARCHITECTURE)\$(CONFIGURATION)\v140\libboost_system-vc140-mt$(LIBPART)-1_59.lib $(EXTERNAL_LIBS)
+EXTERNAL_LIBS = boost-filesystem-symena\$(GDAL_LINK_BOOST_VERSION)\build\native\lib\$(ARCHITECTURE)\$(CONFIGURATION)\v140\libboost_filesystem-vc140-mt$(LIBPART)-$(GDAL_LINK_BOOST_MAJOR_MINOR).lib $(EXTERNAL_LIBS)
+EXTERNAL_LIBS = boost-system-symena\$(GDAL_LINK_BOOST_VERSION)\build\native\lib\$(ARCHITECTURE)\$(CONFIGURATION)\v140\libboost_system-vc140-mt$(LIBPART)-$(GDAL_LINK_BOOST_MAJOR_MINOR).lib $(EXTERNAL_LIBS)
 
