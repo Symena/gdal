@@ -27,7 +27,8 @@ Dataset::Dataset(std::wistream& gapFile, Warnings& warnings)
 {}
 
 Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
-	: 
-{}
+{
+
+}
 
 }

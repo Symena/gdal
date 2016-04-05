@@ -10,7 +10,7 @@
 #include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-namespace aircom { namespace pred_raster {
+namespace aircom_pred_raster {
 
 class Dataset : public GDALPamDataset
 {
@@ -32,4 +32,4 @@ public:
 	double getResolution() const { return predData.nResolution_cm / 100.0; }
 };
 
-}}
+}
