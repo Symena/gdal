@@ -12,12 +12,15 @@
 
 namespace aircom_pred_raster {
 
+enum class Sections
+{
+	PathlossOnly,
+	InclinationOnly,
+	Both
+};
+
 class Dataset : public GDALPamDataset
 {
-	aircom_map::MapBox boundingBox;
-	aircom::PredData predData;
-	boost::filesystem::path predictionFolder;
-
 public:
 	using Warnings = aircom_map::Warnings;
 
@@ -30,6 +33,13 @@ public:
 
 	const auto& getBoundingBox() const { return boundingBox; }
 	double getResolution() const { return predData.nResolution_cm / 100.0; }
+
+private:
+	boost::filesystem::path predictionFolder;
+	aircom::PredData predData;
+	Sections sections;
+
+	aircom_map::MapBox boundingBox;
 };
 
 }
