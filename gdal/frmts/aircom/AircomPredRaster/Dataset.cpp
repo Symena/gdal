@@ -1,10 +1,15 @@
 #include "Dataset.h"
 
 #include <fstream>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
+#include "membuf.h"
+#include "WarningsReporter.h"
 
 using namespace boost::property_tree;
+using namespace aircom_map;
 
 namespace aircom_pred_raster {
 
@@ -53,6 +58,54 @@ Sections parseSections(std::wstring sections)
 	return Sections::Both;
 }
 
+}
+
+GDALDataset* Dataset::Open(GDALOpenInfo* openInfo)
+{
+	if (openInfo->pszFilename == nullptr || openInfo->pabyHeader == nullptr || openInfo->fpL == nullptr)
+		return nullptr;
+
+	if (!openInfo->bStatOK)
+		return nullptr;
+
+	if (openInfo->eAccess != GA_ReadOnly)
+	{
+		CPLError(CE_Failure, CPLE_NotSupported, "The Aircom ENTERPRISE Map Data driver only supports readonly access to existing datasets.\n");
+		return nullptr;
+	}
+
+	const boost::filesystem::path path = openInfo->pszFilename;
+
+	membuf sbuf(reinterpret_cast<char*>(openInfo->pabyHeader), openInfo->nHeaderBytes);
+	std::istream header(&sbuf);
+
+	/* TODO
+	if (!Identify(indexFile, header))
+		return nullptr;
+	*/
+
+	Warnings warnings;
+	WarningsReporter warningsReporter(warnings);
+
+	std::unique_ptr<Dataset> dataSet;
+
+	try
+	{
+		WarningsContext context(warnings, boost::filesystem::absolute(path).string() + ": ");
+		dataSet = std::make_unique<Dataset>(path, warnings);
+	}
+	catch (const std::runtime_error& e)
+	{
+		CPLError(CE_Failure, CPLE_AppDefined, "Reading index file %s failed: %s", openInfo->pszFilename, e.what());
+		return nullptr;
+	}
+
+	dataSet->SetDescription(openInfo->pszFilename);
+	dataSet->TryLoadXML();
+
+	dataSet->oOvManager.Initialize(dataSet.get(), openInfo->pszFilename);
+
+	return dataSet.release();
 }
 
 Dataset::Dataset(const boost::filesystem::path& gapFile, Warnings& warnings)

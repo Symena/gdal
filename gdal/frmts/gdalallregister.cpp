@@ -350,8 +350,8 @@ void CPL_STDCALL GDALAllRegister()
     GDALRegister_MAP();
 #endif
 
-#ifdef FRMT_aircom_map
-	GDALRegister_AIRCOM_MAP();
+#ifdef FRMT_aircom
+	GDALRegister_AIRCOM();
 #endif
 
 /* -------------------------------------------------------------------- */

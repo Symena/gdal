@@ -8,6 +8,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/range/algorithm.hpp>
 
+#include "membuf.h"
 #include "RasterBand.h"
 #include "Renderer.h"
 #include "WarningsReporter.h"
@@ -16,13 +17,6 @@ namespace aircom_map {
 
 namespace {
 
-struct membuf: public std::streambuf
-{
-	membuf(char* begin, size_t size)
-	{
-		this->setg(begin, begin, begin + size);
-	}
-};
 std::vector<Line> readLines(std::istream& indexFile, Warnings& warnings, const boost::filesystem::path& dataRoot)
 {
 	if (!indexFile.good())
@@ -71,7 +65,7 @@ GDALDataset* Dataset::Open(GDALOpenInfo* openInfo)
 
 	if (openInfo->eAccess != GA_ReadOnly)
 	{
-		CPLError(CE_Failure, CPLE_NotSupported, "The Index driver only supports readonly access to existing datasets.\n");
+		CPLError(CE_Failure, CPLE_NotSupported, "The Aircom ENTERPRISE Map driver only supports readonly access to existing datasets.\n");
 		return nullptr;
 	}
 
@@ -191,7 +185,7 @@ bool Dataset::render(std::int16_t* dst, DataOrientation dataOrientation, int dst
 	}
 	catch (const std::exception& e)
 	{
-		CPLError(CE_Failure, CPLE_AppDefined, "Rendering index data set failed: %s", e.what());
+		CPLError(CE_Failure, CPLE_AppDefined, "Rendering Aircom ENTERPRISE Map dataset failed: %s", e.what());
 		return false;
 	}
 
@@ -206,7 +200,7 @@ CPLErr Dataset::IRasterIO(GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXSize, 
 {
 	if (eRWFlag != GDALRWFlag::GF_Read)
 	{
-		CPLError(CPLErr::CE_Failure, CPLE_NoWriteAccess, "Index data sets can only be read from");
+		CPLError(CPLErr::CE_Failure, CPLE_NoWriteAccess, "Aircom ENTERPRISE Map datasets can only be read from");
 		return CPLErr::CE_Failure;
 	}
 
@@ -220,7 +214,7 @@ CPLErr Dataset::IRasterIO(GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXSize, 
 		(nPixelSpace != 0 && nPixelSpace != sizeof(std::int16_t)) ||
 		(nLineSpace != 0 && nLineSpace != nBufXSize * nPixelSpace))
 	{
-		CPLError(CPLErr::CE_Failure, CPLE_NotSupported, "Index data sets only support reading into contiguous 16-bit buffers");
+		CPLError(CPLErr::CE_Failure, CPLE_NotSupported, "Aircom ENTERPRISE Map datasets only support reading into contiguous 16-bit buffers");
 		return CPLErr::CE_Failure;
 	}
 

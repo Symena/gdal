@@ -25,3 +25,4 @@ gdal_*_*
 buildd*
 buildo*
 *.opendb
+Debug/*
