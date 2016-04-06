@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AircomPredRaster", "AircomP
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AircomShared", "AircomShared\AircomShared.vcxproj", "{8CE72BA8-435C-4CE5-9006-FCE0C0D7468E}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AircomTypeLibraries", "AircomTypeLibraries\AircomTypeLibraries.vcxproj", "{3177711C-DF46-43BA-A40F-3BACA97F2732}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug_LibOnly|Win32 = Debug_LibOnly|Win32
@@ -83,6 +85,14 @@ Global
 		{8CE72BA8-435C-4CE5-9006-FCE0C0D7468E}.Release|Win32.Build.0 = Release|Win32
 		{8CE72BA8-435C-4CE5-9006-FCE0C0D7468E}.Release|x64.ActiveCfg = Release|x64
 		{8CE72BA8-435C-4CE5-9006-FCE0C0D7468E}.Release|x64.Build.0 = Release|x64
+		{3177711C-DF46-43BA-A40F-3BACA97F2732}.Debug_LibOnly|Win32.ActiveCfg = Debug|Win32
+		{3177711C-DF46-43BA-A40F-3BACA97F2732}.Debug_LibOnly|x64.ActiveCfg = Debug|x64
+		{3177711C-DF46-43BA-A40F-3BACA97F2732}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3177711C-DF46-43BA-A40F-3BACA97F2732}.Debug|x64.ActiveCfg = Debug|x64
+		{3177711C-DF46-43BA-A40F-3BACA97F2732}.Release_LibOnly|Win32.ActiveCfg = Release|Win32
+		{3177711C-DF46-43BA-A40F-3BACA97F2732}.Release_LibOnly|x64.ActiveCfg = Release|x64
+		{3177711C-DF46-43BA-A40F-3BACA97F2732}.Release|Win32.ActiveCfg = Release|Win32
+		{3177711C-DF46-43BA-A40F-3BACA97F2732}.Release|x64.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

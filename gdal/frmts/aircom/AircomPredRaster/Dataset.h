@@ -2,15 +2,17 @@
 
 #include "gdal_pam.h"
 
-#include "Aircom/PredData.h"
-#include "Warnings.h"
+#include "API.h"
 #include "Geometry.h"
+#include "Warnings.h"
 
 #include <boost/filesystem/path.hpp>
 #include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 namespace aircom { namespace pred_raster {
+
+class ComFactory;
 
 enum class Sections
 {
@@ -36,6 +38,7 @@ private:
 	PredData predData;
 	Sections sections;
 
+	std::unique_ptr<ComFactory> comFactory;
 	MapBox boundingBox;
 };
 

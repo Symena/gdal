@@ -5,6 +5,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
+#include "ComFactory.h"
 #include "WarningsReporter.h"
 
 using namespace boost::property_tree;
@@ -33,11 +34,9 @@ PredData parsePredData(const wptree& predDataNode)
 	r.fFrequency_MHz = predDataNode.get<float>(L"fFrequency_MHz");
 	r.nModelCRC = predDataNode.get<std::uint64_t>(L"nModelCRC");
 	r.nPredFlags = predDataNode.get<std::uint32_t>(L"nPredFlags");
-
 	r.nAntennaCRC = predDataNode.get<std::uint64_t>(L"nAntennaCRC");
 	r.fAntennaMechanicalTilt_deg = predDataNode.get<double>(L"fAntennaMechanicalTilt_deg");
 	r.fAntennaAzimuth_deg = predDataNode.get<double>(L"fAntennaAzimuth_deg");
-
 	r.nCwWeight = predDataNode.get<std::uint16_t>(L"nCwWeight");
 	r.fCwRolloff = predDataNode.get<float>(L"fCwRolloff");
 
@@ -108,14 +107,14 @@ Dataset::Dataset(std::wistream& gapFile, Warnings& warnings)
 
 Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
 {
-	const auto apiNode = gapTree.get_child(L"API");
-
-	const auto guid = apiNode.get<std::wstring>(L"CRasterGUID");
-	// TODO: set up appropriate COM factory
+	const auto& apiNode = gapTree.get_child(L"API");
 
 	predictionFolder = apiNode.get<std::wstring>(L"PredictionFolder");
 	predData = parsePredData(apiNode.get_child(L"PredData"));
 	sections = parseSections(apiNode.get<std::wstring>(L"Section", L""));
+
+	const auto predRasterClassIDString = apiNode.get<std::wstring>(L"CRasterGUID");
+	comFactory = std::make_unique<ComFactory>(predRasterClassIDString);
 }
 
 }}
