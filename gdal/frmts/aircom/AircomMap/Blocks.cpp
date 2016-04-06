@@ -3,7 +3,7 @@
 #include <boost/geometry/algorithms/intersection.hpp>
 #include <boost/range/algorithm/sort.hpp>
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 Block::Block(const MapBox& boundingBox, int resolution, std::shared_ptr<StreamSource> dataStream, int index)
 	: boundingBox(boundingBox)
@@ -72,4 +72,4 @@ std::vector<Block> Blocks::getIntersectingBlocks(const MapBox& box) const
 	return result;
 }
 
-}
+}}

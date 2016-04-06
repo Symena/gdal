@@ -1,6 +1,6 @@
 #include "Warnings.h"
 
-namespace aircom_map {
+namespace aircom {
 
 void Warnings::add(const std::string& warning)
 {

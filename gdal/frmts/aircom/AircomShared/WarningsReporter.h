@@ -4,7 +4,7 @@
 
 #include <cpl_error.h>
 
-namespace aircom_map {
+namespace aircom {
 
 class WarningsReporter
 {

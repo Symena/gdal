@@ -4,7 +4,7 @@
 
 #include <gmock/gmock.h>
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 class DatasetTests : public testing::Test
 {
@@ -198,4 +198,4 @@ TEST_F(DatasetIdentifyTests, IdentificationWorksIfFirstLineCanBeParsed)
 	EXPECT_TRUE(identify());
 }
 
-}
+}}

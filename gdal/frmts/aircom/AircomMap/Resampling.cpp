@@ -4,7 +4,7 @@
 #include <cassert>
 #include <boost/optional.hpp>
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 void resample(const void* src, int srcWidth, int srcHeight,
               void* dst, int dstWidth, int dstHeight,
@@ -53,4 +53,4 @@ void resample(const void* src, int srcWidth, int srcHeight,
 		pixelType, algorithm, boost::optional<double>(noDataValue));
 }
 
-}
+}}

@@ -14,7 +14,7 @@ extern "C" void CPL_DLL GDALRegister_AIRCOM_MAP()
 		driver->SetMetadataItem(GDAL_DCAP_RASTER, "YES");
 		driver->SetMetadataItem(GDAL_DMD_LONGNAME, "Aircom ENTERPRISE Map Data for height or clutter");
 
-		driver->pfnOpen = aircom_map::Dataset::Open;
+		driver->pfnOpen = aircom::map::Dataset::Open;
 		
 		GetGDALDriverManager()->RegisterDriver(driver);
 	}

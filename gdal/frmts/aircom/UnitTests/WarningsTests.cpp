@@ -4,7 +4,7 @@
 
 #include <boost/format.hpp>
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 TEST(WarningsTests, addSingleWarningWorks)
 {
@@ -111,4 +111,4 @@ TEST(WarningTests, formattedContext)
 	EXPECT_EQ("1 1.5 hello mystringW1", *w.begin());
 }
 
-}
+}}

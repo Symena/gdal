@@ -4,7 +4,7 @@
 #include <boost/endian/conversion.hpp>
 #include <boost/geometry/algorithms/intersection.hpp>
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 Renderer::Renderer(const Blocks& blocks, PixelType* data, DataOrientation dataOrientation, int widthInPixels,
 	int heightInPixels, int resolution, MapPoint bottomLeftCornerInMeters,
@@ -159,7 +159,7 @@ Renderer::UniqueDataPtr Renderer::resample(const PixelType* data, MapBox& region
 	auto newData = std::make_unique<PixelType[]>(numNewPixels);
 
 	const auto algorithm = (scalingFactor < 1 ? downsamplingAlgorithm : upsamplingAlgorithm);
-	aircom_map::resample(data, srcWidth, srcHeight, newData.get(), newWidth, newHeight, GDALDataType::GDT_Int16, algorithm, noDataValue);
+	aircom::map::resample(data, srcWidth, srcHeight, newData.get(), newWidth, newHeight, GDALDataType::GDT_Int16, algorithm, noDataValue);
 
 	region.max_corner() = region.min_corner() + MapPoint(newWidth * resolution, newHeight * resolution);
 
@@ -213,4 +213,4 @@ void Renderer::renderRegion(const PixelType* data, const MapBox& region)
 	}
 }
 
-}
+}}

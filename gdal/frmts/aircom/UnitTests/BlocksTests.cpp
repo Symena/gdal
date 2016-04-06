@@ -4,7 +4,7 @@
 
 using std::vector;
 
-namespace aircom_map { namespace {
+namespace aircom { namespace map { namespace {
 
 Line makeLine(int minX, int minY, int maxX, int maxY, int resolution = 1)
 {
@@ -110,4 +110,4 @@ TEST(Blocks, queriedBlocksAreOrderedByResolutionAndIndex)
 	EXPECT_THAT(indices, testing::ElementsAre(1, 2, 0));
 }
 
-}}
+}}}

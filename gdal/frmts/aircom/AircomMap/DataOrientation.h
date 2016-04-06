@@ -1,6 +1,6 @@
 #pragma once
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 enum class DataOrientation
 {
@@ -8,4 +8,4 @@ enum class DataOrientation
 	BottomUp
 };
 
-}
+}}

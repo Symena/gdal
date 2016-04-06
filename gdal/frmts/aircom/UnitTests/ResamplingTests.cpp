@@ -2,7 +2,7 @@
 
 #include <gmock/gmock.h>
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 TEST(Resampling, bilinearDownsampling)
 {
@@ -121,4 +121,4 @@ TEST(Resampling, bilinearDownsampling_onlyNoDataValues)
 		99, 99));
 }
 
-}
+}}

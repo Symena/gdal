@@ -1,6 +1,6 @@
 #include "RasterBand.h"
 
-namespace aircom_pred_raster {
+namespace aircom { namespace pred_raster {
 
 RasterBand::RasterBand(Dataset* owningDataSet, int bandIndex)
 {
@@ -23,4 +23,4 @@ CPLErr RasterBand::IReadBlock(int, int, void*)
 	return CPLErr::CE_Failure;
 }
 
-}
+}}

@@ -3,7 +3,7 @@
 
 #include <gmock/gmock.h>
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 TEST(RasterBand, constructor)
 {
@@ -79,4 +79,4 @@ TEST(RasterBand, rasterIO)
 		10, 12));
 }
 
-}
+}}

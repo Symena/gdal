@@ -10,7 +10,7 @@
 #include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-namespace aircom_pred_raster {
+namespace aircom { namespace pred_raster {
 
 enum class Sections
 {
@@ -22,8 +22,6 @@ enum class Sections
 class Dataset : public GDALPamDataset
 {
 public:
-	using Warnings = aircom_map::Warnings;
-
 	Dataset(const boost::filesystem::path& gapFile, Warnings& warnings);
 	Dataset(std::wistream& gapFile, Warnings& warnings);
 	Dataset(const boost::property_tree::wptree& gapTree, Warnings& warnings);
@@ -36,10 +34,10 @@ public:
 
 private:
 	boost::filesystem::path predictionFolder;
-	aircom::PredData predData;
+	PredData predData;
 	Sections sections;
 
-	aircom_map::MapBox boundingBox;
+	MapBox boundingBox;
 };
 
-}
+}}

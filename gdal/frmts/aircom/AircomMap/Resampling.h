@@ -2,7 +2,7 @@
 
 #include "gdal.h"
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 void resample(const void* src, int srcWidth, int srcHeight,
               void* dst, int dstWidth, int dstHeight,
@@ -13,4 +13,4 @@ void resample(const void* src, int srcWidth, int srcHeight,
               GDALDataType pixelType, GDALRIOResampleAlg algorithm,
               double noDataValue);
 
-}
+}}

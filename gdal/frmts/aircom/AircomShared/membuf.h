@@ -2,7 +2,7 @@
 
 #include <streambuf>
 
-namespace aircom_map {
+namespace aircom {
 
 struct membuf : public std::streambuf
 {

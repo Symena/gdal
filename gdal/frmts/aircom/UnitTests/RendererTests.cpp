@@ -6,7 +6,7 @@
 using std::int16_t;
 using std::vector;
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 struct RendererTest : public testing::Test
 {
@@ -304,4 +304,4 @@ TEST_F(RendererTest, render_withResampling)
 		  0, 10,    11, -9999 });
 }
 
-}
+}}

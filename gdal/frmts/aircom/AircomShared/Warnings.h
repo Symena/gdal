@@ -4,7 +4,7 @@
 #include <deque>
 #include <boost/format.hpp>
 
-namespace aircom_map {
+namespace aircom {
 
 class Warnings
 {

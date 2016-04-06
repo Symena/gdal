@@ -9,7 +9,7 @@
 #include "Geometry.h"
 #include "StreamSource.h"
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 class Block
 {
@@ -57,4 +57,4 @@ public:
 	std::vector<Block> getIntersectingBlocks(const MapBox& box) const;
 };
 
-}
+}}

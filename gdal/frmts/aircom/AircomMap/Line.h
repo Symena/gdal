@@ -8,7 +8,7 @@
 #include "StreamSource.h"
 #include "Warnings.h"
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 class Line
 {
@@ -49,4 +49,4 @@ private:
 	void checkMembers(Warnings& warnings);
 };
 
-}
+}}

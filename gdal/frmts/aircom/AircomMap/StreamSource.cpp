@@ -6,7 +6,7 @@
 
 #include <cpl_error.h>
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 std::unique_ptr<std::istream> FileStreamSource::getStream(Warnings& warnings) const 
 {
@@ -45,4 +45,4 @@ std::string FileStreamSource::getStreamDescription() const
 	return path.string();
 }
 
-}
+}}

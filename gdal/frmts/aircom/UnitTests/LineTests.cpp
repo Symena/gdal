@@ -2,7 +2,7 @@
 
 #include "Line.h"
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 class LineTests : public ::testing::Test
 {
@@ -145,4 +145,4 @@ TEST_F(LineTests, warnsForZeroPixelSizes)
 	EXPECT_EQ(1, warningCount());
 }
 
-}
+}}

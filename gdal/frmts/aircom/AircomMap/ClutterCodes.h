@@ -9,7 +9,7 @@
 
 #include <cpl_string.h>
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 class ClutterCodes
 {
@@ -30,4 +30,4 @@ private:
 
 };
 
-}
+}}

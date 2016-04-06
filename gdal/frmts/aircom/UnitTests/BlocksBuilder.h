@@ -9,7 +9,7 @@
 
 #include "Blocks.h"
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 class VectorBackedStreamSource: public StreamSource
 {
@@ -108,4 +108,4 @@ public:
 	}
 };
 
-}
+}}

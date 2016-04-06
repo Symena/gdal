@@ -7,7 +7,7 @@
 
 #include "Warnings.h"
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 struct StreamSource
 {
@@ -30,4 +30,4 @@ public:
 	virtual std::string getStreamDescription() const override;
 };
 
-}
+}}

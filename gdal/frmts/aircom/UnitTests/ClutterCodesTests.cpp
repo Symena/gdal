@@ -2,7 +2,7 @@
 
 #include "ClutterCodes.h"
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 class ClutterCodesTests : public ::testing::Test
 {
@@ -155,4 +155,4 @@ TEST_F(ClutterCodesTests, supportsGDALClutterCodes)
 	EXPECT_EQ("mountain", getGdalClutterCode(2));
 }
 
-}
+}}

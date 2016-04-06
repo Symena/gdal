@@ -4,7 +4,7 @@
 #include "DataOrientation.h"
 #include "gdal.h"
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 class Renderer
 {
@@ -55,4 +55,4 @@ public:
 	void renderRegion(const PixelType* data, const MapBox& region);
 };
 
-}
+}}

@@ -14,7 +14,7 @@ extern "C" void CPL_DLL GDALRegister_AIRCOM_PRED_RASTER()
 		driver->SetMetadataItem(GDAL_DCAP_RASTER, "YES");
 		driver->SetMetadataItem(GDAL_DMD_LONGNAME, "Aircom ENTERPRISE Prediction Data");
 
-		driver->pfnOpen = aircom_pred_raster::Dataset::Open;
+		driver->pfnOpen = aircom::pred_raster::Dataset::Open;
 		
 		GetGDALDriverManager()->RegisterDriver(driver);
 	}

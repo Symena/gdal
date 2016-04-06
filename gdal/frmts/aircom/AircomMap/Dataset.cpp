@@ -13,7 +13,7 @@
 #include "Renderer.h"
 #include "WarningsReporter.h"
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 namespace {
 
@@ -240,4 +240,4 @@ CPLErr Dataset::IRasterIO(GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXSize, 
 	return success ? CPLErr::CE_None : CPLErr::CE_Failure;
 }
 
-}
+}}

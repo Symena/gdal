@@ -4,7 +4,7 @@
 
 #include "Dataset.h"
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 class RasterBand: public GDALPamRasterBand
 {
@@ -26,4 +26,4 @@ private:
 	Dataset& getDataset() { return *static_cast<Dataset*>(poDS); }
 };
 
-}
+}}

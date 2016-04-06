@@ -9,9 +9,8 @@
 #include "WarningsReporter.h"
 
 using namespace boost::property_tree;
-using namespace aircom_map;
 
-namespace aircom_pred_raster {
+namespace aircom { namespace pred_raster {
 
 namespace {
 
@@ -22,9 +21,9 @@ wptree loadJson(std::wistream& jsonStream)
 	return tree;
 }
 
-aircom::PredData parsePredData(const wptree& predDataNode)
+PredData parsePredData(const wptree& predDataNode)
 {
-	aircom::PredData r;
+	PredData r;
 
 	r.nX_cm = predDataNode.get<std::int64_t>(L"nX_cm");
 	r.nY_cm = predDataNode.get<std::int64_t>(L"nY_cm");
@@ -126,4 +125,4 @@ Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
 	sections = parseSections(gapTree.get<std::wstring>(L"API.Sections", L""));
 }
 
-}
+}}

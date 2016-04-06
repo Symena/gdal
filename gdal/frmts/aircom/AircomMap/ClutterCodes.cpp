@@ -4,7 +4,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 ClutterCodes::ClutterCodes(const boost::filesystem::path& menuFile)
 	: ClutterCodes(std::ifstream(menuFile.string()))
@@ -97,4 +97,4 @@ void ClutterCodes::createClutterList(std::map<int, std::string>& clutterCodesMap
 	}
 }
 
-}
+}}

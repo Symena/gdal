@@ -6,7 +6,7 @@
 #include <boost/tokenizer.hpp>
 #include <boost/filesystem/operations.hpp>
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 Line::Line(const std::string& line, Warnings& warnings, const boost::filesystem::path& dataRoot)
 {
@@ -85,4 +85,4 @@ void Line::checkMembers(Warnings& warnings)
 	}
 }
 
-}
+}}

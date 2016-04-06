@@ -1,6 +1,6 @@
 #include "RasterBand.h"
 
-namespace aircom_map {
+namespace aircom { namespace map {
 
 RasterBand::RasterBand(Dataset* owningDataSet, int bandIndex)
 {
@@ -44,4 +44,4 @@ CPLErr RasterBand::IRasterIO(GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXSiz
 		psExtraArg);
 }
 
-}
+}}
