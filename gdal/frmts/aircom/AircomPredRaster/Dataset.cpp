@@ -108,12 +108,14 @@ Dataset::Dataset(std::wistream& gapFile, Warnings& warnings)
 
 Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
 {
-	const auto guid = gapTree.get<std::wstring>(L"API.CRasterGUID");
+	const auto apiNode = gapTree.get_child(L"API");
+
+	const auto guid = apiNode.get<std::wstring>(L"CRasterGUID");
 	// TODO: set up appropriate COM factory
 
-	predictionFolder = gapTree.get<std::wstring>(L"API.PredictionFolder");
-	predData = parsePredData(gapTree.get_child(L"API.PredData"));
-	sections = parseSections(gapTree.get<std::wstring>(L"API.Section", L""));
+	predictionFolder = apiNode.get<std::wstring>(L"PredictionFolder");
+	predData = parsePredData(apiNode.get_child(L"PredData"));
+	sections = parseSections(apiNode.get<std::wstring>(L"Section", L""));
 }
 
 }}
