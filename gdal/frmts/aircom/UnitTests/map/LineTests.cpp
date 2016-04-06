@@ -1,6 +1,6 @@
 #include <gmock/gmock.h>
 
-#include "Line.h"
+#include "AircomMap/Line.h"
 
 namespace aircom { namespace map {
 

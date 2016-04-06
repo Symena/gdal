@@ -7,7 +7,7 @@
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/stream.hpp>
 
-#include "Blocks.h"
+#include "AircomMap/Blocks.h"
 
 namespace aircom { namespace map {
 
