@@ -21,26 +21,25 @@ task :prepare_build_environment => :clean_directory do
   
   ENV['GDAL_LINK_BOOST_VERSION'] = boost_version
   ENV['GDAL_LINK_BOOST_MAJOR_MINOR'] = boost_major_minor
- 
-  FileUtils.copy_entry 'gdal', 'gdal_32_debug'
-  FileUtils.copy_entry 'gdal', 'gdal_32_release'
-  FileUtils.copy_entry 'gdal', 'gdal_64_debug'
-  FileUtils.copy_entry 'gdal', 'gdal_64_release'
 end
 
 task :build_32_debug => :prepare_build_environment do
+  FileUtils.copy_entry 'gdal', 'gdal_32_debug'
   Symenabuild.launch_checked("build_32_debug.bat")
 end
 
 task :build_32_release => :prepare_build_environment do
+  FileUtils.copy_entry 'gdal', 'gdal_32_release'
   Symenabuild.launch_checked("build_32_release.bat")
 end
 
 task :build_64_debug => :prepare_build_environment do
+  FileUtils.copy_entry 'gdal', 'gdal_64_debug'
   Symenabuild.launch_checked("build_64_debug.bat")
 end
 
 task :build_64_release => :prepare_build_environment do
+  FileUtils.copy_entry 'gdal', 'gdal_64_release'
   Symenabuild.launch_checked("build_64_release.bat")
 end
 
