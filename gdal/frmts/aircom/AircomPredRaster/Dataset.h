@@ -16,7 +16,7 @@ enum class Sections
 {
 	PathlossOnly,
 	InclinationOnly,
-	Both
+	Unspecified
 };
 
 class Dataset : public GDALPamDataset
@@ -27,7 +27,6 @@ public:
 	Dataset(const boost::property_tree::wptree& gapTree, Warnings& warnings);
 
 	static GDALDataset* Open(GDALOpenInfo* openInfo);
-	static bool Identify(const boost::filesystem::path& file, std::istream& header);
 
 	const auto& getBoundingBox() const { return boundingBox; }
 	double getResolution() const { return predData.nResolution_cm / 100.0; }

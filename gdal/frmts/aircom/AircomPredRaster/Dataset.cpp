@@ -5,7 +5,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include "membuf.h"
 #include "WarningsReporter.h"
 
 using namespace boost::property_tree;
@@ -51,60 +50,52 @@ Sections parseSections(std::wstring sections)
 
 	if (sections == L"pathloss")
 		return Sections::PathlossOnly;
-	if (sections == L"InclinationOnly")
+	if (sections == L"inclination")
 		return Sections::InclinationOnly;
 
-	return Sections::Both;
+	return Sections::Unspecified;
 }
 
 }
 
 GDALDataset* Dataset::Open(GDALOpenInfo* openInfo)
 {
-	if (openInfo->pszFilename == nullptr || openInfo->pabyHeader == nullptr || openInfo->fpL == nullptr)
-		return nullptr;
-
-	if (!openInfo->bStatOK)
+	if (openInfo->pszFilename == nullptr || !openInfo->bStatOK)
 		return nullptr;
 
 	if (openInfo->eAccess != GA_ReadOnly)
 	{
-		CPLError(CE_Failure, CPLE_NotSupported, "The Aircom ENTERPRISE Map Data driver only supports readonly access to existing datasets.\n");
+		CPLError(CE_Failure, CPLE_NotSupported, "The Aircom ENTERPRISE Prediction driver only supports readonly access to existing datasets.\n");
 		return nullptr;
 	}
 
 	const boost::filesystem::path path = openInfo->pszFilename;
-
-	membuf sbuf(reinterpret_cast<char*>(openInfo->pabyHeader), openInfo->nHeaderBytes);
-	std::istream header(&sbuf);
-
-	/* TODO
-	if (!Identify(indexFile, header))
+	const auto lowerExtension = boost::to_lower_copy(path.extension().wstring());
+	if (lowerExtension != L".gap")
 		return nullptr;
-	*/
 
 	Warnings warnings;
 	WarningsReporter warningsReporter(warnings);
-
-	std::unique_ptr<Dataset> dataSet;
+	WarningsContext context(warnings, boost::filesystem::absolute(path).string() + ": ");
 
 	try
 	{
-		WarningsContext context(warnings, boost::filesystem::absolute(path).string() + ": ");
-		dataSet = std::make_unique<Dataset>(path, warnings);
+		auto ds = std::make_unique<Dataset>(path, warnings);
+		ds->SetDescription(openInfo->pszFilename);
+		ds->TryLoadXML();
+		ds->oOvManager.Initialize(ds.get(), openInfo->pszFilename);
+		return ds.release();
 	}
-	catch (const std::runtime_error& e)
+	catch (const boost::property_tree::json_parser_error&)
 	{
-		CPLError(CE_Failure, CPLE_AppDefined, "Reading index file %s failed: %s", openInfo->pszFilename, e.what());
-		return nullptr;
+		warnings.add("File has a .gap extension but is no valid JSON file, so not suited for Aircom ENTERPRISE Prediction driver");
+	}
+	catch (const std::exception&)
+	{
+		warnings.add("File has a .gap extension but Aircom ENTERPRISE Prediction driver failed to load it");
 	}
 
-	dataSet->SetDescription(openInfo->pszFilename);
-	dataSet->TryLoadXML();
-
-	dataSet->oOvManager.Initialize(dataSet.get(), openInfo->pszFilename);
-
-	return dataSet.release();
+	return nullptr;
 }
 
 Dataset::Dataset(const boost::filesystem::path& gapFile, Warnings& warnings)
@@ -122,7 +113,7 @@ Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
 
 	predictionFolder = gapTree.get<std::wstring>(L"API.PredictionFolder");
 	predData = parsePredData(gapTree.get_child(L"API.PredData"));
-	sections = parseSections(gapTree.get<std::wstring>(L"API.Sections", L""));
+	sections = parseSections(gapTree.get<std::wstring>(L"API.Section", L""));
 }
 
 }}
