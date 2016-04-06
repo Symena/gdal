@@ -5,7 +5,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include "ComFactory.h"
 #include "WarningsReporter.h"
 
 using namespace boost::property_tree;
@@ -89,9 +88,9 @@ GDALDataset* Dataset::Open(GDALOpenInfo* openInfo)
 	{
 		warnings.add("File has a .gap extension but is no valid JSON file, so not suited for Aircom ENTERPRISE Prediction driver");
 	}
-	catch (const std::exception&)
+	catch (const std::exception& e)
 	{
-		warnings.add("File has a .gap extension but Aircom ENTERPRISE Prediction driver failed to load it");
+		warnings.add("File has a .gap extension but Aircom ENTERPRISE Prediction driver failed to load it: %s", e.what());
 	}
 
 	return nullptr;

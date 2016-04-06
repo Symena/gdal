@@ -24,8 +24,8 @@ public:
 	}
 
 	size_t size() const { return warnings.size(); }
-	std::deque<std::string>::const_iterator begin() const { return warnings.cbegin(); }
-	std::deque<std::string>::const_iterator end() const { return warnings.cend(); }
+	auto begin() const { return warnings.cbegin(); }
+	auto end() const { return warnings.cend(); }
 
 private:
 	void pushContext(const std::string& context);

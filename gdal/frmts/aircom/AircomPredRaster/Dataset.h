@@ -2,7 +2,7 @@
 
 #include "gdal_pam.h"
 
-#include "API.h"
+#include "ComFactory.h"
 #include "Geometry.h"
 #include "Warnings.h"
 
@@ -11,8 +11,6 @@
 #include <boost/property_tree/ptree.hpp>
 
 namespace aircom { namespace pred_raster {
-
-class ComFactory;
 
 enum class Sections
 {
