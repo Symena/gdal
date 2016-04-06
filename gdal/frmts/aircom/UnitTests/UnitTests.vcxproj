@@ -160,14 +160,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="BlocksTests.cpp" />
-    <ClCompile Include="ClutterCodesTests.cpp" />
-    <ClCompile Include="DatasetTests.cpp" />
-    <ClCompile Include="LineTests.cpp" />
-    <ClCompile Include="RasterBandTests.cpp" />
-    <ClCompile Include="RendererTests.cpp" />
-    <ClCompile Include="WarningsTests.cpp" />
-    <ClCompile Include="ResamplingTests.cpp" />
+    <ClCompile Include="map\BlocksTests.cpp" />
+    <ClCompile Include="map\ClutterCodesTests.cpp" />
+    <ClCompile Include="map\DatasetTests.cpp" />
+    <ClCompile Include="map\LineTests.cpp" />
+    <ClCompile Include="map\RasterBandTests.cpp" />
+    <ClCompile Include="map\RendererTests.cpp" />
+    <ClCompile Include="shared\WarningsTests.cpp" />
+    <ClCompile Include="map\ResamplingTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AircomMap\AircomMap.vcxproj">
@@ -181,7 +181,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BlocksBuilder.h" />
+    <ClInclude Include="map\BlocksBuilder.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="project.json" />
