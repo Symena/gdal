@@ -76,16 +76,20 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IncludePath>$(SolutionDir)AircomShared;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(SolutionDir)AircomShared;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IncludePath>$(SolutionDir)AircomShared;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(SolutionDir)AircomShared;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -164,7 +168,6 @@
     <ClCompile Include="Register.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="StreamSource.cpp" />
-    <ClCompile Include="Warnings.cpp" />
     <ClCompile Include="Resampling.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -172,13 +175,10 @@
     <ClInclude Include="Blocks.h" />
     <ClInclude Include="ClutterCodes.h" />
     <ClInclude Include="Dataset.h" />
-    <ClInclude Include="Geometry.h" />
     <ClInclude Include="Line.h" />
     <ClInclude Include="RasterBand.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="StreamSource.h" />
-    <ClInclude Include="WarningsReporter.h" />
-    <ClInclude Include="Warnings.h" />
     <ClInclude Include="Resampling.h" />
   </ItemGroup>
   <ItemGroup>

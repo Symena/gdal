@@ -75,15 +75,21 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(SolutionDir)AircomShared;$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(SolutionDir)AircomShared;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(SolutionDir)AircomShared;$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(SolutionDir)AircomShared;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -166,6 +172,12 @@
   <ItemGroup>
     <ProjectReference Include="..\AircomMap\AircomMap.vcxproj">
       <Project>{7cdc6946-464f-4559-81bd-19edf2272452}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\AircomPredRaster\AircomPredRaster.vcxproj">
+      <Project>{54baa7e9-1a5c-42a9-a636-842f877ebdd0}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\AircomShared\AircomShared.vcxproj">
+      <Project>{8ce72ba8-435c-4ce5-9006-fce0c0d7468e}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

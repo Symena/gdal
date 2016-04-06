@@ -1,5 +1,5 @@
 ENV['GO_PIPELINE_NAME'] ||= 'GDAL'
-ENV['GO_PIPELINE_COUNTER'] ||= '64'
+ENV['GO_PIPELINE_COUNTER'] ||= '80'
 ENV['GO_STAGE_NAME'] ||= 'Build'
 ENV['GO_STAGE_COUNTER'] ||= '1'
 ENV['GO_JOB_NAME'] ||= 'BuildAndPackage'
@@ -59,10 +59,9 @@ task :test_package => :build_package do
   versionmapping = {id => version, id+'.redist' => version}
   package_location = Dir.pwd
   
-  Dir.chdir "gdal_64_release/frmts/aircom_map" do
-    Symenabuild.build('AircomMap.sln', versionmapping, package_location)
+  Dir.chdir "gdal_64_release/frmts/aircom" do
+    Symenabuild.build('Aircom.sln', versionmapping, package_location)
     Symenabuild.run_test('x64\Release\UnitTests.exe')
-    Symenabuild.launch_checked('x64\Release\IntegrationTests.exe "..\..\..\TestData" test')
   end
 end
 

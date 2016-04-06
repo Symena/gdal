@@ -1,0 +1,12 @@
+﻿{
+  "dependencies": {
+    "boost-headers-symena":"1.*"
+  },
+  "frameworks": {
+    "native": {}
+  },
+  "runtimes": {
+    "win-x64": {},
+    "win-x86": {}
+  }
+}

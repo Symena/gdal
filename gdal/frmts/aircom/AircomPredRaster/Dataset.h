@@ -3,8 +3,8 @@
 #include "gdal_pam.h"
 
 #include "Aircom/PredData.h"
-#include "../../aircom_map/AircomMap/Warnings.h"
-#include "../../aircom_map/AircomMap/Geometry.h"
+#include "Warnings.h"
+#include "Geometry.h"
 
 #include <boost/filesystem/path.hpp>
 #include <boost/optional.hpp>
