@@ -78,7 +78,6 @@ Dataset::Dataset(std::wistream& gapFile, Warnings& warnings)
 
 Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
 	: apiParams(gapTree.get_child(L"EnterprisePredRasterApi"))
-	, comFactory(apiParams.predAccessClassID, apiParams.predRasterClassID)
 	, geoParams(getGeoParamsFromApi())
 	//, meta(gapTree.get_child_optional(L"Meta"))
 	//, geoParams(gapTree.get_child(L"Meta.Geo"))

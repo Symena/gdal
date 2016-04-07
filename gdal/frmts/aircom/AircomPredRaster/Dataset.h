@@ -3,7 +3,6 @@
 #include "gdal_pam.h"
 
 #include "ApiParams.h"
-#include "ComFactory.h"
 #include "Geometry.h"
 #include "GeoParams.h"
 #include "Warnings.h"
@@ -28,8 +27,6 @@ public:
 private:
 	ApiParams apiParams;
 	GeoParams geoParams;
-
-	ComFactory comFactory;
 };
 
 }}
