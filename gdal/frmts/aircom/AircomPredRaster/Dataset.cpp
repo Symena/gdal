@@ -72,7 +72,7 @@ Dataset::Dataset(std::wistream& gapFile, Warnings& warnings)
 
 Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
 	: apiParams(gapTree.get_child(L"EnterprisePredRasterApi"))
-	, comFactory(std::make_unique<ComFactory>(apiParams.cRasterGUID))
+	, comFactory(apiParams.predAccessClassID, apiParams.predRasterClassID)
 {}
 
 }}

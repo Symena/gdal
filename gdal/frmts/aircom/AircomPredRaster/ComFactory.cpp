@@ -24,15 +24,12 @@ Ptr createComInstance(const CLSID& classID, const char* interfaceName)
 
 }
 
-ComFactory::ComFactory(const std::wstring& predRasterClassIDString)
+ComFactory::ComFactory(const std::wstring& predAccessClassIDString, const std::wstring& predRasterClassIDString)
 {
-	if (predRasterClassIDString == L"{98A67A67-9DAB-407A-AA74-AEF504C165EE}")
-	{
-		CLSIDFromString(L"{A6EC9A6C-3262-4DEE-AA29-2DEC97FBED2D}", &predAccessClassID);
-		CLSIDFromString(predRasterClassIDString.c_str(), &predRasterClassID);
-	}
-	else
-		throw std::runtime_error(format("Unsupported PredRaster COM class ID %s", predRasterClassIDString));
+	if (FAILED(CLSIDFromString(predAccessClassIDString.c_str(), &predAccessClassID)))
+		throw std::runtime_error(format("Invalid class ID %s for COM class PredAccess", predAccessClassIDString));
+	if (FAILED(CLSIDFromString(predRasterClassIDString.c_str(), &predRasterClassID)))
+		throw std::runtime_error(format("Invalid class ID %s for COM class PredRaster", predRasterClassIDString));
 }
 
 IAircomPredAccess4Ptr ComFactory::createPredAccess() const

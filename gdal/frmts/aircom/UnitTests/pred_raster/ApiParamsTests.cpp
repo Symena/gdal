@@ -17,8 +17,9 @@ struct ApiParamsTests : public testing::Test
 	ApiParamsTests()
 	{
 		apiNode.add(L"PredictionFolder", L"c:/pred");
-		apiNode.add(L"CRasterGUID", L"123-456");
-		
+		apiNode.add(L"PredAccessClassID", L"123-456-789");
+		apiNode.add(L"PredRasterClassID", L"123-456");
+
 		predDataNode.add<std::int64_t>(L"nX_cm", 1);
 		predDataNode.add<std::int64_t>(L"nY_cm", 2);
 
@@ -71,7 +72,8 @@ TEST_F(ApiParamsTests, ParamsParsedCorrectly)
 	ApiParams apiParams(apiNode);
 
 	EXPECT_EQ(boost::filesystem::path(L"c:/pred"), apiParams.predictionFolder);
-	EXPECT_EQ(L"123-456", apiParams.cRasterGUID);
+	EXPECT_EQ(L"123-456-789", apiParams.predAccessClassID);
+	EXPECT_EQ(L"123-456", apiParams.predRasterClassID);
 
 	PredData expectedPredData;
 	expectedPredData.nX_cm = 1;
@@ -91,6 +93,5 @@ TEST_F(ApiParamsTests, ParamsParsedCorrectly)
 
 	EXPECT_TRUE( 0 == std::memcmp( &expectedPredData, &apiParams.predData, sizeof(PredData) ) ) << "PredData mismatch";
 }
-
 
 }}

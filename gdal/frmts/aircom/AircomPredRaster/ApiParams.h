@@ -19,7 +19,8 @@ struct ApiParams
 	// mandatory params
 	boost::filesystem::path predictionFolder;
 	PredData predData;
-	std::wstring cRasterGUID;
+	std::wstring predAccessClassID;
+	std::wstring predRasterClassID;
 
 	// optional params
 	Section section;

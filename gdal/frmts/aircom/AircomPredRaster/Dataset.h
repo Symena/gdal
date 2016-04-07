@@ -12,7 +12,6 @@
 
 namespace aircom { namespace pred_raster {
 
-
 class Dataset : public GDALPamDataset
 {
 public:
@@ -28,7 +27,7 @@ public:
 private:
 	ApiParams apiParams;
 
-	std::unique_ptr<ComFactory> comFactory;
+	ComFactory comFactory;
 	MapBox boundingBox;
 };
 

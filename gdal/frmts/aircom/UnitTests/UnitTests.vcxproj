@@ -167,6 +167,7 @@
     <ClCompile Include="map\RasterBandTests.cpp" />
     <ClCompile Include="map\RendererTests.cpp" />
     <ClCompile Include="pred_raster\ApiParamsTests.cpp" />
+    <ClCompile Include="pred_raster\ComFactoryTests.cpp" />
     <ClCompile Include="pred_raster\PredRasterDatasetTests.cpp" />
     <ClCompile Include="shared\WarningsTests.cpp" />
     <ClCompile Include="map\ResamplingTests.cpp" />

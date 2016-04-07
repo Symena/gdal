@@ -55,7 +55,8 @@ Section parseSection(const boost::optional<std::wstring>& optionalSection)
 ApiParams::ApiParams(const wptree& apiNode)
 	: predictionFolder(apiNode.get<std::wstring>(L"PredictionFolder"))
 	, predData(parsePredData(apiNode.get_child(L"PredData")))
-	, cRasterGUID(apiNode.get<std::wstring>(L"CRasterGUID"))
+	, predAccessClassID(apiNode.get<std::wstring>(L"PredAccessClassID"))
+	, predRasterClassID(apiNode.get<std::wstring>(L"PredRasterClassID"))
 	, section(parseSection(apiNode.get_optional<std::wstring>(L"Section")))
 {}
 

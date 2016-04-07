@@ -9,7 +9,7 @@ namespace aircom { namespace pred_raster {
 class ComFactory
 {
 public:
-	ComFactory(const std::wstring& predRasterClassIDString);
+	ComFactory(const std::wstring& predAccessClassIDString, const std::wstring& predRasterClassIDString);
 
 	IAircomPredAccess4Ptr createPredAccess() const;
 	IPredRaster5Ptr createPredRaster() const;
