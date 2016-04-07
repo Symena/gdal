@@ -1,5 +1,7 @@
 #include "ApiParams.h"
 
+#include "StringUtils.h"
+
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/format.hpp>
 #include <stdint.h>
@@ -45,7 +47,7 @@ Section parseSection(const boost::optional<std::wstring>& optionalSection)
 	if (section == L"inclination")
 		return Section::InclinationOnly;
 
-	throw std::runtime_error("Unknown section");
+	throw std::runtime_error(ws2ns(format(L"Unknown section '%1%'", section)));
 }
 
 }
