@@ -161,6 +161,7 @@
   <ItemGroup>
     <ClInclude Include="API.h" />
     <ClInclude Include="ApiParams.h" />
+    <ClInclude Include="ApiWrapper.h" />
     <ClInclude Include="PredRasterFactory.h" />
     <ClInclude Include="Dataset.h" />
     <ClInclude Include="GeoParams.h" />
@@ -168,6 +169,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ApiParams.cpp" />
+    <ClCompile Include="ApiWrapper.cpp" />
     <ClCompile Include="PredRasterFactory.cpp" />
     <ClCompile Include="Dataset.cpp" />
     <ClCompile Include="GeoParams.cpp" />

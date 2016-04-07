@@ -2,9 +2,7 @@
 
 #include "gdal_pam.h"
 
-#include "ApiParams.h"
-#include "Geometry.h"
-#include "GeoParams.h"
+#include "ApiWrapper.h"
 #include "Warnings.h"
 
 #include <boost/filesystem/path.hpp>
@@ -14,7 +12,11 @@ namespace aircom { namespace pred_raster {
 
 class Dataset : public GDALPamDataset
 {
+	ApiWrapper apiWrapper; // must be initialized before geoParams
+
 public:
+	GeoParams geoParams;
+
 	Dataset(const boost::filesystem::path& gapFile, Warnings& warnings);
 	Dataset(std::wistream& gapFile, Warnings& warnings);
 	Dataset(const boost::property_tree::wptree& gapTree, Warnings& warnings);
@@ -22,11 +24,11 @@ public:
 	static GDALDataset* Open(GDALOpenInfo* openInfo);
 
 	const auto& getBoundingBox() const { return geoParams.boundingBox; }
-	double getResolution() const { return apiParams.predData.nResolution_cm / 100.0; }
+	double getResolution() const { return apiWrapper.getParams().predData.nResolution_cm / 100.0; }
 
-private:
-	ApiParams apiParams;
-	GeoParams geoParams;
+	IPredRaster5Ptr getPredRaster() { return apiWrapper.getPredRaster(); }
+
+	GDALDataType getSectionDataType(int sectionIndex);
 };
 
 }}

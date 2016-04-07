@@ -21,8 +21,9 @@ struct PredRasterDatasetTests : public testing::Test
 	{
 		wptree apiNode;
 		apiNode.add(L"PredictionFolder", L"c:/pred");
-		apiNode.add(L"CRasterGUID", L"{98A67A67-9DAB-407A-AA74-AEF504C165EE}");
-		
+		apiNode.add(L"PredAccessClassID", L"{98A67A67-9DAB-407A-AA74-AEF504C165EE}");
+		apiNode.add(L"PredRasterClassID", L"{12345678-9DAB-407A-AA74-AEF504C165EE}");
+
 		wptree predDataNode;
 		predDataNode.add<std::int64_t>(L"nX_cm", 1);
 		predDataNode.add<std::int64_t>(L"nY_cm", 2);
