@@ -20,40 +20,6 @@ wptree loadJson(std::wistream& jsonStream)
 	return tree;
 }
 
-PredData parsePredData(const wptree& predDataNode)
-{
-	PredData r;
-
-	r.nX_cm = predDataNode.get<std::int64_t>(L"nX_cm");
-	r.nY_cm = predDataNode.get<std::int64_t>(L"nY_cm");
-	r.nAntennaHeight_cm = predDataNode.get<std::int32_t>(L"nAntennaHeight_cm");
-	r.nGroundHeight_cm = predDataNode.get<std::int32_t>(L"nGroundHeight_cm");
-	r.nResolution_cm = predDataNode.get<std::uint32_t>(L"nResolution_cm");
-	r.nRadius_cm = predDataNode.get<std::uint32_t>(L"nRadius_cm");
-	r.fFrequency_MHz = predDataNode.get<float>(L"fFrequency_MHz");
-	r.nModelCRC = predDataNode.get<std::uint64_t>(L"nModelCRC");
-	r.nPredFlags = predDataNode.get<std::uint32_t>(L"nPredFlags");
-	r.nAntennaCRC = predDataNode.get<std::uint64_t>(L"nAntennaCRC");
-	r.fAntennaMechanicalTilt_deg = predDataNode.get<double>(L"fAntennaMechanicalTilt_deg");
-	r.fAntennaAzimuth_deg = predDataNode.get<double>(L"fAntennaAzimuth_deg");
-	r.nCwWeight = predDataNode.get<std::uint16_t>(L"nCwWeight");
-	r.fCwRolloff = predDataNode.get<float>(L"fCwRolloff");
-
-	return r;
-}
-
-Sections parseSections(std::wstring sections)
-{
-	boost::to_lower(sections);
-
-	if (sections == L"pathloss")
-		return Sections::PathlossOnly;
-	if (sections == L"inclination")
-		return Sections::InclinationOnly;
-
-	return Sections::Unspecified;
-}
-
 }
 
 GDALDataset* Dataset::Open(GDALOpenInfo* openInfo)
@@ -105,15 +71,8 @@ Dataset::Dataset(std::wistream& gapFile, Warnings& warnings)
 {}
 
 Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
-{
-	const auto& apiNode = gapTree.get_child(L"API");
-
-	predictionFolder = apiNode.get<std::wstring>(L"PredictionFolder");
-	predData = parsePredData(apiNode.get_child(L"PredData"));
-	sections = parseSections(apiNode.get<std::wstring>(L"Section", L""));
-
-	const auto predRasterClassIDString = apiNode.get<std::wstring>(L"CRasterGUID");
-	comFactory = std::make_unique<ComFactory>(predRasterClassIDString);
-}
+	: apiParams(gapTree.get_child(L"EnterprisePredRasterApi"))
+	, comFactory(std::make_unique<ComFactory>(apiParams.cRasterGUID))
+{}
 
 }}

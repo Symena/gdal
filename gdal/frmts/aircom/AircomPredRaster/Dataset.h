@@ -2,22 +2,16 @@
 
 #include "gdal_pam.h"
 
+#include "ApiParams.h"
 #include "ComFactory.h"
 #include "Geometry.h"
 #include "Warnings.h"
 
 #include <boost/filesystem/path.hpp>
-#include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 namespace aircom { namespace pred_raster {
 
-enum class Sections
-{
-	PathlossOnly,
-	InclinationOnly,
-	Unspecified
-};
 
 class Dataset : public GDALPamDataset
 {
@@ -29,12 +23,10 @@ public:
 	static GDALDataset* Open(GDALOpenInfo* openInfo);
 
 	const auto& getBoundingBox() const { return boundingBox; }
-	double getResolution() const { return predData.nResolution_cm / 100.0; }
+	double getResolution() const { return apiParams.predData.nResolution_cm / 100.0; }
 
 private:
-	boost::filesystem::path predictionFolder;
-	PredData predData;
-	Sections sections;
+	ApiParams apiParams;
 
 	std::unique_ptr<ComFactory> comFactory;
 	MapBox boundingBox;
