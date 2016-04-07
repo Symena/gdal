@@ -1,8 +1,8 @@
 #pragma once
 
-#include <string>
 #include <deque>
-#include <boost/format.hpp>
+
+#include "StringUtils.h"
 
 namespace aircom {
 
@@ -18,9 +18,7 @@ public:
 	template <class... ArgumentTypes>
 	void add(const std::string& formatString, const ArgumentTypes& ... args)
 	{
-		boost::format format(formatString);
-		internalFormat(format, args...);
-		add(boost::str(format));
+		add(format(formatString, args...));
 	}
 
 	size_t size() const { return warnings.size(); }
@@ -33,21 +31,10 @@ private:
 	template <class... ArgumentTypes>
 	void pushContext(const std::string& contextFormatString, const ArgumentTypes& ... args)
 	{
-		boost::format format(contextFormatString);
-		internalFormat(format, args...);
-		pushContext(boost::str(format));
+		pushContext(format(contextFormatString, args...));
 	}
 	
 	void popContext();
-
-	void internalFormat(boost::format& /*format*/) {}
-
-	template <class T, class... OtherTs>
-	void internalFormat(boost::format& format, const T& arg, const OtherTs& ... otherArgs)
-	{
-		format % arg;
-		internalFormat(format, otherArgs...);
-	}
 
 	friend class WarningsContext;
 };
@@ -65,7 +52,7 @@ public:
 	template <class... ArgumentTypes>
 	WarningsContext(Warnings& warnings, const std::string& contextFormatString, const ArgumentTypes& ... args) : warnings(warnings)
 	{
-		this->warnings.pushContext(contextFormatString, args...);
+		this->warnings.pushContext(format(contextFormatString, args...));
 	}
 
 	~WarningsContext()
