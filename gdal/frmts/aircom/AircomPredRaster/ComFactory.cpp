@@ -1,5 +1,7 @@
 #include "ComFactory.h"
 
+#include "StringUtils.h"
+
 namespace aircom { namespace pred_raster {
 
 namespace {
@@ -14,10 +16,8 @@ Ptr createComInstance(const CLSID& classID, const char* interfaceName)
 	LPOLESTR classIDString = L"";
 	StringFromCLSID(classID, &classIDString);
 
-	std::string msg = "Failed to create COM interface ";
-	msg += interfaceName;
-	//msg += " using class ID ";
-	//msg += classIDString;
+	const auto msg = format("Failed to create COM interface %s using COM class ID %s",
+		interfaceName, classIDString);
 
 	throw std::runtime_error(msg);
 }
@@ -32,7 +32,7 @@ ComFactory::ComFactory(const std::wstring& predRasterClassIDString)
 		CLSIDFromString(predRasterClassIDString.c_str(), &predRasterClassID);
 	}
 	else
-		throw std::runtime_error("Unsupported PredRaster COM class ID");
+		throw std::runtime_error(format("Unsupported PredRaster COM class ID %s", predRasterClassIDString));
 }
 
 IAircomPredAccess4Ptr ComFactory::createPredAccess() const
