@@ -127,11 +127,13 @@
   <ItemGroup>
     <ClInclude Include="Geometry.h" />
     <ClInclude Include="membuf.h" />
+    <ClInclude Include="StringUtils.h" />
     <ClInclude Include="Warnings.h" />
     <ClInclude Include="WarningsReporter.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Register.cpp" />
+    <ClCompile Include="StringUtils.cpp" />
     <ClCompile Include="Warnings.cpp" />
   </ItemGroup>
   <ItemGroup>

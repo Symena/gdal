@@ -26,3 +26,4 @@ buildd*
 buildo*
 *.opendb
 Debug/*
+Release/*
