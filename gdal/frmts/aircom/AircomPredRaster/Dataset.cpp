@@ -20,6 +20,11 @@ wptree loadJson(std::wistream& jsonStream)
 	return tree;
 }
 
+GeoParams getGeoParamsFromApi()
+{
+	throw std::runtime_error("not implemented");
+}
+
 }
 
 GDALDataset* Dataset::Open(GDALOpenInfo* openInfo)
@@ -45,6 +50,7 @@ GDALDataset* Dataset::Open(GDALOpenInfo* openInfo)
 	try
 	{
 		auto ds = std::make_unique<Dataset>(path, warnings);
+		ds->nRasterXSize;
 		ds->SetDescription(openInfo->pszFilename);
 		ds->TryLoadXML();
 		ds->oOvManager.Initialize(ds.get(), openInfo->pszFilename);
@@ -73,6 +79,31 @@ Dataset::Dataset(std::wistream& gapFile, Warnings& warnings)
 Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
 	: apiParams(gapTree.get_child(L"EnterprisePredRasterApi"))
 	, comFactory(apiParams.predAccessClassID, apiParams.predRasterClassID)
-{}
+	, geoParams(getGeoParamsFromApi())
+	//, meta(gapTree.get_child_optional(L"Meta"))
+	//, geoParams(gapTree.get_child(L"Meta.Geo"))
+{
+	auto geoNode = gapTree.get_child_optional(L"Geo");
+	geoParams = geoNode ? GeoParams(geoNode.get()) : getGeoParamsFromApi();	
+
+	nRasterXSize = width(geoParams.boundingBox);
+	nRasterYSize = height(geoParams.boundingBox);
+
+	auto meta = gapTree.get_child_optional(L"Meta");
+	if (meta)
+	{
+		for (auto metaDomain : meta.get())
+		{
+			auto domain = ws2ns(metaDomain.first);
+			for (auto kv : metaDomain.second)
+			{
+				auto key = ws2ns(kv.first);
+				auto value = ws2ns(kv.second.data());
+				SetMetadataItem(key.c_str(), value.c_str(), domain.c_str());
+			}
+		}
+	}
+
+}
 
 }}

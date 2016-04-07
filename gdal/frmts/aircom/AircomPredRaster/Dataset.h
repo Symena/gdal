@@ -5,6 +5,7 @@
 #include "ApiParams.h"
 #include "ComFactory.h"
 #include "Geometry.h"
+#include "GeoParams.h"
 #include "Warnings.h"
 
 #include <boost/filesystem/path.hpp>
@@ -21,14 +22,14 @@ public:
 
 	static GDALDataset* Open(GDALOpenInfo* openInfo);
 
-	const auto& getBoundingBox() const { return boundingBox; }
+	const auto& getBoundingBox() const { return geoParams.boundingBox; }
 	double getResolution() const { return apiParams.predData.nResolution_cm / 100.0; }
 
 private:
 	ApiParams apiParams;
+	GeoParams geoParams;
 
 	ComFactory comFactory;
-	MapBox boundingBox;
 };
 
 }}

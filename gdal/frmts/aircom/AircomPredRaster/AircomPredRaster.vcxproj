@@ -163,12 +163,14 @@
     <ClInclude Include="ApiParams.h" />
     <ClInclude Include="ComFactory.h" />
     <ClInclude Include="Dataset.h" />
+    <ClInclude Include="GeoParams.h" />
     <ClInclude Include="RasterBand.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ApiParams.cpp" />
     <ClCompile Include="ComFactory.cpp" />
     <ClCompile Include="Dataset.cpp" />
+    <ClCompile Include="GeoParams.cpp" />
     <ClCompile Include="RasterBand.cpp" />
     <ClCompile Include="Register.cpp" />
   </ItemGroup>
