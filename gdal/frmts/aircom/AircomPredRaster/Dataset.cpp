@@ -115,6 +115,9 @@ Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
 	auto section = apiWrapper.getParams().section;
 	if (section != Section::Unspecified)
 		SetBand(1, new RasterBand(this, 1, static_cast<int>(section)));
+	else
+		for (auto sectionNum : apiWrapper.getSectionNums())
+			SetBand(sectionNum + 1, new RasterBand(this, sectionNum + 1, sectionNum));
 }
 
 GDALDataType Dataset::getSectionDataType(int sectionIndex)
