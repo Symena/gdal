@@ -17,7 +17,10 @@ GeoParams ApiWrapper::getGeoParams()
 	_REGIONEX region;
 	getPredRaster()->GetRegionEx(0, &region);
 
-	return GeoParams(MapBox());
+	MapPoint bottomLeft(region.m_eastMin, region.m_northMax - region.m_height);
+	MapPoint topRight(region.m_eastMin + region.m_width, region.m_northMax);
+
+	return GeoParams(MapBox(bottomLeft, topRight));
 }
 
 }}

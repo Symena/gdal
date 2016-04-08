@@ -7,9 +7,11 @@
 #include <boost/property_tree/ptree.hpp>
 #include <sstream>
 
+using namespace ::testing;
+
 namespace aircom { namespace pred_raster {
 
-struct ApiWrapperTest : public testing::Test
+struct ApiWrapperTest : public Test
 {
 	ApiParams params;
 	MockPredRaster predRaster;
@@ -32,12 +34,11 @@ TEST_F(ApiWrapperTest, getGeoParams)
 	region.m_width = 4;
 	region.m_height = 5;
 
-	EXPECT_CALL(predRaster, raw_GetRegionEx(0, &region))
-		.Times(1);
+	EXPECT_CALL(predRaster, raw_GetRegionEx(0, _))
+		.WillOnce(DoAll(::testing::SetArgPointee<1>(region), Return(S_OK)));
 
-	MapPoint topLeft(region.m_eastMin, region.m_northMax);
-	MapPoint bottomRight(region.m_eastMin + region.m_width, region.m_northMax - region.m_height);
-	MapBox bounds(topLeft, bottomRight);
+	MapBox bounds = makeBox(region.m_eastMin, region.m_northMax - region.m_height, 
+							region.m_eastMin + region.m_width, region.m_northMax);
 	GeoParams expected(bounds);
 
 	auto actual = wrapper.getGeoParams();
