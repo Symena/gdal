@@ -36,7 +36,7 @@ GeoParams parseOrLoadGeoParams(const wptree& gapTree, ApiWrapper& wrapper, Warni
 		}
 		catch (std::runtime_error e)
 		{
-			std::string warning = format("Failed to load warnings from json node. Falling back to API. (%s)", e.what());
+			std::string warning = format("Failed to load GeoParams from json node. Falling back to API. (%s)", e.what());
 			warnings.add(warning);
 		}
 
