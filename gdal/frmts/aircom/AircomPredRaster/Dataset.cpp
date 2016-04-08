@@ -25,13 +25,21 @@ GeoParams getGeoParamsFromApi()
 	throw std::runtime_error("not implemented");
 }
 
-GeoParams parseGeoParams(const wptree& gapTree, ApiWrapper& wrapper)
+GeoParams parseOrLoadGeoParams(const wptree& gapTree, ApiWrapper& wrapper, Warnings& warnings)
 {
 	auto geoNode = gapTree.get_child_optional(L"Geo");
-	if (!geoNode)
-		return wrapper.getGeoParams();
+	if (geoNode)	
+		try
+		{
+			return GeoParams(geoNode.get());
+		}
+		catch (std::runtime_error e)
+		{
+			std::string warning = format("Failed to load warnings from json node. Falling back to API. (%s)", e.what());
+			warnings.add(warning);
+		}
 
-	return GeoParams(geoNode.get());
+	return wrapper.getGeoParams();
 }
 
 }
@@ -87,7 +95,7 @@ Dataset::Dataset(std::wistream& gapFile, Warnings& warnings)
 
 Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
 	: apiWrapper(ApiParams(gapTree.get_child(L"EnterprisePredRasterApi")))
-	, geoParams(parseGeoParams(gapTree, apiWrapper))
+	, geoParams(parseOrLoadGeoParams(gapTree, apiWrapper, warnings))
 {
 	const auto& boundingBox = getBoundingBox();
 	nRasterXSize = width(boundingBox);
