@@ -20,7 +20,6 @@ struct PredRasterDatasetTests : public testing::Test
 
 	PredRasterDatasetTests()
 	{
-		
 		apiNode.add(L"PredictionFolder", L"c:/pred");
 		apiNode.add(L"PredAccessClassID", L"{98A67A67-9DAB-407A-AA74-AEF504C165EE}");
 		apiNode.add(L"PredRasterClassID", L"{12345678-9DAB-407A-AA74-AEF504C165EE}");
@@ -59,31 +58,31 @@ struct PredRasterDatasetTests : public testing::Test
 };
 
 TEST_F(PredRasterDatasetTests, ExceptionOnEmptyFile)
-{		
+{
 	EXPECT_THROW(Dataset(gapFile, warnings), boost::property_tree::json_parser_error);
 }
 
 TEST_F(PredRasterDatasetTests, ExceptionOnInvalidJson)
-{		
+{
 	gapFile << L"invalid";
 	EXPECT_THROW(Dataset(gapFile, warnings), boost::property_tree::json_parser_error);
 }
 
 TEST_F(PredRasterDatasetTests, ExceptionOnIncompleteData)
-{		
+{
 	gapFile << L"{}";
 	EXPECT_THROW(Dataset(gapFile, warnings), boost::property_tree::ptree_bad_path);
 	EXPECT_THROW(Dataset(gapTree, warnings), boost::property_tree::ptree_bad_path);
 }
 
 TEST_F(PredRasterDatasetTests, ParsesGapSuccessful)
-{		
+{
 	Dataset dataset(sampleGapTree, warnings);
 	EXPECT_EQ(0, warnings.size());
 }
 
 TEST_F(PredRasterDatasetTests, CollectsMetaData)
-{	
+{
 	wptree metaDomain;
 	metaDomain.add(L"foo", 1);
 	metaDomain.add(L"bar", 2);
@@ -108,7 +107,7 @@ TEST_F(PredRasterDatasetTests, CollectsMetaData)
 TEST_F(PredRasterDatasetTests, LoadsGeoParamsFromGapFile)
 {
 	Dataset dataset(sampleGapTree, warnings);
-	
+
 	MapBox bounds({1, 3}, {2, 5});
 
 	EXPECT_EQ(bounds, dataset.getBoundingBox()); 
@@ -122,14 +121,14 @@ TEST_F(PredRasterDatasetTests, LoadsGeoParamsFromGapFile)
 }
 
 TEST_F(PredRasterDatasetTests, ExceptionOnInvalidDimensions)
-{	
+{
 	sampleGapTree.get_child(L"Geo").put(L"left", 10);
 	
 	EXPECT_THROW(Dataset(sampleGapTree, warnings), std::runtime_error);
 }
 
 TEST_F(PredRasterDatasetTests, OnlyOneBandWhenSectionSpecified)
-{	
+{
 	apiNode.add(L"Section", L"Inclination");
 	sampleGapTree.put_child(L"EnterprisePredRasterApi", apiNode);
 
