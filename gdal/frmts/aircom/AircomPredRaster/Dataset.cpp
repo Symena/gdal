@@ -6,6 +6,7 @@
 #include <boost/property_tree/json_parser.hpp>
 
 #include "WarningsReporter.h"
+#include "RasterBand.h"
 
 using namespace boost::property_tree;
 
@@ -119,6 +120,9 @@ Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
 		}
 	}
 
+	auto section = apiWrapper.getParams().section;
+	if (section != Section::Unspecified)
+		SetBand(1, new RasterBand(this, 1, static_cast<int>(section)));
 }
 
 }}

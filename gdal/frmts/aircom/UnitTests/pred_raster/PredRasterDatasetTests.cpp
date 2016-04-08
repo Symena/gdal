@@ -15,11 +15,12 @@ struct PredRasterDatasetTests : public testing::Test
 	wptree gapTree;
 	Warnings warnings;
 
+	wptree apiNode;
 	wptree sampleGapTree;
 
 	PredRasterDatasetTests()
 	{
-		wptree apiNode;
+		
 		apiNode.add(L"PredictionFolder", L"c:/pred");
 		apiNode.add(L"PredAccessClassID", L"{98A67A67-9DAB-407A-AA74-AEF504C165EE}");
 		apiNode.add(L"PredRasterClassID", L"{12345678-9DAB-407A-AA74-AEF504C165EE}");
@@ -119,7 +120,17 @@ TEST_F(PredRasterDatasetTests, ExceptionOnInvalidDimensions)
 {	
 	sampleGapTree.get_child(L"Geo").put(L"left", 10);
 	
-	EXPECT_THROW(Dataset dataset(sampleGapTree, warnings), std::runtime_error);
+	EXPECT_THROW(Dataset(sampleGapTree, warnings), std::runtime_error);
+}
+
+TEST_F(PredRasterDatasetTests, OnlyOneBandWhenSectionSpecified)
+{	
+	apiNode.add(L"Section", L"Inclination");
+	sampleGapTree.put_child(L"EnterprisePredRasterApi", apiNode);
+
+	Dataset dataset(sampleGapTree, warnings);
+
+	EXPECT_EQ(1, dataset.GetRasterCount());
 }
 
 }}

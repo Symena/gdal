@@ -8,8 +8,9 @@ namespace aircom { namespace pred_raster {
 
 class RasterBand: public GDALPamRasterBand
 {
+	int section;
 public:
-	RasterBand(Dataset* owningDataSet, int bandIndex = 1);
+	RasterBand(Dataset* owningDataSet, int bandIndex, int section);
 	
 	virtual GDALColorInterp GetColorInterpretation() override;
 

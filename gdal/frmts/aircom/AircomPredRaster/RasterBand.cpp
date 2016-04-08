@@ -2,7 +2,8 @@
 
 namespace aircom { namespace pred_raster {
 
-RasterBand::RasterBand(Dataset* owningDataSet, int bandIndex)
+RasterBand::RasterBand(Dataset* owningDataSet, int bandIndex, int section)
+	: section(section)
 {
 	poDS = owningDataSet;
 	nBand = bandIndex;

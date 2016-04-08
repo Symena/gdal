@@ -9,8 +9,8 @@ namespace aircom { namespace pred_raster {
 
 enum class Section
 {
-	PathlossOnly,
-	InclinationOnly,
+	PathlossOnly = 0,
+	InclinationOnly = 1,
 	Unspecified
 };
 
