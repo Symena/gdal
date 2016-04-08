@@ -115,4 +115,11 @@ TEST_F(PredRasterDatasetTests, LoadsGeoParamsFromGapFile)
 	EXPECT_EQ(2, dataset.GetRasterYSize());
 }
 
+TEST_F(PredRasterDatasetTests, ExceptionOnInvalidDimensions)
+{	
+	sampleGapTree.get_child(L"Geo").put(L"left", 10);
+	
+	EXPECT_THROW(Dataset dataset(sampleGapTree, warnings), std::runtime_error);
+}
+
 }}

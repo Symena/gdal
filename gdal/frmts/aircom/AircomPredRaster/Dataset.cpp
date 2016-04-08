@@ -101,6 +101,9 @@ Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
 	nRasterXSize = width(boundingBox);
 	nRasterYSize = height(boundingBox);
 
+	if (nRasterXSize <= 0 ||nRasterYSize <= 0)
+		throw std::runtime_error(format("Invalid dimensions : %d x %d", nRasterXSize, nRasterYSize));
+
 	auto meta = gapTree.get_child_optional(L"Meta");
 	if (meta)
 	{
