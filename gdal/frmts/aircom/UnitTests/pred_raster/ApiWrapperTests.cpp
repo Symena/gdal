@@ -18,7 +18,7 @@ struct ApiWrapperTest : public testing::Test
 	ApiWrapperTest()
 		: params("z:/ombie", PredData{}, L"123-456", L"567-890", Section::Unspecified)
 		, predRaster()
-		, wrapper(params, predRaster)
+		, wrapper(params, &predRaster)
 	{}
 
 };
