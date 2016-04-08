@@ -10,7 +10,7 @@ struct MockPredRaster : public IPredRaster5
 {
 	// Inherited via IPredRaster5
 	virtual HRESULT QueryInterface(REFIID riid, void ** ppvObject) override {
-		ppvObject = reinterpret_cast<void**>(this);
+		(*ppvObject) = this;
 		return S_OK;
 	}
 	MOCK_METHOD0(AddRef, ULONG(void));
