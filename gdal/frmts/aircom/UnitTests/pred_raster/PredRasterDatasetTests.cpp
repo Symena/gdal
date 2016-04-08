@@ -47,11 +47,11 @@ struct PredRasterDatasetTests : public testing::Test
 
 		sampleGapTree.add_child(L"EnterprisePredRasterApi", apiNode);
 
-		wptree geoNode;
+		wptree geoNode; // resolution: 5m
 		geoNode.add(L"left", 1);
-		geoNode.add(L"right", 2);
+		geoNode.add(L"right", 6);
 		geoNode.add(L"bottom", 3);
-		geoNode.add(L"top", 5);
+		geoNode.add(L"top", 13);
 
 		sampleGapTree.add_child(L"Geo", geoNode);
 	}
@@ -108,7 +108,7 @@ TEST_F(PredRasterDatasetTests, LoadsGeoParamsFromGapFile)
 {
 	Dataset dataset(sampleGapTree, warnings);
 
-	MapBox bounds({1, 3}, {2, 5});
+	MapBox bounds({1, 3}, {6, 13});
 
 	EXPECT_EQ(bounds, dataset.getBoundingBox()); 
 	EXPECT_EQ(1, dataset.GetRasterXSize());
@@ -116,8 +116,8 @@ TEST_F(PredRasterDatasetTests, LoadsGeoParamsFromGapFile)
 
 	double transformMatrix[6];
 	dataset.GetGeoTransform(transformMatrix);
-	EXPECT_THAT(transformMatrix, testing::ElementsAre(1, 5, 0,
-	                                                  5, 0, -5));
+	EXPECT_THAT(transformMatrix, testing::ElementsAre( 1, 5,  0,
+	                                                  13, 0, -5));
 }
 
 TEST_F(PredRasterDatasetTests, ExceptionOnInvalidDimensions)

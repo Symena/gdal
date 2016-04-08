@@ -144,18 +144,20 @@ GDALDataType Dataset::getSectionDataType(int sectionIndex)
 
 void Dataset::setBoundingBox()
 {
+	const double res = getResolution();
+
 	const auto& bounds = getBoundingBox();
-	nRasterXSize = width(bounds);
-	nRasterYSize = height(bounds);
+	nRasterXSize = static_cast<int>(std::round(width(bounds) / res));
+	nRasterYSize = static_cast<int>(std::round(height(bounds) / res));
 
 	double transformMatrix[6];
 	transformMatrix[0] = bounds.min_corner().get<0>(); // minX
-	transformMatrix[1] = getResolution();
+	transformMatrix[1] = res;
 	transformMatrix[2] = 0;
 	// top-down
 	transformMatrix[3] = bounds.max_corner().get<1>(); // maxY
 	transformMatrix[4] = 0;
-	transformMatrix[5] = -getResolution();
+	transformMatrix[5] = -res;
 
 	SetGeoTransform(transformMatrix);
 }
