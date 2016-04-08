@@ -12,7 +12,10 @@ class ApiWrapper
 	IPredRaster5Ptr predRaster;
 
 public:
-	explicit ApiWrapper(ApiParams apiParams) : params(std::move(apiParams)) {}
+	ApiWrapper(ApiParams apiParams, IPredRaster5Ptr predRaster= nullptr)
+		: params(std::move(apiParams)) 
+		, predRaster(predRaster)
+	{}	
 
 	const ApiParams& getParams() const { return params; }
 	IPredRaster5Ptr getPredRaster();

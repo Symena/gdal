@@ -16,6 +16,10 @@ struct GeoParams
 	{}
 
 	explicit GeoParams(const boost::property_tree::wptree& geoNode);
+
+	bool operator==(const GeoParams& r) const {
+		return boundingBox == r.boundingBox;
+	}
 };
 
 }}

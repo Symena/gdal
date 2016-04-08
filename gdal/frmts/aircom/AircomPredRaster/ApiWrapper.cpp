@@ -14,7 +14,9 @@ IPredRaster5Ptr ApiWrapper::getPredRaster()
 
 GeoParams ApiWrapper::getGeoParams()
 {
-	// TODO
+	_REGIONEX region;
+	getPredRaster()->GetRegionEx(0, &region);
+
 	return GeoParams(MapBox());
 }
 

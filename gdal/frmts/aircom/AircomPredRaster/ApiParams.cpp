@@ -52,12 +52,21 @@ Section parseSection(const boost::optional<std::wstring>& optionalSection)
 
 }
 
-ApiParams::ApiParams(const wptree& apiNode)
-	: predictionFolder(apiNode.get<std::wstring>(L"PredictionFolder"))
-	, predData(parsePredData(apiNode.get_child(L"PredData")))
-	, predAccessClassID(apiNode.get<std::wstring>(L"PredAccessClassID"))
-	, predRasterClassID(apiNode.get<std::wstring>(L"PredRasterClassID"))
-	, section(parseSection(apiNode.get_optional<std::wstring>(L"Section")))
+ApiParams::ApiParams(boost::filesystem::path predictionFolder, PredData predData, std::wstring predAccessClassID, 
+					 std::wstring predRasterClassID, Section section)
+	: predictionFolder(std::move(predictionFolder))
+	, predData(std::move(predData))
+	, predAccessClassID(std::move(predAccessClassID))
+	, predRasterClassID(std::move(predRasterClassID))
+	, section(section)
+{}
+
+ApiParams::ApiParams(const wptree& apiNode) : ApiParams
+	( apiNode.get<std::wstring>(L"PredictionFolder")
+	, parsePredData(apiNode.get_child(L"PredData"))
+	, apiNode.get<std::wstring>(L"PredAccessClassID")
+	, apiNode.get<std::wstring>(L"PredRasterClassID")
+	, parseSection(apiNode.get_optional<std::wstring>(L"Section")))
 {}
 
 }}
