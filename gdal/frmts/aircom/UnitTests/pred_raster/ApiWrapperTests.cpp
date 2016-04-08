@@ -35,7 +35,7 @@ TEST_F(ApiWrapperTest, getGeoParams)
 	region.m_height = 5;
 
 	EXPECT_CALL(predRaster, raw_GetRegionEx(0, _))
-		.WillOnce(DoAll(::testing::SetArgPointee<1>(region), Return(S_OK)));
+		.WillOnce(DoAll(SetArgPointee<1>(region), Return(S_OK)));
 
 	MapBox bounds = makeBox(region.m_eastMin, region.m_northMax - region.m_height, 
 							region.m_eastMin + region.m_width, region.m_northMax);
@@ -43,6 +43,22 @@ TEST_F(ApiWrapperTest, getGeoParams)
 
 	auto actual = wrapper.getGeoParams();
 	EXPECT_EQ(expected, actual);
+}
+
+TEST_F(ApiWrapperTest, getSectionNums)
+{
+	std::vector<unsigned long> expected = {7};
+
+	EXPECT_CALL(predRaster, raw_GetNumSections(_))
+		.WillOnce(DoAll(SetArgPointee<0>(1), Return(S_OK)));
+
+	EXPECT_CALL(predRaster, raw_GetSectionNumList(1, _))
+		.WillOnce(DoAll(SetArgPointee<1>(7), Return(S_OK)));
+		
+	auto actual = wrapper.getSectionNums();
+	EXPECT_EQ(expected, actual);
+
+	wrapper.getSectionNums();
 }
 
 }}
