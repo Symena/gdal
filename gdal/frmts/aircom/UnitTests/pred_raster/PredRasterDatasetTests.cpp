@@ -26,13 +26,13 @@ struct PredRasterDatasetTests : public testing::Test
 		apiNode.add(L"PredRasterClassID", L"{12345678-9DAB-407A-AA74-AEF504C165EE}");
 
 		wptree predDataNode;
-		predDataNode.add<std::int64_t>(L"nX_cm", 1);
-		predDataNode.add<std::int64_t>(L"nY_cm", 2);
+		predDataNode.add<std::int64_t>(L"nX_cm", 100);
+		predDataNode.add<std::int64_t>(L"nY_cm", 200);
 
-		predDataNode.add<std::int32_t>(L"nAntennaHeight_cm", 3);
-		predDataNode.add<std::int32_t>(L"nGroundHeight_cm", 4);
-		predDataNode.add<std::uint32_t>(L"nResolution_cm", 5);
-		predDataNode.add<std::uint32_t>(L"nRadius_cm", 6);
+		predDataNode.add<std::int32_t>(L"nAntennaHeight_cm", 300);
+		predDataNode.add<std::int32_t>(L"nGroundHeight_cm", 400);
+		predDataNode.add<std::uint32_t>(L"nResolution_cm", 500);
+		predDataNode.add<std::uint32_t>(L"nRadius_cm", 600);
 
 		predDataNode.add<float>(L"fFrequency_MHz", 7.1f);
 		predDataNode.add<std::uint64_t>(L"nModelCRC", 8);
@@ -52,7 +52,7 @@ struct PredRasterDatasetTests : public testing::Test
 		geoNode.add(L"left", 1);
 		geoNode.add(L"right", 2);
 		geoNode.add(L"bottom", 3);
-		geoNode.add(L"top", 5);	
+		geoNode.add(L"top", 5);
 
 		sampleGapTree.add_child(L"Geo", geoNode);
 	}
@@ -106,7 +106,7 @@ TEST_F(PredRasterDatasetTests, CollectsMetaData)
 }
 
 TEST_F(PredRasterDatasetTests, LoadsGeoParamsFromGapFile)
-{	
+{
 	Dataset dataset(sampleGapTree, warnings);
 	
 	MapBox bounds({1, 3}, {2, 5});
@@ -114,6 +114,11 @@ TEST_F(PredRasterDatasetTests, LoadsGeoParamsFromGapFile)
 	EXPECT_EQ(bounds, dataset.getBoundingBox()); 
 	EXPECT_EQ(1, dataset.GetRasterXSize());
 	EXPECT_EQ(2, dataset.GetRasterYSize());
+
+	double transformMatrix[6];
+	dataset.GetGeoTransform(transformMatrix);
+	EXPECT_THAT(transformMatrix, testing::ElementsAre(1, 5, 0,
+	                                                  5, 0, -5));
 }
 
 TEST_F(PredRasterDatasetTests, ExceptionOnInvalidDimensions)

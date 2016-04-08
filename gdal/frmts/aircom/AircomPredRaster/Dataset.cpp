@@ -92,9 +92,7 @@ Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
 	: apiWrapper(ApiParams(gapTree.get_child(L"EnterprisePredRasterApi")))
 	, geoParams(parseOrLoadGeoParams(gapTree, apiWrapper, warnings))
 {
-	const auto& boundingBox = getBoundingBox();
-	nRasterXSize = width(boundingBox);
-	nRasterYSize = height(boundingBox);
+	setBoundingBox();
 
 	if (nRasterXSize <= 0 || nRasterYSize <= 0)
 		throw std::runtime_error(format("Invalid dimensions: %d x %d", nRasterXSize, nRasterYSize));
@@ -142,6 +140,24 @@ GDALDataType Dataset::getSectionDataType(int sectionIndex)
 	default:
 		throw std::runtime_error(format("Aircom data type %d not supported by GDAL", aircomType));
 	}
+}
+
+void Dataset::setBoundingBox()
+{
+	const auto& bounds = getBoundingBox();
+	nRasterXSize = width(bounds);
+	nRasterYSize = height(bounds);
+
+	double transformMatrix[6];
+	transformMatrix[0] = bounds.min_corner().get<0>(); // minX
+	transformMatrix[1] = getResolution();
+	transformMatrix[2] = 0;
+	// top-down
+	transformMatrix[3] = bounds.max_corner().get<1>(); // maxY
+	transformMatrix[4] = 0;
+	transformMatrix[5] = -getResolution();
+
+	SetGeoTransform(transformMatrix);
 }
 
 }}

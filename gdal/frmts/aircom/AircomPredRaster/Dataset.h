@@ -29,6 +29,9 @@ public:
 	IPredRaster5Ptr getPredRaster() { return apiWrapper.getPredRaster(); }
 
 	GDALDataType getSectionDataType(int sectionIndex);
+
+private:
+	void setBoundingBox();
 };
 
 }}
