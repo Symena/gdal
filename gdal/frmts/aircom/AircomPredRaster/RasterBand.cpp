@@ -35,9 +35,60 @@ CPLErr RasterBand::IRasterIO(GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXSiz
 		nBufXSize, nBufYSize, eBufType, nPixelSpace, nLineSpace, psExtraArg);
 }
 
-CPLErr RasterBand::IReadBlock(int, int, void*)
+CPLErr RasterBand::IReadBlock(int nXBlockOff, int nYBlockOff, void* pImage)
 {
-	return CPLErr::CE_Failure;
+	if (nBlockXSize == -1)
+		throw std::logic_error("RasterBand::IReadBlock(): blocks info not initialized yet!");
+
+	if (nXBlockOff < 0 || nXBlockOff >= nBlocksPerRow ||
+		nYBlockOff < 0 || nYBlockOff >= nBlocksPerColumn ||
+		pImage == nullptr)
+	{
+		return CPLErr::CE_Failure;
+	}
+
+	const size_t numPixels = size_t(nBlockXSize) * nBlockYSize;
+
+	auto tile = getPredRaster()->CreateTileIterator(section)->GetTile(nXBlockOff, nYBlockOff);
+
+	// TODO: verify that non-existing tiles are returned as null without HRESULT failure
+	if (!tile)
+	{
+		// TODO: fill buffer with no data value?
+		return CPLErr::CE_Failure;
+	}
+
+	if (numPixels != tile->GetPixelCount())
+		throw std::logic_error("RasterBand::IReadBlock(): unexpected number of block pixels!");
+
+	switch (eDataType)
+	{
+	case GDT_Byte:
+		tile->GetUCharData(numPixels, static_cast<unsigned char*>(pImage));
+		break;
+	case GDT_Int16:
+		tile->GetShortData(numPixels, static_cast<short*>(pImage));
+		break;
+	case GDT_UInt16:
+		tile->GetUShortData(numPixels, static_cast<unsigned short*>(pImage));
+		break;
+	case GDT_Int32:
+		tile->GetIntData(numPixels, static_cast<int*>(pImage));
+		break;
+	case GDT_UInt32:
+		tile->GetUIntData(numPixels, static_cast<unsigned int*>(pImage));
+		break;
+	case GDT_Float32:
+		tile->GetFloatData(numPixels, static_cast<float*>(pImage));
+		break;
+	case GDT_Float64:
+		tile->GetDoubleData(numPixels, static_cast<double*>(pImage));
+		break;
+	default:
+		throw std::logic_error("RasterBand::IReadBlock(): unsupported GDAL data type!");
+	}
+
+	return CPLErr::CE_None;
 }
 
 void RasterBand::initializeBlocksInfo()
