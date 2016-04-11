@@ -164,7 +164,7 @@
     <ClInclude Include="ApiWrapper.h" />
     <ClInclude Include="PredRasterFactory.h" />
     <ClInclude Include="Dataset.h" />
-    <ClInclude Include="GeoParams.h" />
+    <ClInclude Include="SectionInfo.h" />
     <ClInclude Include="RasterBand.h" />
   </ItemGroup>
   <ItemGroup>
@@ -172,7 +172,7 @@
     <ClCompile Include="ApiWrapper.cpp" />
     <ClCompile Include="PredRasterFactory.cpp" />
     <ClCompile Include="Dataset.cpp" />
-    <ClCompile Include="GeoParams.cpp" />
+    <ClCompile Include="SectionInfo.cpp" />
     <ClCompile Include="RasterBand.cpp" />
     <ClCompile Include="Register.cpp" />
   </ItemGroup>

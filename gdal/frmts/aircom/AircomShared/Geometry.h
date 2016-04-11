@@ -47,12 +47,16 @@ inline aircom::MapPoint operator-(aircom::MapPoint lhs, aircom::MapPoint rhs)
 	return { lhs.get<0>() - rhs.get<0>(), lhs.get<1>() - rhs.get<1>() };
 }
 
+inline bool operator==(const aircom::MapPoint& lhs, const aircom::MapPoint& rhs)
+{
+	return lhs.get<0>() == rhs.get<0>()
+		&& lhs.get<1>() == rhs.get<1>();
+}
+
 inline bool operator==(const aircom::MapBox& lhs, const aircom::MapBox& rhs)
 {
-	return lhs.min_corner().get<0>() == rhs.min_corner().get<0>()
-		&& lhs.min_corner().get<1>() == rhs.min_corner().get<1>()
-		&& lhs.max_corner().get<0>() == rhs.max_corner().get<0>()
-		&& lhs.max_corner().get<1>() == rhs.max_corner().get<1>();
+	return lhs.min_corner() == rhs.min_corner()
+		&& lhs.max_corner() == rhs.max_corner();
 }
 
 }}}

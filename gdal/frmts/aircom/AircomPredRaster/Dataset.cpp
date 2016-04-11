@@ -120,31 +120,6 @@ Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
 			SetBand(sectionNum + 1, new RasterBand(this, sectionNum + 1, sectionNum));
 }
 
-GDALDataType Dataset::getSectionDataType(int sectionIndex)
-{
-	const auto aircomType = getPredRaster()->GetSectionDataType(sectionIndex);
-
-	switch (aircomType)
-	{
-	case RasterSectionType_UnsignedChar:
-		return GDT_Byte;
-	case RasterSectionType_Short:
-		return GDT_Int16;
-	case RasterSectionType_UnsignedShort:
-		return GDT_UInt16;
-	case RasterSectionType_Int:
-		return GDT_Int32;
-	case RasterSectionType_UnsignedInt:
-		return GDT_UInt32;
-	case RasterSectionType_Float:
-		return GDT_Float32;
-	case RasterSectionType_Double:
-		return GDT_Float64;
-	default:
-		throw std::runtime_error(format("Aircom data type %d not supported by GDAL", aircomType));
-	}
-}
-
 void Dataset::setBoundingBox()
 {
 	const double res = getResolution();

@@ -1,4 +1,4 @@
-#include "AircomPredRaster/GeoParams.h"
+#include "AircomPredRaster/SectionInfo.h"
 
 #include <gmock/gmock.h>
 
