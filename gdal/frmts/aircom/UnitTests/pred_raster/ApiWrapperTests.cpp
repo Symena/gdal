@@ -47,13 +47,17 @@ TEST_F(ApiWrapperTest, getGeoParams)
 
 TEST_F(ApiWrapperTest, getSectionNums)
 {
-	std::vector<unsigned long> expected = {7};
+	std::vector<unsigned long> expected = {7, 11, 4};
 
 	EXPECT_CALL(predRaster, raw_GetNumSections(_))
-		.WillOnce(DoAll(SetArgPointee<0>(1), Return(S_OK)));
+		.WillOnce(DoAll(SetArgPointee<0>(3), Return(S_OK)));
 
-	EXPECT_CALL(predRaster, raw_GetSectionNumList(1, _))
-		.WillOnce(DoAll(SetArgPointee<1>(7), Return(S_OK)));
+	EXPECT_CALL(predRaster, raw_GetSectionNumList(3, _))
+		.WillOnce(Invoke([&](auto numSections, auto* sectionNums) { 
+			sectionNums[0] = 7;
+			sectionNums[1] = 11;
+			sectionNums[2] = 3;
+			return S_OK; }));
 		
 	auto actual = wrapper.getSectionNums();
 	EXPECT_EQ(expected, actual);
