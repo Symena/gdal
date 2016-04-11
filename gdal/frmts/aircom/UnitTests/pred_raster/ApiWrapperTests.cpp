@@ -37,8 +37,8 @@ TEST_F(ApiWrapperTest, getGeoParams)
 	EXPECT_CALL(predRaster, raw_GetRegionEx(0, _))
 		.WillOnce(DoAll(SetArgPointee<1>(region), Return(S_OK)));
 
-	MapBox bounds = makeBox(region.m_eastMin, region.m_northMax - region.m_height, 
-							region.m_eastMin + region.m_width, region.m_northMax);
+	auto bounds = makeBox(int(region.m_eastMin), int(region.m_northMax - region.m_height),
+	                      int(region.m_eastMin + region.m_width), int(region.m_northMax));
 	GeoParams expected(bounds);
 
 	auto actual = wrapper.getGeoParams();

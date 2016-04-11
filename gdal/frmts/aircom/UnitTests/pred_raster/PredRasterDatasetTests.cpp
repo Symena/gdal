@@ -87,7 +87,7 @@ TEST_F(PredRasterDatasetTests, CollectsMetaData)
 	metaDomain.add(L"foo", 1);
 	metaDomain.add(L"bar", 2);
 
-	wptree meta;	
+	wptree meta;
 	meta.add_child(L"dom", metaDomain);
 
 	sampleGapTree.add_child(L"Meta", meta);
