@@ -75,7 +75,7 @@ IAircomPredAccess4Ptr PredRasterFactory::createPredAccess(const PredAccessKey& k
 	const _bstr_t predictionsFolder(key.predictionsFolder.wstring().c_str());
 
 	constexpr unsigned short retryCount = 2;
-	unsigned short statusCode;
+	unsigned short statusCode = 0;
 	predAccess->Initialise(predictionsFolder, _bstr_t(), retryCount, &statusCode);
 
 	if (statusCode != 0)
@@ -97,7 +97,7 @@ IPredRaster5Ptr PredRasterFactory::createPredRaster(const ApiParams& params)
 
 	auto paramsCopy = params;
 	unsigned long rasterHandle;
-	unsigned short statusCode;
+	unsigned short statusCode = 0;
 	predAccess->ExtractPathlossPredictionRaster(&paramsCopy.predData, &rasterHandle, &statusCode);
 
 	if (statusCode != 0)
