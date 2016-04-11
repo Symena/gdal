@@ -36,8 +36,11 @@ GeoParams ApiWrapper::getGeoParams()
 	_REGIONEX region;
 	getPredRaster()->GetRegionEx(0, &region);
 
-	MapPoint bottomLeft(int(region.m_eastMin), int(region.m_northMax - region.m_height));
-	MapPoint topRight(int(region.m_eastMin + region.m_width), int(region.m_northMax));
+	MapPoint topLeft(int(region.m_eastMin / 100), int(region.m_northMax / 100));
+
+	const int res = region.m_resolution / 100;
+	MapPoint bottomLeft(topLeft.get<0>(), topLeft.get<1>() - region.m_height * res);
+	MapPoint topRight(topLeft.get<0>() + region.m_width * res, topLeft.get<1>());
 
 	return GeoParams(MapBox(bottomLeft, topRight));
 }

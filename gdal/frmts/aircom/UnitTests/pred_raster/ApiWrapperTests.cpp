@@ -27,18 +27,18 @@ struct ApiWrapperTest : public Test
 
 TEST_F(ApiWrapperTest, getGeoParams)
 {
-	_REGIONEX region;
-	region.m_eastMin = 1;
-	region.m_northMax = 2;
-	region.m_resolution = 3;
-	region.m_width = 4;
-	region.m_height = 5;
+	_REGIONEX r;
+	r.m_eastMin = 1;
+	r.m_northMax = 2;
+	r.m_resolution = 3;
+	r.m_width = 4;
+	r.m_height = 5;
 
 	EXPECT_CALL(predRaster, raw_GetRegionEx(0, _))
-		.WillOnce(DoAll(SetArgPointee<1>(region), Return(S_OK)));
+		.WillOnce(DoAll(SetArgPointee<1>(r), Return(S_OK)));
 
-	auto bounds = makeBox(int(region.m_eastMin), int(region.m_northMax - region.m_height),
-	                      int(region.m_eastMin + region.m_width), int(region.m_northMax));
+	auto bounds = makeBox(int(r.m_eastMin / 100), int(r.m_northMax - r.m_height * r.m_resolution) / 100,
+	                      int(r.m_eastMin + r.m_width * r.m_resolution) / 100, int(r.m_northMax) / 100);
 	GeoParams expected(bounds);
 
 	auto actual = wrapper.getGeoParams();
