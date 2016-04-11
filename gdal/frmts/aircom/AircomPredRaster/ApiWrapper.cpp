@@ -2,7 +2,26 @@
 
 #include "PredRasterFactory.h"
 
+#include <mutex>
+
 namespace aircom { namespace pred_raster {
+
+std::mutex coInitialize_mutex;
+
+std::unordered_map<std::thread::id, bool> ApiWrapper::coInitialized;
+
+ApiWrapper::ApiWrapper(ApiParams apiParams, IPredRaster5Ptr predRaster)
+	: params(std::move(apiParams)) 
+	, predRaster(predRaster)
+{
+	auto threadId = std::this_thread::get_id();
+	std::lock_guard<std::mutex> lock(coInitialize_mutex);
+	if (!coInitialized[threadId])
+	{
+		CoInitialize(nullptr);
+		coInitialized[threadId] = true;
+	}
+}	
 
 IPredRaster5Ptr ApiWrapper::getPredRaster()
 {
