@@ -42,16 +42,14 @@ GeoParams ApiWrapper::getGeoParams()
 	return GeoParams(MapBox(bottomLeft, topRight));
 }
 
-const std::vector<unsigned long>& ApiWrapper::getSectionNums()
+std::vector<unsigned long> ApiWrapper::getSectionNums()
 {
-	if (!sections)
-	{
-		sections.emplace();
-		auto numSections = getPredRaster()->GetNumSections();
-		sections->resize(numSections);
-		getPredRaster()->GetSectionNumList(numSections, &sections.get()[0]);
-	}
-	return sections.get();
+	auto numSections = getPredRaster()->GetNumSections();
+
+	std::vector<unsigned long> sections(numSections);
+	getPredRaster()->GetSectionNumList(numSections, sections.data());
+
+	return sections;
 }
 
 }}

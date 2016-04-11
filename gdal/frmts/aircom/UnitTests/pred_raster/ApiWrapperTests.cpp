@@ -58,11 +58,9 @@ TEST_F(ApiWrapperTest, getSectionNums)
 			sectionNums[1] = 11;
 			sectionNums[2] = 3;
 			return S_OK; }));
-		
+
 	auto actual = wrapper.getSectionNums();
 	EXPECT_EQ(expected, actual);
-
-	wrapper.getSectionNums();
 }
 
 }}
