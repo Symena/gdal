@@ -186,6 +186,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="map\BlocksBuilder.h" />
+    <ClInclude Include="shared\DummyIUnknownImpl.h" />
     <ClInclude Include="pred_raster\MockApiWrapper.h" />
     <ClInclude Include="pred_raster\MockPredRaster.h" />
     <ClInclude Include="pred_raster\MockTile.h" />

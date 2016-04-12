@@ -1,20 +1,14 @@
 #pragma once
 
 #include "AircomPredRaster/API.h"
+#include "UnitTests/shared/DummyIUnknownImpl.h"
 
 #include <gmock/gmock.h>
 
 namespace aircom { namespace pred_raster {
 
-struct MockPredRaster : public IPredRaster5
+struct MockPredRaster :  public DummyIUnknownImpl<IPredRaster5>
 {
-	// Inherited via IPredRaster5
-	virtual HRESULT QueryInterface(REFIID riid, void ** ppvObject) override {
-		(*ppvObject) = this;
-		return S_OK;
-	}
-	MOCK_METHOD0(AddRef, ULONG(void));
-	MOCK_METHOD0(Release, ULONG (void));
 	MOCK_METHOD1(raw_Add, HRESULT(unsigned long * pnHandle));
 	MOCK_METHOD7(raw_AddSection, HRESULT(unsigned long nHandle, RasterSectionType eType, __int64 iXcm, __int64 iYcm, int iRadius_cm, int iResolution_cm, unsigned long * pnSectionNumber));
 	MOCK_METHOD5(raw_SetUCharValueAt, HRESULT(unsigned long nRasterHandle, unsigned long nSectionNumber, __int64 iXcm, __int64 iYcm, unsigned char value));

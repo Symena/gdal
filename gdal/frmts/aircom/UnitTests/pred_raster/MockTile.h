@@ -1,22 +1,14 @@
 #pragma once
 
 #include "AircomPredRaster/API.h"
+#include "UnitTests/shared/DummyIUnknownImpl.h"
 
 #include <gmock/gmock.h>
 
 namespace aircom { namespace pred_raster {
 
-struct MockTile : public IRasterTile
+struct MockTile : public DummyIUnknownImpl<IRasterTile>
 {
-	// Inherited via IRasterTile
-	virtual HRESULT QueryInterface(REFIID riid, void ** ppvObject) override {
-		(*ppvObject) = this;
-		return S_OK;
-	}
-
-	MOCK_METHOD0(AddRef, ULONG(void));
-	MOCK_METHOD0(Release, ULONG (void));
-	
 	MOCK_METHOD1(raw_GetTileRegion, HRESULT(_REGIONEX * pRegion));
 	MOCK_METHOD1(raw_GetPixelCount, HRESULT(unsigned __int64 * pNumPix));
 	MOCK_METHOD2(raw_GetCharData, HRESULT(unsigned long numElements, char * pRasterData));
