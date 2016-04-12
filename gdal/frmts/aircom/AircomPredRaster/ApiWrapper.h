@@ -23,8 +23,8 @@ public:
 	const ApiParams& getParams() const { return params; }
 	IPredRaster5Ptr getPredRaster();
 
-	std::vector<unsigned long> getSectionNums();
-	SectionInfo getSectionInfo(unsigned long sectionNum);
+	virtual std::vector<unsigned long> getSectionNums();
+	virtual SectionInfo getSectionInfo(unsigned long sectionNum);
 };
 
 }}
