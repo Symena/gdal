@@ -3,6 +3,7 @@
 #include <fstream>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
 #include "WarningsReporter.h"
@@ -21,21 +22,62 @@ wptree loadJson(std::wistream& jsonStream)
 	return tree;
 }
 
-GeoParams parseOrLoadGeoParams(const wptree& gapTree, ApiWrapper& wrapper, Warnings& warnings)
+std::map<unsigned long, SectionInfo> parseOrLoadSectionInfos(const wptree& gapTree, 
+															 ApiWrapper& wrapper, Warnings& warnings)
 {
-	auto geoNode = gapTree.get_child_optional(L"Geo");
-	if (geoNode)	
+	auto sectionsNode = gapTree.get_child_optional(L"Sections");
+	
+	if (sectionsNode)
 		try
-		{
-			return GeoParams(geoNode.get());
+		{			
+			std::map<unsigned long, SectionInfo> ret;
+			for (const auto& kv : sectionsNode.get())				
+			{
+				auto sectionNum = boost::lexical_cast<unsigned long>(kv.first);
+				ret.emplace(sectionNum, SectionInfo(kv.second));
+			}
+			return ret;
 		}
 		catch (std::runtime_error e)
 		{
-			std::string warning = format("Failed to load GeoParams from json node. Falling back to API. (%s)", e.what());
+			std::string warning = format("Failed to load SectionInfos from json. Falling back to API. (%s)", e.what());
 			warnings.add(warning);
 		}
 
-	return wrapper.getGeoParams();
+	std::map<unsigned long, SectionInfo> ret;
+	for (const auto sectionNum : wrapper.getSectionNums())
+		ret.emplace(sectionNum, wrapper.getSectionInfo(sectionNum));
+
+	return ret;
+}
+
+MapBox computeHull(const std::map<unsigned long, SectionInfo>& sectionInfos)
+{
+	MapBox hull({std::numeric_limits<int>::max(), std::numeric_limits<int>::max()},
+				{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()});
+
+	for (const auto& sectionInfo : sectionInfos)
+	{
+		auto& bottomLeft = sectionInfo.second.boundingBox.min_corner();
+		auto& topRight = sectionInfo.second.boundingBox.max_corner();
+
+		auto& hullBottomLeft = hull.min_corner();
+		auto& hullTopRight = hull.max_corner();
+		
+		if (bottomLeft.get<0>() < hullBottomLeft.get<0>())
+			hullBottomLeft.set<0>(bottomLeft.get<0>());
+
+		if (bottomLeft.get<1>() < hullBottomLeft.get<1>())
+			hullBottomLeft.set<0>(bottomLeft.get<1>());
+
+		if (topRight.get<0>() > hullTopRight.get<0>())
+			hullTopRight.set<0>(topRight.get<0>());
+
+		if (topRight.get<1>() > hullTopRight.get<1>())
+			hullTopRight.set<0>(topRight.get<1>());
+	}
+	
+	return hull;
 }
 
 }
@@ -90,8 +132,9 @@ Dataset::Dataset(std::wistream& gapFile, Warnings& warnings)
 
 Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
 	: apiWrapper(ApiParams(gapTree.get_child(L"EnterprisePredRasterApi")))
-	, geoParams(parseOrLoadGeoParams(gapTree, apiWrapper, warnings))
 {
+	auto sectionInfos = parseOrLoadSectionInfos(gapTree, apiWrapper, warnings);
+	boundingBox = computeHull(sectionInfos);
 	setBoundingBox();
 
 	if (nRasterXSize <= 0 || nRasterYSize <= 0)
