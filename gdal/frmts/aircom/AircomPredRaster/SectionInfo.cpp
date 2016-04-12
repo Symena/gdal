@@ -71,4 +71,13 @@ bool SectionInfo::operator==(const SectionInfo& r) const
 		&& tileSizeInPixels == r.tileSizeInPixels;
 }
 
+std::ostream& operator<<(std::ostream& stream, const SectionInfo& sectionInfo) {
+	stream << "{" 
+		<< sectionInfo.boundingBox << ", DT: " 
+		<< sectionInfo.dataType << ", " 
+		<< sectionInfo.tileSizeInPixels << "}";
+
+	return stream;
+}
+
 }}

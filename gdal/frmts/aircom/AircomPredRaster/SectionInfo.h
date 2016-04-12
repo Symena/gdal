@@ -16,7 +16,9 @@ struct SectionInfo
 	SectionInfo(const MapBox& boundingBox, GDALDataType dataType, MapPoint tileSizeInPixels);
 	explicit SectionInfo(const boost::property_tree::wptree& sectionNode);
 
-	bool operator==(const SectionInfo& r) const;
+	bool operator==(const SectionInfo& r) const;	
 };
+
+std::ostream& operator<< (std::ostream& stream, const SectionInfo& sectionInfo);
 
 }}
