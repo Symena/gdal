@@ -131,9 +131,16 @@ Dataset::Dataset(std::wistream& gapFile, Warnings& warnings)
 {}
 
 Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
-	: apiWrapper(ApiParams(gapTree.get_child(L"EnterprisePredRasterApi")))
+	: Dataset
+	( gapTree
+	, std::make_shared<ApiWrapper>(ApiParams(gapTree.get_child(L"EnterprisePredRasterApi")))
+	, warnings)
+{}
+
+Dataset::Dataset(const wptree& gapTree, std::shared_ptr<ApiWrapper> tmpApiWrapper, Warnings& warnings)
+	: apiWrapper(std::move(tmpApiWrapper))
 {
-	auto sectionInfos = parseOrLoadSectionInfos(gapTree, apiWrapper, warnings);
+	auto sectionInfos = parseOrLoadSectionInfos(gapTree, *apiWrapper, warnings);
 	boundingBox = computeHull(sectionInfos);
 	setBoundingBox();
 
@@ -155,11 +162,11 @@ Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
 		}
 	}
 
-	auto section = apiWrapper.getParams().section;
+	auto section = apiWrapper->getParams().section;
 	if (section != Section::Unspecified)
 		SetBand(1, new RasterBand(this, 1, static_cast<int>(section)));
 	else
-		for (auto sectionNum : apiWrapper.getSectionNums())
+		for (auto sectionNum : apiWrapper->getSectionNums())
 			SetBand(sectionNum + 1, new RasterBand(this, sectionNum + 1, sectionNum));
 }
 
