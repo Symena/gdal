@@ -1,5 +1,7 @@
 #include "AircomPredRaster/Dataset.h"
 
+#include "MockApiWrapper.h"
+
 #include <gmock/gmock.h>
 
 #include <boost/property_tree/json_parser.hpp>
@@ -8,20 +10,23 @@
 namespace aircom { namespace pred_raster {
 
 using boost::property_tree::wptree;
+using namespace testing;
 
-struct PredRasterDatasetTests : public testing::Test
+struct PredRasterDatasetTests : public Test
 {
 	std::wstringstream gapFile;
 	wptree gapTree;
 	Warnings warnings;
 
 	wptree sampleGapTree;
-	wptree& apiNode;
-	
+	wptree& apiNode;	
+
+	std::shared_ptr<MockApiWrapper> apiWrapper;
 
 	PredRasterDatasetTests()
 		: sampleGapTree(createSampleGapTree())
 		, apiNode(sampleGapTree.get_child(L"EnterprisePredRasterApi"))
+		, apiWrapper(std::make_shared<MockApiWrapper>(ApiParams(apiNode)))
 	{}
 
 	static wptree createSampleGapTree()
@@ -151,6 +156,19 @@ TEST_F(PredRasterDatasetTests, OnlyOneBandWhenSectionSpecified)
 	Dataset dataset(sampleGapTree, warnings);
 
 	EXPECT_EQ(1, dataset.GetRasterCount());
+}
+
+TEST_F(PredRasterDatasetTests, LoadSectionsFromApi)
+{
+	sampleGapTree.erase(L"Sections");
+	std::vector<unsigned long> apiSectionNums = {1, 3};
+	SectionInfo apiSectionInfo({{0, 0}, {10, 10}}, GDALDataType::GDT_Byte, {1, 1});
+
+	EXPECT_CALL(*apiWrapper, getSectionNums()).WillOnce(Return(apiSectionNums));
+	EXPECT_CALL(*apiWrapper, getSectionInfo(1)).WillOnce(Return(apiSectionInfo));		
+	EXPECT_CALL(*apiWrapper, getSectionInfo(3)).WillOnce(Return(apiSectionInfo));
+
+	Dataset(sampleGapTree, apiWrapper, warnings);
 }
 
 }}
