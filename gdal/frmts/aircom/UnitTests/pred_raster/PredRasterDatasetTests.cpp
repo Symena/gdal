@@ -15,45 +15,56 @@ struct PredRasterDatasetTests : public testing::Test
 	wptree gapTree;
 	Warnings warnings;
 
-	wptree apiNode;
 	wptree sampleGapTree;
+	wptree& apiNode;
+	
 
 	PredRasterDatasetTests()
+		: sampleGapTree(createSampleGapTree())
+		, apiNode(sampleGapTree.get_child(L"EnterprisePredRasterApi"))
+	{}
+
+	static wptree createSampleGapTree()
 	{
-		apiNode.add(L"PredictionFolder", L"c:/pred");
-		apiNode.add(L"PredAccessClassID", L"{98A67A67-9DAB-407A-AA74-AEF504C165EE}");
-		apiNode.add(L"PredRasterClassID", L"{12345678-9DAB-407A-AA74-AEF504C165EE}");
+		std::wstring json = LR"({
+			"EnterprisePredRasterApi": {
+				"PredictionFolder":  "z:/ombie",
+				"PredAccessClassID": "{12345678-FAKE-407A-AA74-AEF504C165EE}",
+				"PredRasterClassID": "{12345678-FAKE-407A-AA74-AEF504C165EE}",
+				"PredData": {
+					"nX_cm": 100,
+					"nY_cm": 200,
+					"nAntennaHeight_cm": 300,
+					"nGroundHeight_cm": 400,
+					"nResolution_cm": 500,
+					"nRadius_cm": 600,
+					"fFrequency_MHz": 7.1,
+					"nModelCRC": 8,
+					"nPredFlags": 9,
+					"nAntennaCRC": 10,
+					"fAntennaMechanicalTilt_deg": 11.1,
+					"fAntennaAzimuth_deg": 12.1,
+					"nCwWeight": 13,
+					"fCwRolloff": 14.1
+				},
+				"Section": "pathloss"
+			},
+			"Sections": {
+				"0": {
+					"bottomLeft": [1, 3],
+					"topRight": [6, 13],
+					"dataType": "R64",
+					"tileSizeInPixels": [3, 4]
+				}
+			}
+		})";
 
-		wptree predDataNode;
-		predDataNode.add<std::int64_t>(L"nX_cm", 100);
-		predDataNode.add<std::int64_t>(L"nY_cm", 200);
-
-		predDataNode.add<std::int32_t>(L"nAntennaHeight_cm", 300);
-		predDataNode.add<std::int32_t>(L"nGroundHeight_cm", 400);
-		predDataNode.add<std::uint32_t>(L"nResolution_cm", 500);
-		predDataNode.add<std::uint32_t>(L"nRadius_cm", 600);
-
-		predDataNode.add<float>(L"fFrequency_MHz", 7.1f);
-		predDataNode.add<std::uint64_t>(L"nModelCRC", 8);
-		predDataNode.add<std::uint32_t>(L"nPredFlags", 9);
-		predDataNode.add<std::uint64_t>(L"nAntennaCRC", 10);
-
-		predDataNode.add<double>(L"fAntennaMechanicalTilt_deg", 11.1);
-		predDataNode.add<double>(L"fAntennaAzimuth_deg", 12.1);
-		predDataNode.add<std::uint16_t>(L"nCwWeight", 13);
-		predDataNode.add<float>(L"fCwRolloff", 14.1f);
-
-		apiNode.add_child(L"PredData", predDataNode);
-
-		sampleGapTree.add_child(L"EnterprisePredRasterApi", apiNode);
-
-		wptree geoNode; // resolution: 5m
-		geoNode.add(L"left", 1);
-		geoNode.add(L"right", 6);
-		geoNode.add(L"bottom", 3);
-		geoNode.add(L"top", 13);
-
-		sampleGapTree.add_child(L"Geo", geoNode);
+		std::wstringstream stream;
+		stream << json;
+		
+		wptree ret;
+		boost::property_tree::json_parser::read_json(stream, ret);
+		return ret;
 	}
 };
 
@@ -122,8 +133,13 @@ TEST_F(PredRasterDatasetTests, LoadsGeoParamsFromGapFile)
 
 TEST_F(PredRasterDatasetTests, ExceptionOnInvalidDimensions)
 {
-	sampleGapTree.get_child(L"Geo").put(L"left", 10);
-	
+	wptree bottomLeft;
+	std::wstringstream json;
+	json << L"[10, 3]";
+	boost::property_tree::json_parser::read_json(json, bottomLeft);
+
+	sampleGapTree.get_child(L"Sections.0.bottomLeft").swap(bottomLeft);
+
 	EXPECT_THROW(Dataset(sampleGapTree, warnings), std::runtime_error);
 }
 
