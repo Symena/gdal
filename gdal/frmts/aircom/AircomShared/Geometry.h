@@ -2,6 +2,7 @@
 
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
+#include <ostream>
 
 namespace aircom {
 
@@ -59,4 +60,17 @@ inline bool operator==(const aircom::MapBox& lhs, const aircom::MapBox& rhs)
 		&& lhs.max_corner() == rhs.max_corner();
 }
 
+inline std::ostream& operator<<(std::ostream& stream, const aircom::MapPoint& p)
+{
+	stream << "{ x: " << p.get<0>() << ", y: " << p.get<1>() << " }";
+	return stream;
+}
+
+inline std::ostream& operator<<(std::ostream& stream, const aircom::MapBox& b)
+{
+	stream << "{ BL: " << b.min_corner() << ", TR: " << b.max_corner() << " }";
+	return stream;
+}
+
 }}}
+
