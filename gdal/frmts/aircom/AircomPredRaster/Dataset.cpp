@@ -38,7 +38,7 @@ std::map<unsigned long, SectionInfo> parseOrLoadSectionInfos(const wptree& gapTr
 			}
 			return ret;
 		}
-		catch (std::runtime_error e)
+		catch (const std::runtime_error& e)
 		{
 			std::string warning = format("Failed to load SectionInfos from json. Falling back to API. (%s)", e.what());
 			warnings.add(warning);
@@ -68,13 +68,13 @@ MapBox computeHull(const std::map<unsigned long, SectionInfo>& sectionInfos)
 			hullBottomLeft.set<0>(bottomLeft.get<0>());
 
 		if (bottomLeft.get<1>() < hullBottomLeft.get<1>())
-			hullBottomLeft.set<0>(bottomLeft.get<1>());
+			hullBottomLeft.set<1>(bottomLeft.get<1>());
 
 		if (topRight.get<0>() > hullTopRight.get<0>())
 			hullTopRight.set<0>(topRight.get<0>());
 
 		if (topRight.get<1>() > hullTopRight.get<1>())
-			hullTopRight.set<0>(topRight.get<1>());
+			hullTopRight.set<1>(topRight.get<1>());
 	}
 	
 	return hull;
