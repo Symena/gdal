@@ -1,6 +1,8 @@
 #include "AircomPredRaster/ApiWrapper.h"
 
 #include "MockPredRaster.h"
+#include "MockTile.h"
+#include "MockTileIterator.h"
 
 #include <gmock/gmock.h>
 
@@ -15,6 +17,8 @@ struct ApiWrapperTest : public Test
 {
 	ApiParams params;
 	MockPredRaster predRaster;
+	MockTile tile;
+	MockTileIterator tileIterator;
 	ApiWrapper wrapper;
 
 	ApiWrapperTest()
@@ -25,23 +29,37 @@ struct ApiWrapperTest : public Test
 
 };
 
-TEST_F(ApiWrapperTest, getGeoParams)
+TEST_F(ApiWrapperTest, getSectionInfo)
 {
 	_REGIONEX r;
-	r.m_eastMin = 1;
-	r.m_northMax = 2;
-	r.m_resolution = 3;
+	r.m_eastMin = 100;
+	r.m_northMax = 200;
+	r.m_resolution = 300;
 	r.m_width = 4;
 	r.m_height = 5;
 
 	EXPECT_CALL(predRaster, raw_GetRegionEx(0, _))
 		.WillOnce(DoAll(SetArgPointee<1>(r), Return(S_OK)));
 
+	EXPECT_CALL(predRaster, raw_GetSectionDataType(0, _))
+		.WillOnce(DoAll(SetArgPointee<1>(RasterSectionType::RasterSectionType_Double), Return(S_OK)));
+
+	EXPECT_CALL(predRaster, raw_CreateTileIterator(0, _))
+		.WillOnce(DoAll(SetArgPointee<1>(&tileIterator), Return(S_OK)));
+
+	EXPECT_CALL(tileIterator, raw_GetNextTile(_))
+		.WillOnce(DoAll(SetArgPointee<0>(&tile), Return(S_OK)));
+
+	EXPECT_CALL(tile, raw_GetTileRegion(_))
+		.WillOnce(DoAll(SetArgPointee<0>(r), Return(S_OK)));
+
 	auto bounds = makeBox(int(r.m_eastMin / 100), int(r.m_northMax - r.m_height * r.m_resolution) / 100,
 	                      int(r.m_eastMin + r.m_width * r.m_resolution) / 100, int(r.m_northMax) / 100);
-	GeoParams expected(bounds);
+	
+	
+	SectionInfo expected(bounds, GDALDataType::GDT_Float64, {r.m_width, r.m_height});
 
-	auto actual = wrapper.getGeoParams();
+	auto actual = wrapper.getSectionInfo(0);
 	EXPECT_EQ(expected, actual);
 }
 
