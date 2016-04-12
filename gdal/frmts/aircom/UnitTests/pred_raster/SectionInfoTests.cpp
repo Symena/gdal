@@ -28,7 +28,7 @@ struct SectionInfoTests : public testing::Test
 	}
 };
 
-TEST_F(SectionInfoTests, ParsesBounds)
+TEST_F(SectionInfoTests, ParsesJsonNode)
 {
 	SectionInfo sectionInfo(sectionNode);
 
