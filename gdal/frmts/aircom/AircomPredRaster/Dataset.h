@@ -13,11 +13,10 @@ namespace aircom { namespace pred_raster {
 class Dataset : public GDALPamDataset
 {
 	std::shared_ptr<ApiWrapper> apiWrapper;
+	std::map<unsigned long, SectionInfo> sectionInfos;
 	MapBox boundingBox;
 
 public:
-	Dataset(const boost::filesystem::path& gapFile, Warnings& warnings);
-	Dataset(std::wistream& gapFile, Warnings& warnings);
 	Dataset(const boost::property_tree::wptree& gapTree, Warnings& warnings);
 	Dataset(const boost::property_tree::wptree& gapTree, std::shared_ptr<ApiWrapper> apiWrapper, Warnings& warnings);
 

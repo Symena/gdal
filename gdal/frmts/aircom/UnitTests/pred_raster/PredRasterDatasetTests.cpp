@@ -14,7 +14,6 @@ using namespace testing;
 
 struct PredRasterDatasetTests : public Test
 {
-	std::wstringstream gapFile;
 	wptree gapTree;
 	Warnings warnings;
 
@@ -73,22 +72,9 @@ struct PredRasterDatasetTests : public Test
 	}
 };
 
-TEST_F(PredRasterDatasetTests, ExceptionOnEmptyFile)
-{
-	EXPECT_THROW(Dataset(gapFile, warnings), boost::property_tree::json_parser_error);
-}
-
-TEST_F(PredRasterDatasetTests, ExceptionOnInvalidJson)
-{
-	gapFile << L"invalid";
-	EXPECT_THROW(Dataset(gapFile, warnings), boost::property_tree::json_parser_error);
-}
-
 TEST_F(PredRasterDatasetTests, ExceptionOnIncompleteData)
 {
-	gapFile << L"{}";
-	EXPECT_THROW(Dataset(gapFile, warnings), boost::property_tree::ptree_bad_path);
-	EXPECT_THROW(Dataset(gapTree, warnings), boost::property_tree::ptree_bad_path);
+	EXPECT_THROW(Dataset(wptree(), warnings), boost::property_tree::ptree_bad_path);
 }
 
 TEST_F(PredRasterDatasetTests, ParsesGapSuccessful)

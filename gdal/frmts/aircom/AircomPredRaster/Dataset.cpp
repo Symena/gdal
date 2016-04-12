@@ -15,8 +15,9 @@ namespace aircom { namespace pred_raster {
 
 namespace {
 
-wptree loadJson(std::wistream& jsonStream)
+wptree loadJson(const boost::filesystem::path& path)
 {
+	std::wifstream jsonStream(path.string());
 	wptree tree;
 	json_parser::read_json(jsonStream, tree);
 	return tree;
@@ -104,7 +105,8 @@ GDALDataset* Dataset::Open(GDALOpenInfo* openInfo)
 
 	try
 	{
-		auto ds = std::make_unique<Dataset>(path, warnings);
+		auto gapTree = loadJson(path);
+		auto ds = std::make_unique<Dataset>(gapTree, warnings);
 		ds->SetDescription(openInfo->pszFilename);
 		ds->TryLoadXML();
 		ds->oOvManager.Initialize(ds.get(), openInfo->pszFilename);
@@ -122,14 +124,6 @@ GDALDataset* Dataset::Open(GDALOpenInfo* openInfo)
 	return nullptr;
 }
 
-Dataset::Dataset(const boost::filesystem::path& gapFile, Warnings& warnings)
-	: Dataset(std::wifstream(gapFile.string()), warnings)
-{}
-
-Dataset::Dataset(std::wistream& gapFile, Warnings& warnings)
-	: Dataset(loadJson(gapFile), warnings)
-{}
-
 Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
 	: Dataset
 	( gapTree
@@ -139,9 +133,9 @@ Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
 
 Dataset::Dataset(const wptree& gapTree, std::shared_ptr<ApiWrapper> tmpApiWrapper, Warnings& warnings)
 	: apiWrapper(std::move(tmpApiWrapper))
+	, sectionInfos(parseOrLoadSectionInfos(gapTree, *apiWrapper, warnings))
+	, boundingBox(computeHull(sectionInfos))
 {
-	auto sectionInfos = parseOrLoadSectionInfos(gapTree, *apiWrapper, warnings);
-	boundingBox = computeHull(sectionInfos);
 	setBoundingBox();
 
 	if (nRasterXSize <= 0 || nRasterYSize <= 0)
