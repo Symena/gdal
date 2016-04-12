@@ -187,6 +187,8 @@
   <ItemGroup>
     <ClInclude Include="map\BlocksBuilder.h" />
     <ClInclude Include="pred_raster\MockPredRaster.h" />
+    <ClInclude Include="pred_raster\MockTile.h" />
+    <ClInclude Include="pred_raster\MockTileIterator.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="project.json" />
