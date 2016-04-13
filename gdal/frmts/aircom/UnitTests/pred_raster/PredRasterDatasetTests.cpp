@@ -53,13 +53,16 @@ struct PredRasterDatasetTests : public Test
 				},
 				"Section": "pathloss"
 			},
-			"Sections": {
-				"0": {
-					"bottomLeft": [1, 3],
-					"topRight": [6, 13],
-					"dataType": "R64",
-					"tileSizeInPixels": [3, 4],
-					"numTiles": [2, 2]
+			"Auxiliary": {
+				"BoundingBox": {
+					"BottomLeft": [1, 3],
+					"TopRight": [6, 13]
+				},
+
+				"TileSizeInPixels": [3, 4],
+
+				"SectionDataTypes": {
+					"0": "R64"
 				}
 			}
 		})";
@@ -145,8 +148,8 @@ TEST_F(PredRasterDatasetTests, LoadSectionsFromApi)
 {
 	sampleGapTree.erase(L"Sections");
 
-	std::map<unsigned long, SectionInfo> sectionInfos;
-	sectionInfos.emplace(0, SectionInfo({{0, 0}, {10, 10}}, GDALDataType::GDT_Byte, {1, 1}, {1, 1}));
+	std::map<unsigned long, Auxiliary> sectionInfos;
+	sectionInfos.emplace(0, Auxiliary({{0, 0}, {10, 10}}, GDALDataType::GDT_Byte, {1, 1}, {1, 1}));
 
 	EXPECT_CALL(*apiWrapper, getSectionInfos()).WillOnce(Return(sectionInfos));
 

@@ -105,12 +105,12 @@ std::vector<unsigned long> ApiWrapper::getSectionNums()
 	return sections;
 }
 
-SectionInfo ApiWrapper::getSectionInfo(unsigned long sectionNum)
+Auxiliary ApiWrapper::getAuxiliary(unsigned long sectionNum)
 {
 	auto predRaster = getPredRaster();
 	auto tileIterator = predRaster->CreateTileIterator(sectionNum);
 
-	return SectionInfo(
+	return Auxiliary(
 		getSectionArea(predRaster, sectionNum),
 		getDataType(predRaster, sectionNum),
 		getTileSizeInPixels(tileIterator),
@@ -118,11 +118,11 @@ SectionInfo ApiWrapper::getSectionInfo(unsigned long sectionNum)
 	);
 }
 
-std::map<unsigned long, SectionInfo> ApiWrapper::getSectionInfos()
+std::map<unsigned long, Auxiliary> ApiWrapper::getSectionInfos()
 {
-	std::map<unsigned long, SectionInfo> ret;
+	std::map<unsigned long, Auxiliary> ret;
 	for (const auto sectionNum : getSectionNums())
-		ret.emplace(sectionNum, getSectionInfo(sectionNum));
+		ret.emplace(sectionNum, getAuxiliary(sectionNum));
 
 	return ret;
 }

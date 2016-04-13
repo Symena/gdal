@@ -4,9 +4,9 @@ namespace aircom { namespace pred_raster {
 
 namespace {
 
-boost::optional<double> getNoDataValue(const SectionInfo& sectionInfo)
+boost::optional<double> getNoDataValue(const GDALDataType& dataType)
 {
-	switch (sectionInfo.dataType)
+	switch (dataType)
 	{
 	case GDT_Float32:
 		return -9999; // at least for unmasked loss according to docs
@@ -22,23 +22,23 @@ boost::optional<double> getNoDataValue(const SectionInfo& sectionInfo)
 }
 
 RasterBand::RasterBand(Dataset* owningDataSet, int bandIndex, std::shared_ptr<ApiWrapper> tmpApiWrapper,
-	unsigned long sectionNum, const SectionInfo& sectionInfo)
+	unsigned long sectionNum, const Auxiliary& auxiliary)
 	: apiWrapper(std::move(tmpApiWrapper))
 	, sectionNum(sectionNum)
 {
 	poDS = owningDataSet;
 	nBand = bandIndex;
-	eDataType = sectionInfo.dataType;
+	eDataType = auxiliary.sectionDataTypes.at(sectionNum);
 
-	nBlockXSize = sectionInfo.tileSizeInPixels.get<0>();
-	nBlockYSize = sectionInfo.tileSizeInPixels.get<1>();
+	nBlockXSize = auxiliary.tileSizeInPixels.get<0>();
+	nBlockYSize = auxiliary.tileSizeInPixels.get<1>();
 
-	nBlocksPerRow = sectionInfo.numTiles.get<0>();
-	nBlocksPerColumn = sectionInfo.numTiles.get<1>();
+	//nBlocksPerRow = auxiliary.numTiles.get<0>();
+	//nBlocksPerColumn = auxiliary.numTiles.get<1>();
 
 	// nRasterXSize & nRasterYSize are set to the dataset size by GDALDataset::SetBand()
 
-	if (auto noDataValue = getNoDataValue(sectionInfo))
+	if (auto noDataValue = getNoDataValue(eDataType))
 		SetNoDataValue(*noDataValue);
 }
 

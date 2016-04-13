@@ -23,7 +23,7 @@ wptree loadJson(const boost::filesystem::path& path)
 	return tree;
 }
 
-using SectionInfosMap = std::map<unsigned long, SectionInfo>;
+using SectionInfosMap = std::map<unsigned long, Auxiliary>;
 
 SectionInfosMap parseOrLoadSectionInfos(const wptree& gapTree, ApiWrapper& wrapper, Warnings& warnings)
 {
@@ -36,7 +36,7 @@ SectionInfosMap parseOrLoadSectionInfos(const wptree& gapTree, ApiWrapper& wrapp
 			for (const auto& kv : sectionsNode.get())
 			{
 				auto sectionNum = boost::lexical_cast<unsigned long>(kv.first);
-				ret.emplace(sectionNum, SectionInfo(kv.second));
+				ret.emplace(sectionNum, Auxiliary(kv.second));
 			}
 			return ret;
 		}
@@ -49,7 +49,7 @@ SectionInfosMap parseOrLoadSectionInfos(const wptree& gapTree, ApiWrapper& wrapp
 	return wrapper.getSectionInfos();
 }
 
-MapBox computeHull(const std::map<unsigned long, SectionInfo>& sectionInfos)
+MapBox computeHull(const std::map<unsigned long, Auxiliary>& sectionInfos)
 {
 	MapBox hull({std::numeric_limits<int>::max(), std::numeric_limits<int>::max()},
 				{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()});

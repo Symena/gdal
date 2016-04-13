@@ -1,4 +1,4 @@
-#include "AircomPredRaster/SectionInfo.h"
+#include "AircomPredRaster/Auxiliary.h"
 
 #include <gmock/gmock.h>
 
@@ -31,10 +31,10 @@ struct SectionInfoTests : public testing::Test
 
 TEST_F(SectionInfoTests, ParsesJsonNode)
 {
-	SectionInfo sectionInfo(sectionNode);
+	Auxiliary sectionInfo(sectionNode);
 
 	MapBox bounds({1, 3}, {2, 4});
-	SectionInfo expected(bounds, GDALDataType::GDT_Float64, {5, 6}, {3, 2});
+	Auxiliary expected(bounds, GDALDataType::GDT_Float64, {5, 6}, {3, 2});
 
 	EXPECT_EQ(expected, sectionInfo);
 }

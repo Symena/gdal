@@ -13,7 +13,7 @@ namespace aircom { namespace pred_raster {
 class Dataset : public GDALPamDataset
 {
 	std::shared_ptr<ApiWrapper> apiWrapper;
-	std::map<unsigned long, SectionInfo> sectionInfos;
+	std::map<unsigned long, Auxiliary> sectionInfos;
 	MapBox boundingBox;
 
 public:

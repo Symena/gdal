@@ -30,7 +30,7 @@ struct ApiWrapperTest : public Test
 
 };
 
-TEST_F(ApiWrapperTest, getSectionInfo)
+TEST_F(ApiWrapperTest, getAuxiliary)
 {
 	_REGIONEX r;
 	r.m_eastMin = 100;
@@ -60,9 +60,9 @@ TEST_F(ApiWrapperTest, getSectionInfo)
 	auto bounds = makeBox(int(r.m_eastMin / 100), int(r.m_northMax - r.m_height * r.m_resolution) / 100,
 	                      int(r.m_eastMin + r.m_width * r.m_resolution) / 100, int(r.m_northMax) / 100);
 
-	SectionInfo expected(bounds, GDALDataType::GDT_Float64, {r.m_width, r.m_height}, {3, 3});
+	Auxiliary expected(bounds, GDALDataType::GDT_Float64, {r.m_width, r.m_height}, {3, 3});
 
-	auto actual = wrapper.getSectionInfo(0);
+	auto actual = wrapper.getAuxiliary(0);
 	EXPECT_EQ(expected, actual);
 }
 
@@ -89,21 +89,21 @@ TEST_F(ApiWrapperTest, getSectionInfos)
 	// Given
 	MockApiWrapper mApiWrapper(params, &predRaster);
 	
-	SectionInfo sectionInfo1({{0,0}, {1,1}}, GDALDataType::GDT_Float64, {1, 2}, {3, 4});
-	SectionInfo sectionInfo3({{2,3}, {4,5}}, GDALDataType::GDT_Int16, {4, 5}, {6, 7});
+	Auxiliary sectionInfo1({{0,0}, {1,1}}, GDALDataType::GDT_Float64, {1, 2}, {3, 4});
+	Auxiliary sectionInfo3({{2,3}, {4,5}}, GDALDataType::GDT_Int16, {4, 5}, {6, 7});
 
 	EXPECT_CALL(mApiWrapper, getSectionNums())
 		.WillOnce(Return(std::vector<unsigned long>{1, 3}));
-	EXPECT_CALL(mApiWrapper, getSectionInfo(1))
+	EXPECT_CALL(mApiWrapper, getAuxiliary(1))
 		.WillOnce(Return(sectionInfo1));
-	EXPECT_CALL(mApiWrapper, getSectionInfo(3))
+	EXPECT_CALL(mApiWrapper, getAuxiliary(3))
 		.WillOnce(Return(sectionInfo3));
 
 	// When
 	auto actual = mApiWrapper.ApiWrapper::getSectionInfos();
 
 	// Then
-	std::map<unsigned long, SectionInfo> expected;
+	std::map<unsigned long, Auxiliary> expected;
 	expected.emplace(1, sectionInfo1);
 	expected.emplace(3, sectionInfo3);
 

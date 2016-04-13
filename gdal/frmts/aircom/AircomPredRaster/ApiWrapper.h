@@ -2,7 +2,7 @@
 
 #include "API.h"
 #include "ApiParams.h"
-#include "SectionInfo.h"
+#include "Auxiliary.h"
 
 #include <boost/optional.hpp>
 #include <map>
@@ -24,8 +24,8 @@ public:
 	IPredRaster5Ptr getPredRaster();
 
 	virtual std::vector<unsigned long> getSectionNums();
-	virtual SectionInfo getSectionInfo(unsigned long sectionNum);
-	virtual std::map<unsigned long, SectionInfo> getSectionInfos();
+	virtual Auxiliary getAuxiliary(unsigned long sectionNum);
+	virtual std::map<unsigned long, Auxiliary> getSectionInfos();
 };
 
 }}
