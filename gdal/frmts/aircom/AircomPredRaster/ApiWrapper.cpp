@@ -4,6 +4,7 @@
 #include "StringUtils.h"
 
 #include <mutex>
+#include <unordered_map>
 
 namespace aircom { namespace pred_raster {
 
@@ -115,6 +116,15 @@ SectionInfo ApiWrapper::getSectionInfo(unsigned long sectionNum)
 		getTileSizeInPixels(tileIterator),
 		getNumTiles(tileIterator)
 	);
+}
+
+std::map<unsigned long, SectionInfo> ApiWrapper::getSectionInfos()
+{
+	std::map<unsigned long, SectionInfo> ret;
+	for (const auto sectionNum : getSectionNums())
+		ret.emplace(sectionNum, getSectionInfo(sectionNum));
+
+	return ret;
 }
 
 }}

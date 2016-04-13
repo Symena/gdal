@@ -1,5 +1,6 @@
 #include "AircomPredRaster/ApiWrapper.h"
 
+#include "MockApiWrapper.h"
 #include "MockPredRaster.h"
 #include "MockTile.h"
 #include "MockTileIterator.h"
@@ -81,6 +82,32 @@ TEST_F(ApiWrapperTest, getSectionNums)
 
 	auto actual = wrapper.getSectionNums();
 	EXPECT_EQ(expected, actual);
+}
+
+TEST_F(ApiWrapperTest, getSectionInfos)
+{
+	// Given
+	MockApiWrapper mApiWrapper(params, &predRaster);
+	
+	SectionInfo sectionInfo1({{0,0}, {1,1}}, GDALDataType::GDT_Float64, {1, 2}, {3, 4});
+	SectionInfo sectionInfo3({{2,3}, {4,5}}, GDALDataType::GDT_Int16, {4, 5}, {6, 7});
+
+	EXPECT_CALL(mApiWrapper, getSectionNums())
+		.WillOnce(Return(std::vector<unsigned long>{1, 3}));
+	EXPECT_CALL(mApiWrapper, getSectionInfo(1))
+		.WillOnce(Return(sectionInfo1));
+	EXPECT_CALL(mApiWrapper, getSectionInfo(3))
+		.WillOnce(Return(sectionInfo3));
+
+	// When
+	auto actual = mApiWrapper.ApiWrapper::getSectionInfos();
+
+	// Then
+	std::map<unsigned long, SectionInfo> expected;
+	expected.emplace(1, sectionInfo1);
+	expected.emplace(3, sectionInfo3);
+
+	EXPECT_EQ(expected, actual);	
 }
 
 }}

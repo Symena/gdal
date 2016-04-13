@@ -15,6 +15,7 @@ struct MockApiWrapper : public ApiWrapper
 
 	MOCK_METHOD0(getSectionNums, std::vector<unsigned long>());
 	MOCK_METHOD1(getSectionInfo, SectionInfo(unsigned long sectionNum));
+	MOCK_METHOD0(getSectionInfos, std::map<unsigned long, SectionInfo>());
 };
 
 }}

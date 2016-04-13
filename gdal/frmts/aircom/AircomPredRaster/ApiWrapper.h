@@ -5,8 +5,8 @@
 #include "SectionInfo.h"
 
 #include <boost/optional.hpp>
+#include <map>
 #include <thread>
-#include <unordered_map>
 #include <vector>
 
 
@@ -25,6 +25,7 @@ public:
 
 	virtual std::vector<unsigned long> getSectionNums();
 	virtual SectionInfo getSectionInfo(unsigned long sectionNum);
+	virtual std::map<unsigned long, SectionInfo> getSectionInfos();
 };
 
 }}
