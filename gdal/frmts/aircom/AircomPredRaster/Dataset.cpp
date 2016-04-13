@@ -105,7 +105,6 @@ GDALDataset* Dataset::Open(GDALOpenInfo* openInfo)
 		auto gapTree = loadJson(path);
 		auto ds = std::make_unique<Dataset>(gapTree, warnings);
 		ds->SetDescription(openInfo->pszFilename);
-		ds->TryLoadXML();
 		ds->oOvManager.Initialize(ds.get(), openInfo->pszFilename);
 		return ds.release();
 	}
@@ -149,14 +148,39 @@ Dataset::Dataset(const wptree& gapTree, std::shared_ptr<ApiWrapper> tmpApiWrappe
 		}
 	}
 
-	auto requestedSection = apiWrapper->getParams().section;
+	const auto requestedSection = apiWrapper->getParams().section;
+	const MapPoint sizeInPixels = { nRasterXSize, nRasterYSize };
+
 	for (const auto& sectionInfoPair : sectionInfos)
 	{
 		const auto sectionNum = sectionInfoPair.first;
 		const int bandIndex = sectionNum + 1;
 		if (requestedSection == Section::Unspecified || static_cast<int>(requestedSection) == sectionNum)
-			SetBand(bandIndex, new RasterBand(this, bandIndex, apiWrapper, sectionNum, sectionInfoPair.second));
+			SetBand(bandIndex, new RasterBand(this, sizeInPixels, bandIndex, apiWrapper, sectionNum, sectionInfoPair.second));
 	}
+}
+
+CPLErr Dataset::SetGeoTransform(double* padfTransform)
+{
+	return CPLErr::CE_Failure;
+}
+
+CPLErr Dataset::GetGeoTransform(double* padfTransform)
+{
+	if (!padfTransform)
+		return CPLErr::CE_Failure;
+
+	const double res = getResolution();
+
+	padfTransform[0] = getBoundingBox().min_corner().get<0>(); // min x
+	padfTransform[1] = res;
+	padfTransform[2] = 0;
+	// top-down
+	padfTransform[3] = getBoundingBox().max_corner().get<1>(); // max y
+	padfTransform[4] = 0;
+	padfTransform[5] = -res;
+
+	return CPLErr::CE_None;
 }
 
 void Dataset::setBoundingBox()
@@ -169,17 +193,6 @@ void Dataset::setBoundingBox()
 
 	if (nRasterXSize <= 0 || nRasterYSize <= 0)
 		throw std::runtime_error(format("Invalid dimensions: %d x %d", nRasterXSize, nRasterYSize));
-
-	double transformMatrix[6];
-	transformMatrix[0] = boundingBox.min_corner().get<0>(); // minX
-	transformMatrix[1] = res;
-	transformMatrix[2] = 0;
-	// top-down
-	transformMatrix[3] = boundingBox.max_corner().get<1>(); // maxY
-	transformMatrix[4] = 0;
-	transformMatrix[5] = -res;
-
-	SetGeoTransform(transformMatrix);
 }
 
 }}

@@ -18,7 +18,7 @@ struct PredRasterDatasetTests : public Test
 	Warnings warnings;
 
 	wptree sampleGapTree;
-	wptree& apiNode;	
+	wptree& apiNode;
 
 	std::shared_ptr<MockApiWrapper> apiWrapper;
 
