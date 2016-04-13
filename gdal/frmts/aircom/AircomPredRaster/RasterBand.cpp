@@ -4,7 +4,7 @@ namespace aircom { namespace pred_raster {
 
 namespace {
 
-boost::optional<double> getNoDataValue(const GDALDataType& dataType)
+boost::optional<double> getNoDataValue(GDALDataType dataType)
 {
 	switch (dataType)
 	{
@@ -34,7 +34,7 @@ RasterBand::RasterBand(Dataset* owningDataSet, MapPoint sizeInPixels,
 	unsigned long sectionNum, const Auxiliary& auxiliary)
 	: apiWrapper(std::move(tmpApiWrapper))
 	, sectionNum(sectionNum)
-	, noDataValue(getNoDataValue(sectionInfo))
+	, noDataValue(getNoDataValue(auxiliary.sectionDataTypes.at(sectionNum)))
 {
 	poDS = owningDataSet;
 	nBand = bandIndex;

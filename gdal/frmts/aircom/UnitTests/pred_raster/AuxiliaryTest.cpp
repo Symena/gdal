@@ -10,31 +10,29 @@ namespace aircom { namespace pred_raster {
 
 using boost::property_tree::wptree;
 
-struct SectionInfoTests : public testing::Test
+struct AuxiliaryTest : public testing::Test
 {
-	wptree sectionNode;
+	wptree auxiliaryNode;
 
-	SectionInfoTests()
+	AuxiliaryTest()
 	{
 		std::wstring sectionJson = LR"({
-			"bottomLeft": [1, 3],
-			"topRight": [2, 4],
-			"dataType": "R64",
-			"tileSizeInPixels": [5, 6],
-			"numTiles": [3, 2] })";
+			"BoundingBox": { "BottomLeft": [1, 3], "TopRight": [2, 4] },
+			"SectionDataTypes": { "0": "R64" },
+			"TileSizeInPixels": [5, 6] })";
 
 		std::wstringstream stream;
 		stream << sectionJson;
-		boost::property_tree::json_parser::read_json(stream, sectionNode);
+		boost::property_tree::json_parser::read_json(stream, auxiliaryNode);
 	}
 };
 
-TEST_F(SectionInfoTests, ParsesJsonNode)
+TEST_F(AuxiliaryTest, ParsesJsonNode)
 {
-	Auxiliary sectionInfo(sectionNode);
+	Auxiliary sectionInfo(auxiliaryNode);
 
 	MapBox bounds({1, 3}, {2, 4});
-	Auxiliary expected(bounds, GDALDataType::GDT_Float64, {5, 6}, {3, 2});
+	Auxiliary expected(bounds, { {0, GDT_Float64} }, {5, 6});
 
 	EXPECT_EQ(expected, sectionInfo);
 }

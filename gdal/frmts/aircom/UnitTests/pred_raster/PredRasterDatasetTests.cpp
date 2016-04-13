@@ -149,7 +149,7 @@ TEST_F(PredRasterDatasetTests, LoadSectionsFromApi)
 	sampleGapTree.erase(L"Sections");
 
 	std::map<unsigned long, Auxiliary> sectionInfos;
-	sectionInfos.emplace(0, Auxiliary({{0, 0}, {10, 10}}, GDALDataType::GDT_Byte, {1, 1}, {1, 1}));
+	sectionInfos.emplace(0, Auxiliary({{0, 0}, {10, 10}}, { {0, GDT_Byte} }, {1, 1}));
 
 	EXPECT_CALL(*apiWrapper, getSectionInfos()).WillOnce(Return(sectionInfos));
 
