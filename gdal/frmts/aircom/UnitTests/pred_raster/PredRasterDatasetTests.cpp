@@ -58,7 +58,8 @@ struct PredRasterDatasetTests : public Test
 					"bottomLeft": [1, 3],
 					"topRight": [6, 13],
 					"dataType": "R64",
-					"tileSizeInPixels": [3, 4]
+					"tileSizeInPixels": [3, 4],
+					"numTiles": [2, 2]
 				}
 			}
 		})";
@@ -95,7 +96,7 @@ TEST_F(PredRasterDatasetTests, CollectsMetaData)
 	sampleGapTree.add_child(L"Meta", meta);
 
 	Dataset dataset(sampleGapTree, warnings);
-	
+
 	EXPECT_EQ(0, warnings.size());
 
 	auto domainList = dataset.GetMetadataDomainList();
@@ -106,7 +107,7 @@ TEST_F(PredRasterDatasetTests, CollectsMetaData)
 	EXPECT_EQ(std::string("2"), dataset.GetMetadataItem("bar", "dom"));
 }
 
-TEST_F(PredRasterDatasetTests, LoadsGeoParamsFromGapFile)
+TEST_F(PredRasterDatasetTests, LoadsBoundingBoxFromGapFile)
 {
 	Dataset dataset(sampleGapTree, warnings);
 
@@ -136,11 +137,7 @@ TEST_F(PredRasterDatasetTests, ExceptionOnInvalidDimensions)
 
 TEST_F(PredRasterDatasetTests, OnlyOneBandWhenSectionSpecified)
 {
-	apiNode.add(L"Section", L"Inclination");
-	sampleGapTree.put_child(L"EnterprisePredRasterApi", apiNode);
-
 	Dataset dataset(sampleGapTree, warnings);
-
 	EXPECT_EQ(1, dataset.GetRasterCount());
 }
 
@@ -148,10 +145,10 @@ TEST_F(PredRasterDatasetTests, LoadSectionsFromApi)
 {
 	sampleGapTree.erase(L"Sections");
 	std::vector<unsigned long> apiSectionNums = {1, 3};
-	SectionInfo apiSectionInfo({{0, 0}, {10, 10}}, GDALDataType::GDT_Byte, {1, 1});
+	SectionInfo apiSectionInfo({{0, 0}, {10, 10}}, GDALDataType::GDT_Byte, {1, 1}, {1, 1});
 
 	EXPECT_CALL(*apiWrapper, getSectionNums()).WillOnce(Return(apiSectionNums));
-	EXPECT_CALL(*apiWrapper, getSectionInfo(1)).WillOnce(Return(apiSectionInfo));		
+	EXPECT_CALL(*apiWrapper, getSectionInfo(1)).WillOnce(Return(apiSectionInfo));
 	EXPECT_CALL(*apiWrapper, getSectionInfo(3)).WillOnce(Return(apiSectionInfo));
 
 	Dataset(sampleGapTree, apiWrapper, warnings);

@@ -23,16 +23,17 @@ wptree loadJson(const boost::filesystem::path& path)
 	return tree;
 }
 
-std::map<unsigned long, SectionInfo> parseOrLoadSectionInfos(const wptree& gapTree, 
-															 ApiWrapper& wrapper, Warnings& warnings)
+using SectionInfosMap = std::map<unsigned long, SectionInfo>;
+
+SectionInfosMap parseOrLoadSectionInfos(const wptree& gapTree, ApiWrapper& wrapper, Warnings& warnings)
 {
 	auto sectionsNode = gapTree.get_child_optional(L"Sections");
-	
+
 	if (sectionsNode)
 		try
-		{			
-			std::map<unsigned long, SectionInfo> ret;
-			for (const auto& kv : sectionsNode.get())				
+		{
+			SectionInfosMap ret;
+			for (const auto& kv : sectionsNode.get())
 			{
 				auto sectionNum = boost::lexical_cast<unsigned long>(kv.first);
 				ret.emplace(sectionNum, SectionInfo(kv.second));
@@ -45,7 +46,7 @@ std::map<unsigned long, SectionInfo> parseOrLoadSectionInfos(const wptree& gapTr
 			warnings.add(warning);
 		}
 
-	std::map<unsigned long, SectionInfo> ret;
+	SectionInfosMap ret;
 	for (const auto sectionNum : wrapper.getSectionNums())
 		ret.emplace(sectionNum, wrapper.getSectionInfo(sectionNum));
 
@@ -134,12 +135,8 @@ Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
 Dataset::Dataset(const wptree& gapTree, std::shared_ptr<ApiWrapper> tmpApiWrapper, Warnings& warnings)
 	: apiWrapper(std::move(tmpApiWrapper))
 	, sectionInfos(parseOrLoadSectionInfos(gapTree, *apiWrapper, warnings))
-	, boundingBox(computeHull(sectionInfos))
 {
 	setBoundingBox();
-
-	if (nRasterXSize <= 0 || nRasterYSize <= 0)
-		throw std::runtime_error(format("Invalid dimensions: %d x %d", nRasterXSize, nRasterYSize));
 
 	auto meta = gapTree.get_child_optional(L"Meta");
 	if (meta)
@@ -156,28 +153,33 @@ Dataset::Dataset(const wptree& gapTree, std::shared_ptr<ApiWrapper> tmpApiWrappe
 		}
 	}
 
-	auto section = apiWrapper->getParams().section;
-	if (section != Section::Unspecified)
-		SetBand(1, new RasterBand(this, 1, static_cast<int>(section)));
-	else
-		for (auto sectionNum : apiWrapper->getSectionNums())
-			SetBand(sectionNum + 1, new RasterBand(this, sectionNum + 1, sectionNum));
+	auto requestedSection = apiWrapper->getParams().section;
+	for (const auto& sectionInfoPair : sectionInfos)
+	{
+		const auto sectionNum = sectionInfoPair.first;
+		const int bandIndex = sectionNum + 1;
+		if (requestedSection == Section::Unspecified || static_cast<int>(requestedSection) == sectionNum)
+			SetBand(bandIndex, new RasterBand(this, bandIndex, apiWrapper, sectionNum, sectionInfoPair.second));
+	}
 }
 
 void Dataset::setBoundingBox()
 {
-	const double res = getResolution();
+	boundingBox = computeHull(sectionInfos);
 
-	const auto& bounds = getBoundingBox();
-	nRasterXSize = static_cast<int>(std::round(width(bounds) / res));
-	nRasterYSize = static_cast<int>(std::round(height(bounds) / res));
+	const double res = getResolution();
+	nRasterXSize = static_cast<int>(std::round(width(boundingBox) / res));
+	nRasterYSize = static_cast<int>(std::round(height(boundingBox) / res));
+
+	if (nRasterXSize <= 0 || nRasterYSize <= 0)
+		throw std::runtime_error(format("Invalid dimensions: %d x %d", nRasterXSize, nRasterYSize));
 
 	double transformMatrix[6];
-	transformMatrix[0] = bounds.min_corner().get<0>(); // minX
+	transformMatrix[0] = boundingBox.min_corner().get<0>(); // minX
 	transformMatrix[1] = res;
 	transformMatrix[2] = 0;
 	// top-down
-	transformMatrix[3] = bounds.max_corner().get<1>(); // maxY
+	transformMatrix[3] = boundingBox.max_corner().get<1>(); // maxY
 	transformMatrix[4] = 0;
 	transformMatrix[5] = -res;
 

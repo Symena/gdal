@@ -20,7 +20,8 @@ struct SectionInfoTests : public testing::Test
 			"bottomLeft": [1, 3],
 			"topRight": [2, 4],
 			"dataType": "R64",
-			"tileSizeInPixels": [5, 6] })";
+			"tileSizeInPixels": [5, 6],
+			"numTiles": [3, 2] })";
 
 		std::wstringstream stream;
 		stream << sectionJson;
@@ -32,11 +33,8 @@ TEST_F(SectionInfoTests, ParsesJsonNode)
 {
 	SectionInfo sectionInfo(sectionNode);
 
-	MapPoint bottomLeft(1, 3);
-	MapPoint topRight(2, 4);
-	MapBox bounds(bottomLeft, topRight);
-
-	SectionInfo expected(bounds, GDALDataType::GDT_Float64, {5, 6});
+	MapBox bounds({1, 3}, {2, 4});
+	SectionInfo expected(bounds, GDALDataType::GDT_Float64, {5, 6}, {3, 2});
 
 	EXPECT_EQ(expected, sectionInfo);
 }

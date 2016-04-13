@@ -53,11 +53,13 @@ TEST_F(ApiWrapperTest, getSectionInfo)
 	EXPECT_CALL(tile, raw_GetTileRegion(_))
 		.WillOnce(DoAll(SetArgPointee<0>(r), Return(S_OK)));
 
+	EXPECT_CALL(tileIterator, raw_GetNumTiles(_))
+		.WillOnce(DoAll(SetArgPointee<0>(3*3), Return(S_OK)));
+
 	auto bounds = makeBox(int(r.m_eastMin / 100), int(r.m_northMax - r.m_height * r.m_resolution) / 100,
 	                      int(r.m_eastMin + r.m_width * r.m_resolution) / 100, int(r.m_northMax) / 100);
-	
-	
-	SectionInfo expected(bounds, GDALDataType::GDT_Float64, {r.m_width, r.m_height});
+
+	SectionInfo expected(bounds, GDALDataType::GDT_Float64, {r.m_width, r.m_height}, {3, 3});
 
 	auto actual = wrapper.getSectionInfo(0);
 	EXPECT_EQ(expected, actual);

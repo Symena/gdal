@@ -52,30 +52,36 @@ GDALDataType parseDataType(const wptree& sectionNode)
 
 }
 
-SectionInfo::SectionInfo(const MapBox& boundingBox, GDALDataType dataType, MapPoint tileSizeInPixels)
+SectionInfo::SectionInfo(const MapBox& boundingBox, GDALDataType dataType, MapPoint tileSizeInPixels, MapPoint numTiles)
 	: boundingBox(boundingBox)
 	, dataType(dataType)
 	, tileSizeInPixels(tileSizeInPixels)
+	, numTiles(numTiles)
 {}
 
 SectionInfo::SectionInfo(const wptree& sectionNode)
 	: boundingBox(parseBoundingBox(sectionNode))
 	, dataType(parseDataType(sectionNode))
 	, tileSizeInPixels(parsePoint(sectionNode.get_child(L"tileSizeInPixels")))
+	, numTiles(parsePoint(sectionNode.get_child(L"numTiles")))
 {}
 
 bool SectionInfo::operator==(const SectionInfo& r) const
 {
 	return boundingBox == r.boundingBox
 		&& dataType == r.dataType
-		&& tileSizeInPixels == r.tileSizeInPixels;
+		&& tileSizeInPixels == r.tileSizeInPixels
+		&& numTiles == r.numTiles;
 }
 
-std::ostream& operator<<(std::ostream& stream, const SectionInfo& sectionInfo) {
+std::ostream& operator<<(std::ostream& stream, const SectionInfo& sectionInfo)
+{
 	stream << "{" 
-		<< sectionInfo.boundingBox << ", DT: " 
-		<< sectionInfo.dataType << ", " 
-		<< sectionInfo.tileSizeInPixels << "}";
+		<< sectionInfo.boundingBox
+		<< ", data type: " << sectionInfo.dataType
+		<< ", tile size: " << sectionInfo.tileSizeInPixels
+		<< ", num tiles: " << sectionInfo.numTiles
+		<< "}";
 
 	return stream;
 }

@@ -6,12 +6,14 @@
 
 namespace aircom { namespace pred_raster {
 
-class RasterBand: public GDALPamRasterBand
+class RasterBand : public GDALPamRasterBand
 {
-	const int section;
+	std::shared_ptr<ApiWrapper> apiWrapper;
+	const unsigned long sectionNum;
 
 public:
-	RasterBand(Dataset* owningDataSet, int bandIndex, int section);
+	RasterBand(Dataset* owningDataSet, int bandIndex, std::shared_ptr<ApiWrapper> apiWrapper,
+		unsigned long sectionNum, const SectionInfo& sectionInfo);
 
 	virtual GDALColorInterp GetColorInterpretation() override;
 
@@ -19,8 +21,7 @@ protected:
 	virtual CPLErr IReadBlock(int nXBlockOff, int nYBlockOff, void* pImage) override;
 
 private:
-	Dataset& getDataset() { return *static_cast<Dataset*>(poDS); }
-	IPredRaster5Ptr getPredRaster() { return getDataset().getPredRaster(); }
+	IPredRaster5Ptr getPredRaster() { return apiWrapper->getPredRaster(); }
 };
 
 }}

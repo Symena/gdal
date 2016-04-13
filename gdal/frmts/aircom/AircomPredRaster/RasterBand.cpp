@@ -2,26 +2,44 @@
 
 namespace aircom { namespace pred_raster {
 
-RasterBand::RasterBand(Dataset* owningDataSet, int bandIndex, int section)
-	: section(section)
+namespace {
+
+boost::optional<double> getNoDataValue(const SectionInfo& sectionInfo)
+{
+	switch (sectionInfo.dataType)
+	{
+	case GDT_Float32:
+		return -9999; // at least for unmasked loss according to docs
+	case GDT_Int16:
+		return -9999; // at least for unmasked angles
+	case GDT_Byte:
+		return 200;   // at least for masked loss and masked+unmasked LineOfSightInfo
+	}
+
+	return boost::none;
+}
+
+}
+
+RasterBand::RasterBand(Dataset* owningDataSet, int bandIndex, std::shared_ptr<ApiWrapper> tmpApiWrapper,
+	unsigned long sectionNum, const SectionInfo& sectionInfo)
+	: apiWrapper(std::move(tmpApiWrapper))
+	, sectionNum(sectionNum)
 {
 	poDS = owningDataSet;
 	nBand = bandIndex;
-	eDataType = GDT_Int16;
+	eDataType = sectionInfo.dataType;
+
+	nBlockXSize = sectionInfo.tileSizeInPixels.get<0>();
+	nBlockYSize = sectionInfo.tileSizeInPixels.get<1>();
+
+	nBlocksPerRow = sectionInfo.numTiles.get<0>();
+	nBlocksPerColumn = sectionInfo.numTiles.get<1>();
 
 	// nRasterXSize & nRasterYSize are set to the dataset size by GDALDataset::SetBand()
 
-	// the size of each block and the number of blocks will be lazily initialized via
-	// initializeBlocksInfo() to avoid unnecessary API accesses
-	nBlockXSize = nBlockYSize = -1;
-	nBlocksPerRow = nBlocksPerColumn = -1;
-
-	SetNoDataValue(-9999);
-
-	/*
-	nBlocksPerRow = (nRasterXSize + nBlockXSize - 1) / nBlockXSize;    // ceiling(nRasterXSize / nBlockXSize)
-	nBlocksPerColumn = (nRasterYSize + nBlockYSize - 1) / nBlockYSize; // ceiling(nRasterYSize / nBlockYSize)
-	*/
+	if (auto noDataValue = getNoDataValue(sectionInfo))
+		SetNoDataValue(*noDataValue);
 }
 
 GDALColorInterp RasterBand::GetColorInterpretation()
@@ -31,9 +49,6 @@ GDALColorInterp RasterBand::GetColorInterpretation()
 
 CPLErr RasterBand::IReadBlock(int nXBlockOff, int nYBlockOff, void* pImage)
 {
-	if (nBlockXSize == -1)
-		throw std::logic_error("RasterBand::IReadBlock(): blocks info not initialized yet!");
-
 	if (nXBlockOff < 0 || nXBlockOff >= nBlocksPerRow ||
 		nYBlockOff < 0 || nYBlockOff >= nBlocksPerColumn ||
 		pImage == nullptr)
@@ -43,10 +58,10 @@ CPLErr RasterBand::IReadBlock(int nXBlockOff, int nYBlockOff, void* pImage)
 
 	const size_t numPixels = size_t(nBlockXSize) * nBlockYSize;
 
-	auto tile = getPredRaster()->CreateTileIterator(section)->GetTile(nXBlockOff, nYBlockOff);
+	auto tileIterator = getPredRaster()->CreateTileIterator(sectionNum);
 
-	// TODO: verify that non-existing tiles are returned as null without HRESULT failure
-	if (!tile)
+	IRasterTilePtr tile;
+	if (FAILED(tileIterator->raw_GetTile(nXBlockOff, nYBlockOff, &tile)))
 	{
 		// TODO: fill buffer with no data value?
 		return CPLErr::CE_Failure;

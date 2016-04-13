@@ -34,14 +34,38 @@ GDALDataType getDataType(IPredRaster5Ptr predRaster, unsigned long sectionNum)
 	}
 }
 
-MapPoint getTileSizeInPixels(IPredRaster5Ptr predRaster, unsigned long sectionNum)
+MapBox getSectionArea(IPredRaster5Ptr predRaster, unsigned long sectionNum)
 {
-	auto firstTile = predRaster->CreateTileIterator(sectionNum)->GetNextTile();
+	_REGIONEX region;
+	predRaster->GetRegionEx(sectionNum, &region);
+
+	const MapPoint topLeft(int(region.m_eastMin / 100), int(region.m_northMax / 100));
+
+	const int res = region.m_resolution / 100;
+	const MapPoint bottomLeft(topLeft.get<0>(), topLeft.get<1>() - region.m_height * res);
+	const MapPoint topRight(topLeft.get<0>() + region.m_width * res, topLeft.get<1>());
+
+	return { bottomLeft, topRight };
+}
+
+MapPoint getTileSizeInPixels(IPredRasterTileIteratorPtr tileIterator)
+{
+	auto firstTile = tileIterator->GetNextTile();
 
 	_REGIONEX tileRegion;
 	firstTile->GetTileRegion(&tileRegion);
 
 	return { tileRegion.m_width, tileRegion.m_height };
+}
+
+MapPoint getNumTiles(IPredRasterTileIteratorPtr tileIterator)
+{
+	const auto numTiles = tileIterator->GetNumTiles();
+	const auto numTilesPerDimension = int(std::sqrt(numTiles));
+	if (numTilesPerDimension * numTilesPerDimension != numTiles)
+		throw std::logic_error("Unexpected non-square number of tiles for a section!");
+
+	return { numTilesPerDimension, numTilesPerDimension };
 }
 
 std::mutex coInitialize_mutex;
@@ -83,20 +107,13 @@ std::vector<unsigned long> ApiWrapper::getSectionNums()
 SectionInfo ApiWrapper::getSectionInfo(unsigned long sectionNum)
 {
 	auto predRaster = getPredRaster();
-
-	_REGIONEX region;
-	predRaster->GetRegionEx(0, &region);
-
-	const MapPoint topLeft(int(region.m_eastMin / 100), int(region.m_northMax / 100));
-
-	const int res = region.m_resolution / 100;
-	const MapPoint bottomLeft(topLeft.get<0>(), topLeft.get<1>() - region.m_height * res);
-	const MapPoint topRight(topLeft.get<0>() + region.m_width * res, topLeft.get<1>());
+	auto tileIterator = predRaster->CreateTileIterator(sectionNum);
 
 	return SectionInfo(
-		{ bottomLeft, topRight },
+		getSectionArea(predRaster, sectionNum),
 		getDataType(predRaster, sectionNum),
-		getTileSizeInPixels(predRaster, sectionNum)
+		getTileSizeInPixels(tileIterator),
+		getNumTiles(tileIterator)
 	);
 }
 
