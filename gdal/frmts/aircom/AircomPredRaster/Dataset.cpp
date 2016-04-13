@@ -46,11 +46,7 @@ SectionInfosMap parseOrLoadSectionInfos(const wptree& gapTree, ApiWrapper& wrapp
 			warnings.add(warning);
 		}
 
-	SectionInfosMap ret;
-	for (const auto sectionNum : wrapper.getSectionNums())
-		ret.emplace(sectionNum, wrapper.getSectionInfo(sectionNum));
-
-	return ret;
+	return wrapper.getSectionInfos();
 }
 
 MapBox computeHull(const std::map<unsigned long, SectionInfo>& sectionInfos)

@@ -144,12 +144,11 @@ TEST_F(PredRasterDatasetTests, OnlyOneBandWhenSectionSpecified)
 TEST_F(PredRasterDatasetTests, LoadSectionsFromApi)
 {
 	sampleGapTree.erase(L"Sections");
-	std::vector<unsigned long> apiSectionNums = {1, 3};
-	SectionInfo apiSectionInfo({{0, 0}, {10, 10}}, GDALDataType::GDT_Byte, {1, 1}, {1, 1});
 
-	EXPECT_CALL(*apiWrapper, getSectionNums()).WillOnce(Return(apiSectionNums));
-	EXPECT_CALL(*apiWrapper, getSectionInfo(1)).WillOnce(Return(apiSectionInfo));
-	EXPECT_CALL(*apiWrapper, getSectionInfo(3)).WillOnce(Return(apiSectionInfo));
+	std::map<unsigned long, SectionInfo> sectionInfos;
+	sectionInfos.emplace(0, SectionInfo({{0, 0}, {10, 10}}, GDALDataType::GDT_Byte, {1, 1}, {1, 1}));
+
+	EXPECT_CALL(*apiWrapper, getSectionInfos()).WillOnce(Return(sectionInfos));
 
 	Dataset(sampleGapTree, apiWrapper, warnings);
 }
