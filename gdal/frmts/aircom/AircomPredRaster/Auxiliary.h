@@ -11,10 +11,11 @@ namespace aircom { namespace pred_raster {
 struct Auxiliary
 {
 	MapBox boundingBox;
+	int epsg;
 	std::map<unsigned long, GDALDataType> sectionDataTypes;
 	MapPoint tileSizeInPixels;
 
-	Auxiliary(const MapBox& boundingBox, std::map<unsigned long, GDALDataType> dataType, MapPoint tileSizeInPixels);
+	Auxiliary(const MapBox& boundingBox, int epsg, std::map<unsigned long, GDALDataType> dataType, MapPoint tileSizeInPixels);
 	explicit Auxiliary(const boost::property_tree::wptree& auxiliaryNode);
 
 	boost::property_tree::wptree asPropertyTree() const;

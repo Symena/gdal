@@ -1,10 +1,13 @@
 #include "Dataset.h"
 
 #include <fstream>
+#include <mutex>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/json_parser.hpp>
+
+#include "ogr_spatialref.h"
 
 #include "WarningsReporter.h"
 #include "RasterBand.h"
@@ -158,6 +161,30 @@ CPLErr Dataset::GetGeoTransform(double* padfTransform)
 	padfTransform[5] = -res;
 
 	return CPLErr::CE_None;
+}
+
+const char* Dataset::GetProjectionRef()
+{
+	static std::mutex mutex;
+	static std::map<int, std::string> cachedProjections;
+
+	std::lock_guard<std::mutex> lock(mutex);
+	auto it = cachedProjections.find(auxiliary.epsg);
+	if (it != cachedProjections.end())
+		return it->second.c_str();
+
+	OGRSpatialReference spatialRef;
+	if (spatialRef.importFromEPSG(auxiliary.epsg) != OGRERR_NONE)
+		throw std::runtime_error(format("Dataset::GetProjectionRef(): unsupported EPSG code %d", auxiliary.epsg));
+
+	char* rawWktString = nullptr;
+	spatialRef.exportToWkt(&rawWktString);
+	std::string wktString = rawWktString;
+	OGRFree(rawWktString);
+
+	cachedProjections.emplace(auxiliary.epsg, wktString);
+
+	return wktString.c_str();
 }
 
 void Dataset::setBoundingBox()

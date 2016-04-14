@@ -70,14 +70,16 @@ void addMapPointChild(wptree& tree, const std::wstring& path, const MapPoint& ma
 
 }
 
-Auxiliary::Auxiliary(const MapBox& boundingBox, std::map<unsigned long, GDALDataType> sectionDataTypes, MapPoint tileSizeInPixels)
+Auxiliary::Auxiliary(const MapBox& boundingBox, int epsg, std::map<unsigned long, GDALDataType> sectionDataTypes, MapPoint tileSizeInPixels)
 	: boundingBox(boundingBox)
+	, epsg(epsg)
 	, sectionDataTypes(std::move(sectionDataTypes))
 	, tileSizeInPixels(tileSizeInPixels)
 {}
 
 Auxiliary::Auxiliary(const wptree& auxiliaryNode)
 	: boundingBox(parseBoundingBox(auxiliaryNode.get_child(L"BoundingBox")))
+	, epsg(auxiliaryNode.get<int>(L"EPSG"))
 	, sectionDataTypes(parseSectionDataTypes(auxiliaryNode.get_child(L"SectionDataTypes")))
 	, tileSizeInPixels(parsePoint(auxiliaryNode.get_child(L"TileSizeInPixels")))
 {}
@@ -89,6 +91,7 @@ boost::property_tree::wptree Auxiliary::asPropertyTree() const
 	addMapPointChild(ptBoundingBox, L"TopRight", boundingBox.max_corner());
 
 	auxiliary.add_child(L"BoundingBox", ptBoundingBox);
+	auxiliary.add(L"EPSG", epsg);
 	addMapPointChild(auxiliary, L"TileSizeInPixels", tileSizeInPixels);
 	
 	for (const auto& sectionPair : sectionDataTypes)
@@ -115,6 +118,7 @@ boost::property_tree::wptree Auxiliary::asPropertyTree() const
 bool Auxiliary::operator==(const Auxiliary& r) const
 {
 	return boundingBox == r.boundingBox
+		&& epsg == r.epsg
 		&& sectionDataTypes == r.sectionDataTypes
 		&& tileSizeInPixels == r.tileSizeInPixels;
 }
@@ -138,6 +142,7 @@ std::ostream& operator<<(std::ostream& stream, const Auxiliary& auxiliary)
 {
 	stream << "{" 
 		<< auxiliary.boundingBox
+		<< ", EPSG: " << auxiliary.epsg
 		<< ", dataTypes: " << auxiliary.sectionDataTypes
 		<< ", tile size: " << auxiliary.tileSizeInPixels
 		<< "}";

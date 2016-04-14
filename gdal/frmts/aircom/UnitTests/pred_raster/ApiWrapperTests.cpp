@@ -94,6 +94,7 @@ TEST_F(ApiWrapperTest, getAuxiliary)
 	r.m_resolution = 300;
 	r.m_width = 4;
 	r.m_height = 5;
+	r.m_EPSG = 666;
 
 	EXPECT_CALL(mApiWrapper, getSectionNums())
 		.WillOnce(Return(std::vector<unsigned long>{1, 3}));
@@ -119,7 +120,7 @@ TEST_F(ApiWrapperTest, getAuxiliary)
 	// Then
 	auto bounds = makeBox(int(r.m_eastMin / 100), int(r.m_northMax - r.m_height * r.m_resolution) / 100,
 	                      int(r.m_eastMin + r.m_width * r.m_resolution) / 100, int(r.m_northMax) / 100);
-	Auxiliary expected(bounds, { {1, GDT_Float64}, {3, GDT_Byte} }, {r.m_width, r.m_height});
+	Auxiliary expected(bounds, 666, { {1, GDT_Float64}, {3, GDT_Byte} }, {r.m_width, r.m_height});
 	EXPECT_EQ(expected, actual);
 }
 

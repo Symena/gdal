@@ -10,7 +10,7 @@ namespace aircom { namespace pred_raster {
 
 namespace {
 
-MapBox getSectionArea(IPredRaster5Ptr predRaster, unsigned long sectionNum)
+MapBox getSectionArea(IPredRaster5Ptr predRaster, unsigned long sectionNum, int& epsg)
 {
 	_REGIONEX region;
 	predRaster->GetRegionEx(sectionNum, &region);
@@ -21,6 +21,7 @@ MapBox getSectionArea(IPredRaster5Ptr predRaster, unsigned long sectionNum)
 	const MapPoint bottomLeft(topLeft.get<0>(), topLeft.get<1>() - region.m_height * res);
 	const MapPoint topRight(topLeft.get<0>() + region.m_width * res, topLeft.get<1>());
 
+	epsg = region.m_EPSG;
 	return { bottomLeft, topRight };
 }
 
@@ -32,16 +33,6 @@ MapPoint getTileSizeInPixels(IPredRasterTileIteratorPtr tileIterator)
 	firstTile->GetTileRegion(&tileRegion);
 
 	return { tileRegion.m_width, tileRegion.m_height };
-}
-
-MapPoint getNumTiles(IPredRasterTileIteratorPtr tileIterator)
-{
-	const auto numTiles = tileIterator->GetNumTiles();
-	const auto numTilesPerDimension = int(std::sqrt(numTiles));
-	if (numTilesPerDimension * numTilesPerDimension != numTiles)
-		throw std::logic_error("Unexpected non-square number of tiles for a section!");
-
-	return { numTilesPerDimension, numTilesPerDimension };
 }
 
 std::mutex coInitialize_mutex;
@@ -119,13 +110,12 @@ Auxiliary ApiWrapper::getAuxiliary()
 	auto predRaster = getPredRaster();
 	auto sectionNums = getSectionNums();
 	auto firstSection = sectionNums[0];
-	auto tileIterator = predRaster->CreateTileIterator(firstSection);
 
-	return Auxiliary(
-		getSectionArea(predRaster, firstSection),
-		getSectionDataTypes(),
-		getTileSizeInPixels(tileIterator)
-	);
+	int epsg;
+	auto bounds = getSectionArea(predRaster, firstSection, epsg);
+	auto tileSizeInPixels = getTileSizeInPixels(predRaster->CreateTileIterator(firstSection));
+
+	return Auxiliary(bounds, epsg, getSectionDataTypes(), tileSizeInPixels);
 }
 
 }}

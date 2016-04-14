@@ -29,6 +29,8 @@ public:
 	virtual CPLErr SetGeoTransform(double* padfTransform) override;
 	virtual CPLErr GetGeoTransform(double* padfTransform) override;
 
+	virtual const char* GetProjectionRef() override;
+
 	// Hull of section bounding boxes
 	const auto& getBoundingBox() const { return auxiliary.boundingBox; }
 
