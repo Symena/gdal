@@ -470,11 +470,9 @@ int main( int argc, char ** argv )
 
         hBand = GDALGetRasterBand( hDataset, iBand+1 );
 
-		if (!hBand)
-		{
-			printf( "Band %d is NULL\n", iBand + 1);
+		// skip missing bands
+		if (!hBand)			
 			continue;
-		}
 		
         if( bSample )
         {
