@@ -63,12 +63,6 @@ GDALDataset* Dataset::Open(GDALOpenInfo* openInfo)
 	if (!openInfo->bStatOK)
 		return nullptr;
 
-	if (openInfo->eAccess != GA_ReadOnly)
-	{
-		CPLError(CE_Failure, CPLE_NotSupported, "The Aircom ENTERPRISE Map driver only supports readonly access to existing datasets.\n");
-		return nullptr;
-	}
-
 	const boost::filesystem::path indexFile = openInfo->pszFilename;
 
 	membuf sbuf(reinterpret_cast<char*>(openInfo->pabyHeader), openInfo->nHeaderBytes);
@@ -76,6 +70,12 @@ GDALDataset* Dataset::Open(GDALOpenInfo* openInfo)
 
 	if (!Identify(indexFile, header))
 		return nullptr;
+
+	if (openInfo->eAccess != GA_ReadOnly)
+	{
+		CPLError(CE_Failure, CPLE_NotSupported, "The Aircom ENTERPRISE Map driver only supports readonly access to existing datasets.\n");
+		return nullptr;
+	}
 
 	Warnings warnings;
 	WarningsReporter warningsReporter(warnings);

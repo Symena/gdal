@@ -52,12 +52,6 @@ GDALDataset* Dataset::Open(GDALOpenInfo* openInfo)
 	if (openInfo->pszFilename == nullptr || !openInfo->bStatOK)
 		return nullptr;
 
-	if (openInfo->eAccess != GA_ReadOnly)
-	{
-		CPLError(CE_Failure, CPLE_NotSupported, "The Aircom ENTERPRISE Prediction driver only supports readonly access to existing datasets.\n");
-		return nullptr;
-	}
-
 	const bfs::path path = openInfo->pszFilename;
 	const auto lowerExtension = boost::to_lower_copy(path.extension().wstring());
 	if (lowerExtension != L".gap")
@@ -70,8 +64,13 @@ GDALDataset* Dataset::Open(GDALOpenInfo* openInfo)
 	try
 	{
 		auto gapTree = loadJson(path);
-
+		
 		auto apiWrapper = CreateApiWrapper(gapTree);
+		if (openInfo->eAccess != GA_ReadOnly)
+		{
+			CPLError(CE_Failure, CPLE_NotSupported, "The Aircom ENTERPRISE Prediction driver only supports readonly access to existing datasets.\n");
+			return nullptr;
+		}
 		AutoCompleteAuxiliary(gapTree, path, *apiWrapper);
 
 		auto ds = std::make_unique<Dataset>(gapTree, std::move(apiWrapper), warnings);
