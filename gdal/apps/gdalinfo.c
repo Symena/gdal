@@ -470,6 +470,12 @@ int main( int argc, char ** argv )
 
         hBand = GDALGetRasterBand( hDataset, iBand+1 );
 
+		if (!hBand)
+		{
+			printf( "Band %d is NULL\n", iBand + 1);
+			continue;
+		}
+		
         if( bSample )
         {
             float afSample[10000];
