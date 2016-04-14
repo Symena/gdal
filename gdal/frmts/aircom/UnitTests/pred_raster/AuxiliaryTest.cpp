@@ -37,4 +37,18 @@ TEST_F(AuxiliaryTest, ParsesJsonNode)
 	EXPECT_EQ(expected, auxiliary);
 }
 
+TEST_F(AuxiliaryTest, AsPropertyTree)
+{
+	Auxiliary auxiliary(auxiliaryNode);
+
+	auto actual = auxiliary.asPropertyTree();
+	
+	EXPECT_EQ(auxiliary, Auxiliary(actual));
+
+	actual.sort();
+	auxiliaryNode.sort();
+
+	EXPECT_EQ(auxiliaryNode, actual);
+}
+
 }}

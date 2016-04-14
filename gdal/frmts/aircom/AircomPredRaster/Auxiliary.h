@@ -17,6 +17,8 @@ struct Auxiliary
 	Auxiliary(const MapBox& boundingBox, std::map<unsigned long, GDALDataType> dataType, MapPoint tileSizeInPixels);
 	explicit Auxiliary(const boost::property_tree::wptree& auxiliaryNode);
 
+	boost::property_tree::wptree asPropertyTree() const;
+
 	bool operator==(const Auxiliary& r) const;
 };
 

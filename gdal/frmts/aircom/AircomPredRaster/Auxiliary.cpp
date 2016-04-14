@@ -30,9 +30,7 @@ MapBox parseBoundingBox(const wptree& sectionNode)
 	};
 }
 
-std::map<unsigned long, GDALDataType> parseSectionDataTypes(const wptree& sectionDataTypesNode)
-{
-	static const std::map<std::wstring, GDALDataType> dataTypeMap = {
+const std::map<std::wstring, GDALDataType> dataTypeMap = {
 		{ L"U8", GDT_Byte},
 		{ L"I16", GDT_Int16},
 		{ L"U16", GDT_UInt16},
@@ -42,6 +40,8 @@ std::map<unsigned long, GDALDataType> parseSectionDataTypes(const wptree& sectio
 		{ L"R64", GDT_Float64}
 	};
 
+std::map<unsigned long, GDALDataType> parseSectionDataTypes(const wptree& sectionDataTypesNode)
+{
 	std::map<unsigned long, GDALDataType> ret;
 	for (const auto& kv : sectionDataTypesNode)
 	{
@@ -54,6 +54,18 @@ std::map<unsigned long, GDALDataType> parseSectionDataTypes(const wptree& sectio
 	}
 
 	return ret;
+}
+
+void addMapPointChild(wptree& tree, const std::wstring& path, const MapPoint& mapPoint)
+{
+	wptree x, y, values;
+	x.put(L"", mapPoint.get<0>());
+	y.put(L"", mapPoint.get<1>());
+
+	values.push_back(std::make_pair(L"", x));
+	values.push_back(std::make_pair(L"", y));
+
+	tree.add_child(path, values);
 }
 
 }
@@ -69,6 +81,36 @@ Auxiliary::Auxiliary(const wptree& auxiliaryNode)
 	, sectionDataTypes(parseSectionDataTypes(auxiliaryNode.get_child(L"SectionDataTypes")))
 	, tileSizeInPixels(parsePoint(auxiliaryNode.get_child(L"TileSizeInPixels")))
 {}
+
+boost::property_tree::wptree Auxiliary::asPropertyTree() const
+{
+	wptree auxiliary, ptBoundingBox, ptSectionDatatTypes;
+	addMapPointChild(ptBoundingBox, L"BottomLeft", boundingBox.min_corner());
+	addMapPointChild(ptBoundingBox, L"TopRight", boundingBox.max_corner());
+
+	auxiliary.add_child(L"BoundingBox", ptBoundingBox);
+	addMapPointChild(auxiliary, L"TileSizeInPixels", tileSizeInPixels);
+	
+	for (const auto& sectionPair : sectionDataTypes)
+	{
+		std::wstring stringDataType;
+		for (const auto& kv : dataTypeMap)
+			if (kv.second == sectionPair.second)
+			{
+				stringDataType = kv.first;
+				break;
+			}
+
+		if (stringDataType.empty())
+			throw std::runtime_error(format("No string representation found for GDALDataType %d", sectionPair.second));
+
+		ptSectionDatatTypes.add(std::to_wstring(sectionPair.first), stringDataType);
+	}
+	
+	auxiliary.add_child(L"SectionDataTypes", ptSectionDatatTypes);
+
+	return auxiliary;
+}
 
 bool Auxiliary::operator==(const Auxiliary& r) const
 {
