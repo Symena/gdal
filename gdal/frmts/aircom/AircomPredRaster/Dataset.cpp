@@ -167,21 +167,25 @@ const char* Dataset::GetProjectionRef()
 	static std::mutex mutex;
 	static std::map<int, std::string> cachedProjections;
 
+	const int epsg = auxiliary.epsg;
+	if (epsg == 0)
+		return "";
+
 	std::lock_guard<std::mutex> lock(mutex);
-	auto it = cachedProjections.find(auxiliary.epsg);
+	auto it = cachedProjections.find(epsg);
 	if (it != cachedProjections.end())
 		return it->second.c_str();
 
 	OGRSpatialReference spatialRef;
-	if (spatialRef.importFromEPSG(auxiliary.epsg) != OGRERR_NONE)
-		throw std::runtime_error(format("Dataset::GetProjectionRef(): unsupported EPSG code %d", auxiliary.epsg));
+	if (spatialRef.importFromEPSG(epsg) != OGRERR_NONE)
+		throw std::runtime_error(format("Dataset::GetProjectionRef(): unsupported EPSG code %d", epsg));
 
 	char* rawWktString = nullptr;
 	spatialRef.exportToWkt(&rawWktString);
 	std::string wktString = rawWktString;
 	OGRFree(rawWktString);
 
-	cachedProjections.emplace(auxiliary.epsg, wktString);
+	cachedProjections.emplace(epsg, wktString);
 
 	return wktString.c_str();
 }
