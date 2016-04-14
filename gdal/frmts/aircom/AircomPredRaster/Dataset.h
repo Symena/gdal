@@ -16,10 +16,15 @@ class Dataset : public GDALDataset
 	Auxiliary auxiliary;
 
 public:
-	Dataset(const boost::property_tree::wptree& gapTree, Warnings& warnings);
 	Dataset(const boost::property_tree::wptree& gapTree, std::shared_ptr<ApiWrapper> apiWrapper, Warnings& warnings);
 
 	static GDALDataset* Open(GDALOpenInfo* openInfo);
+	static std::shared_ptr<ApiWrapper> CreateApiWrapper(const boost::property_tree::wptree& gapTree);
+
+	// loads auxiliary info from api if Auxiliary node is set to AutoComplete
+	// modifies gapTree and writes modified tree to path;
+	static void AutoCompleteAuxiliary(boost::property_tree::wptree& gapTree,
+												const boost::filesystem::path& path, ApiWrapper& apiWrapper);
 
 	virtual CPLErr SetGeoTransform(double* padfTransform) override;
 	virtual CPLErr GetGeoTransform(double* padfTransform) override;

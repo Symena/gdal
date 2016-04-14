@@ -4,8 +4,10 @@
 
 #include <gmock/gmock.h>
 
+#include <boost/filesystem.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <sstream>
+#include <errno.h>
 
 namespace aircom { namespace pred_raster {
 
@@ -76,14 +78,14 @@ struct PredRasterDatasetTests : public Test
 	}
 };
 
-TEST_F(PredRasterDatasetTests, ExceptionOnIncompleteData)
+TEST(PredRasterDataset, CreateApiwrapper_ExceptionOnIncompleteData)
 {
-	EXPECT_THROW(Dataset(wptree(), warnings), boost::property_tree::ptree_bad_path);
+	EXPECT_THROW(Dataset::CreateApiWrapper(wptree()), boost::property_tree::ptree_bad_path);
 }
 
 TEST_F(PredRasterDatasetTests, ParsesGapSuccessful)
 {
-	Dataset dataset(sampleGapTree, warnings);
+	Dataset dataset(sampleGapTree, apiWrapper, warnings);
 	EXPECT_EQ(0, warnings.size());
 }
 
@@ -98,7 +100,7 @@ TEST_F(PredRasterDatasetTests, CollectsMetaData)
 
 	sampleGapTree.add_child(L"Meta", meta);
 
-	Dataset dataset(sampleGapTree, warnings);
+	Dataset dataset(sampleGapTree, apiWrapper, warnings);
 
 	EXPECT_EQ(0, warnings.size());
 
@@ -112,7 +114,7 @@ TEST_F(PredRasterDatasetTests, CollectsMetaData)
 
 TEST_F(PredRasterDatasetTests, LoadsBoundingBoxFromGapFile)
 {
-	Dataset dataset(sampleGapTree, warnings);
+	Dataset dataset(sampleGapTree, apiWrapper, warnings);
 
 	MapBox bounds({1, 3}, {6, 13});
 
@@ -135,12 +137,12 @@ TEST_F(PredRasterDatasetTests, ExceptionOnInvalidDimensions)
 
 	sampleGapTree.get_child(L"Auxiliary.BoundingBox.BottomLeft").swap(bottomLeft);
 
-	EXPECT_THROW(Dataset(sampleGapTree, warnings), std::runtime_error);
+	EXPECT_THROW(Dataset(sampleGapTree, apiWrapper, warnings), std::runtime_error);
 }
 
 TEST_F(PredRasterDatasetTests, OnlyOneBandWhenSectionSpecified)
 {
-	Dataset dataset(sampleGapTree, warnings);
+	Dataset dataset(sampleGapTree, apiWrapper, warnings);
 	EXPECT_EQ(1, dataset.GetRasterCount());
 }
 
@@ -153,6 +155,64 @@ TEST_F(PredRasterDatasetTests, LoadAuxiliaryFromApi)
 	EXPECT_CALL(*apiWrapper, getAuxiliary()).WillOnce(Return(aux));
 
 	Dataset(sampleGapTree, apiWrapper, warnings);
+}
+
+TEST_F(PredRasterDatasetTests, AutoCompleteSectionsInGapFile)
+{
+	// Given
+	namespace bfs = boost::filesystem;
+
+	auto actualGapTree = sampleGapTree;
+	actualGapTree.erase(L"Auxiliary");
+	actualGapTree.add(L"Auxiliary", L"AutoComplete");
+
+	std::wstringstream gapStream;
+	boost::property_tree::write_json(gapStream, sampleGapTree);
+
+	Auxiliary auxiliary({{1, 2}, {11, 12}}, {{4, GDT_Int16}, {7, GDT_UInt32}}, {1, 2});
+	EXPECT_CALL(*apiWrapper, getAuxiliary()).WillOnce(Return(auxiliary));		
+
+	struct SelfDeletingFile
+	{
+		bfs::path path;
+		SelfDeletingFile(bfs::path p) : path(bfs::temp_directory_path() / bfs::unique_path(p))
+		{
+			auto fp = fopen(path.string().c_str(), "w");
+			if (!fp)
+				throw std::runtime_error(format("Could not create tmp file '%s': %s", path.string(), strerror(errno)));
+			fclose(fp);
+		}
+		~SelfDeletingFile() { remove(path.string().c_str()); }
+	};
+	SelfDeletingFile gapFile("PredRasterTest-%%%%%%%%%.gap");
+
+	// When		
+	Dataset::AutoCompleteAuxiliary(actualGapTree, gapFile.path, *apiWrapper);
+	
+	// Then
+	wptree writtenGapTree;
+	boost::property_tree::read_json(gapFile.path.string(), writtenGapTree);
+
+	EXPECT_EQ(actualGapTree, writtenGapTree);
+
+	auto expectedGapTree = sampleGapTree;
+	std::wstringstream expectedAuxiliary;
+	expectedAuxiliary << LR"({ 
+		"BoundingBox": {
+			"BottomLeft": [1, 2],
+			"TopRight": [11, 12]
+			 },
+		
+		"TileSizeInPixels": [1, 2],
+
+		"SectionDataTypes": {
+			"4": "I16",
+			"7": "U32"
+		}
+	})";
+	boost::property_tree::read_json(expectedAuxiliary, expectedGapTree.get_child(L"Auxiliary"));
+
+	EXPECT_EQ(expectedGapTree, actualGapTree);
 }
 
 }}

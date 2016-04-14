@@ -10,12 +10,13 @@
 #include "RasterBand.h"
 
 using namespace boost::property_tree;
+namespace bfs = boost::filesystem;
 
 namespace aircom { namespace pred_raster {
 
 namespace {
 
-wptree loadJson(const boost::filesystem::path& path)
+wptree loadJson(const bfs::path& path)
 {
 	std::wifstream jsonStream(path.string());
 	wptree tree;
@@ -54,19 +55,23 @@ GDALDataset* Dataset::Open(GDALOpenInfo* openInfo)
 		return nullptr;
 	}
 
-	const boost::filesystem::path path = openInfo->pszFilename;
+	const bfs::path path = openInfo->pszFilename;
 	const auto lowerExtension = boost::to_lower_copy(path.extension().wstring());
 	if (lowerExtension != L".gap")
 		return nullptr;
 
 	Warnings warnings;
 	WarningsReporter warningsReporter(warnings);
-	WarningsContext context(warnings, boost::filesystem::absolute(path).string() + ": ");
+	WarningsContext context(warnings, bfs::absolute(path).string() + ": ");
 
 	try
 	{
 		auto gapTree = loadJson(path);
-		auto ds = std::make_unique<Dataset>(gapTree, warnings);
+
+		auto apiWrapper = CreateApiWrapper(gapTree);
+		AutoCompleteAuxiliary(gapTree, path, *apiWrapper);
+
+		auto ds = std::make_unique<Dataset>(gapTree, std::move(apiWrapper), warnings);
 		ds->SetDescription(openInfo->pszFilename);
 		ds->oOvManager.Initialize(ds.get(), openInfo->pszFilename);
 		return ds.release();
@@ -83,12 +88,21 @@ GDALDataset* Dataset::Open(GDALOpenInfo* openInfo)
 	return nullptr;
 }
 
-Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
-	: Dataset
-	( gapTree
-	, std::make_shared<ApiWrapper>(ApiParams(gapTree.get_child(L"EnterprisePredRasterApi")))
-	, warnings)
-{}
+std::shared_ptr<ApiWrapper> Dataset::CreateApiWrapper(const wptree& gapTree)
+{
+	auto apiParams = ApiParams(gapTree.get_child(L"EnterprisePredRasterApi"));
+	return std::make_shared<ApiWrapper>(apiParams);
+}
+
+void Dataset::AutoCompleteAuxiliary(wptree& gapTree, const bfs::path& path, ApiWrapper& apiWrapper)
+{
+	auto& auxiliaryNode = gapTree.get_child_optional(L"Auxiliary");
+	if (auxiliaryNode && boost::to_lower_copy(auxiliaryNode->data()) == L"autocomplete")
+	{
+		auxiliaryNode.get().swap(apiWrapper.getAuxiliary().asPropertyTree());
+		boost::property_tree::write_json(path.string(), gapTree);
+	}
+}
 
 Dataset::Dataset(const wptree& gapTree, std::shared_ptr<ApiWrapper> tmpApiWrapper, Warnings& warnings)
 	: apiWrapper(std::move(tmpApiWrapper))
