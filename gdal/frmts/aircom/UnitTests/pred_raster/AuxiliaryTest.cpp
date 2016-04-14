@@ -29,12 +29,12 @@ struct AuxiliaryTest : public testing::Test
 
 TEST_F(AuxiliaryTest, ParsesJsonNode)
 {
-	Auxiliary sectionInfo(auxiliaryNode);
+	Auxiliary auxiliary(auxiliaryNode);
 
 	MapBox bounds({1, 3}, {2, 4});
 	Auxiliary expected(bounds, { {0, GDT_Float64} }, {5, 6});
 
-	EXPECT_EQ(expected, sectionInfo);
+	EXPECT_EQ(expected, auxiliary);
 }
 
 }}

@@ -15,7 +15,7 @@ class RasterBand : public GDALRasterBand
 public:
 	RasterBand(Dataset* owningDataSet, MapPoint sizeInPixels,
 		int bandIndex, std::shared_ptr<ApiWrapper> apiWrapper,
-		unsigned long sectionNum, const Auxiliary& sectionInfo);
+		unsigned long sectionNum, const Auxiliary& auxiliary);
 
 	virtual GDALColorInterp GetColorInterpretation() override;
 

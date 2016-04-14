@@ -13,9 +13,10 @@ struct MockApiWrapper : public ApiWrapper
 		: ApiWrapper(std::move(apiParams), predRaster)
 	{}
 
-	MOCK_METHOD0(getSectionNums, std::vector<unsigned long>());
-	MOCK_METHOD1(getAuxiliary, Auxiliary(unsigned long sectionNum));
-	MOCK_METHOD0(getSectionInfos, std::map<unsigned long, Auxiliary>());
+	MOCK_METHOD0(getSectionNums, std::vector<unsigned long>());	
+	MOCK_METHOD1(getDataType, GDALDataType(unsigned long sectionNum));
+	MOCK_METHOD0(getSectionDataTypes, std::map<unsigned long, GDALDataType>());
+	MOCK_METHOD0(getAuxiliary, Auxiliary());
 };
 
 }}

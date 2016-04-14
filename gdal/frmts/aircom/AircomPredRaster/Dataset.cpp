@@ -23,59 +23,22 @@ wptree loadJson(const boost::filesystem::path& path)
 	return tree;
 }
 
-using SectionInfosMap = std::map<unsigned long, Auxiliary>;
-
-SectionInfosMap parseOrLoadSectionInfos(const wptree& gapTree, ApiWrapper& wrapper, Warnings& warnings)
+Auxiliary parseOrLoadAuxiliary(const wptree& gapTree, ApiWrapper& wrapper, Warnings& warnings)
 {
-	auto sectionsNode = gapTree.get_child_optional(L"Sections");
+	auto auxiliaryNode = gapTree.get_child_optional(L"Auxiliary");
 
-	if (sectionsNode)
+	if (auxiliaryNode)
 		try
 		{
-			SectionInfosMap ret;
-			for (const auto& kv : sectionsNode.get())
-			{
-				auto sectionNum = boost::lexical_cast<unsigned long>(kv.first);
-				ret.emplace(sectionNum, Auxiliary(kv.second));
-			}
-			return ret;
+			return Auxiliary(auxiliaryNode.get());
 		}
 		catch (const std::runtime_error& e)
 		{
-			std::string warning = format("Failed to load SectionInfos from json. Falling back to API. (%s)", e.what());
+			std::string warning = format("Failed to load auxiliary info from json. Falling back to API. (%s)", e.what());
 			warnings.add(warning);
 		}
 
-	return wrapper.getSectionInfos();
-}
-
-MapBox computeHull(const std::map<unsigned long, Auxiliary>& sectionInfos)
-{
-	MapBox hull({std::numeric_limits<int>::max(), std::numeric_limits<int>::max()},
-				{std::numeric_limits<int>::min(), std::numeric_limits<int>::min()});
-
-	for (const auto& sectionInfo : sectionInfos)
-	{
-		auto& bottomLeft = sectionInfo.second.boundingBox.min_corner();
-		auto& topRight = sectionInfo.second.boundingBox.max_corner();
-
-		auto& hullBottomLeft = hull.min_corner();
-		auto& hullTopRight = hull.max_corner();
-		
-		if (bottomLeft.get<0>() < hullBottomLeft.get<0>())
-			hullBottomLeft.set<0>(bottomLeft.get<0>());
-
-		if (bottomLeft.get<1>() < hullBottomLeft.get<1>())
-			hullBottomLeft.set<1>(bottomLeft.get<1>());
-
-		if (topRight.get<0>() > hullTopRight.get<0>())
-			hullTopRight.set<0>(topRight.get<0>());
-
-		if (topRight.get<1>() > hullTopRight.get<1>())
-			hullTopRight.set<1>(topRight.get<1>());
-	}
-	
-	return hull;
+	return wrapper.getAuxiliary();
 }
 
 }
@@ -129,7 +92,7 @@ Dataset::Dataset(const wptree& gapTree, Warnings& warnings)
 
 Dataset::Dataset(const wptree& gapTree, std::shared_ptr<ApiWrapper> tmpApiWrapper, Warnings& warnings)
 	: apiWrapper(std::move(tmpApiWrapper))
-	, sectionInfos(parseOrLoadSectionInfos(gapTree, *apiWrapper, warnings))
+	, auxiliary(parseOrLoadAuxiliary(gapTree, *apiWrapper, warnings))
 {
 	setBoundingBox();
 
@@ -151,12 +114,12 @@ Dataset::Dataset(const wptree& gapTree, std::shared_ptr<ApiWrapper> tmpApiWrappe
 	const auto requestedSection = apiWrapper->getParams().section;
 	const MapPoint sizeInPixels = { nRasterXSize, nRasterYSize };
 
-	for (const auto& sectionInfoPair : sectionInfos)
+	for (const auto& sectionPair : auxiliary.sectionDataTypes)
 	{
-		const auto sectionNum = sectionInfoPair.first;
+		const auto sectionNum = sectionPair.first;
 		const int bandIndex = sectionNum + 1;
 		if (requestedSection == Section::Unspecified || static_cast<int>(requestedSection) == sectionNum)
-			SetBand(bandIndex, new RasterBand(this, sizeInPixels, bandIndex, apiWrapper, sectionNum, sectionInfoPair.second));
+			SetBand(bandIndex, new RasterBand(this, sizeInPixels, bandIndex, apiWrapper, sectionNum, auxiliary));
 	}
 }
 
@@ -185,11 +148,9 @@ CPLErr Dataset::GetGeoTransform(double* padfTransform)
 
 void Dataset::setBoundingBox()
 {
-	boundingBox = computeHull(sectionInfos);
-
 	const double res = getResolution();
-	nRasterXSize = static_cast<int>(std::round(width(boundingBox) / res));
-	nRasterYSize = static_cast<int>(std::round(height(boundingBox) / res));
+	nRasterXSize = static_cast<int>(std::round(width(getBoundingBox()) / res));
+	nRasterYSize = static_cast<int>(std::round(height(getBoundingBox()) / res));
 
 	if (nRasterXSize <= 0 || nRasterYSize <= 0)
 		throw std::runtime_error(format("Invalid dimensions: %d x %d", nRasterXSize, nRasterYSize));

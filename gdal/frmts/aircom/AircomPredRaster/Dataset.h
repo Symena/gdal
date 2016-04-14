@@ -13,8 +13,7 @@ namespace aircom { namespace pred_raster {
 class Dataset : public GDALDataset
 {
 	std::shared_ptr<ApiWrapper> apiWrapper;
-	std::map<unsigned long, Auxiliary> sectionInfos;
-	MapBox boundingBox;
+	Auxiliary auxiliary;
 
 public:
 	Dataset(const boost::property_tree::wptree& gapTree, Warnings& warnings);
@@ -26,7 +25,7 @@ public:
 	virtual CPLErr GetGeoTransform(double* padfTransform) override;
 
 	// Hull of section bounding boxes
-	const auto& getBoundingBox() const { return boundingBox; }
+	const auto& getBoundingBox() const { return auxiliary.boundingBox; }
 
 	double getResolution() const { return apiWrapper->getParams().predData.nResolution_cm / 100.0; }
 

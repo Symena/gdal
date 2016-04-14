@@ -10,31 +10,6 @@ namespace aircom { namespace pred_raster {
 
 namespace {
 
-GDALDataType getDataType(IPredRaster5Ptr predRaster, unsigned long sectionNum)
-{
-	const auto aircomType = predRaster->GetSectionDataType(sectionNum);
-
-	switch (aircomType)
-	{
-	case RasterSectionType_UnsignedChar:
-		return GDT_Byte;
-	case RasterSectionType_Short:
-		return GDT_Int16;
-	case RasterSectionType_UnsignedShort:
-		return GDT_UInt16;
-	case RasterSectionType_Int:
-		return GDT_Int32;
-	case RasterSectionType_UnsignedInt:
-		return GDT_UInt32;
-	case RasterSectionType_Float:
-		return GDT_Float32;
-	case RasterSectionType_Double:
-		return GDT_Float64;
-	default:
-		throw std::runtime_error(format("Aircom data type %d not supported by GDAL", aircomType));
-	}
-}
-
 MapBox getSectionArea(IPredRaster5Ptr predRaster, unsigned long sectionNum)
 {
 	_REGIONEX region;
@@ -105,26 +80,52 @@ std::vector<unsigned long> ApiWrapper::getSectionNums()
 	return sections;
 }
 
-Auxiliary ApiWrapper::getAuxiliary(unsigned long sectionNum)
+GDALDataType ApiWrapper::getDataType(unsigned long sectionNum)
 {
-	auto predRaster = getPredRaster();
-	auto tileIterator = predRaster->CreateTileIterator(sectionNum);
+	const auto aircomType = getPredRaster()->GetSectionDataType(sectionNum);
 
-	return Auxiliary(
-		getSectionArea(predRaster, sectionNum),
-		getDataType(predRaster, sectionNum),
-		getTileSizeInPixels(tileIterator),
-		getNumTiles(tileIterator)
-	);
+	switch (aircomType)
+	{
+	case RasterSectionType_UnsignedChar:
+		return GDT_Byte;
+	case RasterSectionType_Short:
+		return GDT_Int16;
+	case RasterSectionType_UnsignedShort:
+		return GDT_UInt16;
+	case RasterSectionType_Int:
+		return GDT_Int32;
+	case RasterSectionType_UnsignedInt:
+		return GDT_UInt32;
+	case RasterSectionType_Float:
+		return GDT_Float32;
+	case RasterSectionType_Double:
+		return GDT_Float64;
+	default:
+		throw std::runtime_error(format("Aircom data type %d not supported by GDAL", aircomType));
+	}
 }
 
-std::map<unsigned long, Auxiliary> ApiWrapper::getSectionInfos()
+std::map<unsigned long, GDALDataType> ApiWrapper::getSectionDataTypes()
 {
-	std::map<unsigned long, Auxiliary> ret;
+	std::map<unsigned long, GDALDataType> ret;
 	for (const auto sectionNum : getSectionNums())
-		ret.emplace(sectionNum, getAuxiliary(sectionNum));
+		ret.emplace(sectionNum, getDataType(sectionNum));
 
 	return ret;
+}
+
+Auxiliary ApiWrapper::getAuxiliary()
+{
+	auto predRaster = getPredRaster();
+	auto sectionNums = getSectionNums();
+	auto firstSection = sectionNums[0];
+	auto tileIterator = predRaster->CreateTileIterator(firstSection);
+
+	return Auxiliary(
+		getSectionArea(predRaster, firstSection),
+		getSectionDataTypes(),
+		getTileSizeInPixels(tileIterator)
+	);
 }
 
 }}

@@ -24,8 +24,9 @@ public:
 	IPredRaster5Ptr getPredRaster();
 
 	virtual std::vector<unsigned long> getSectionNums();
-	virtual Auxiliary getAuxiliary(unsigned long sectionNum);
-	virtual std::map<unsigned long, Auxiliary> getSectionInfos();
+	virtual GDALDataType getDataType(unsigned long sectionNum);
+	virtual std::map<unsigned long, GDALDataType> getSectionDataTypes();
+	virtual Auxiliary getAuxiliary();
 };
 
 }}

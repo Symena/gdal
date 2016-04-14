@@ -30,39 +30,6 @@ struct ApiWrapperTest : public Test
 
 };
 
-TEST_F(ApiWrapperTest, getAuxiliary)
-{
-	_REGIONEX r;
-	r.m_eastMin = 100;
-	r.m_northMax = 200;
-	r.m_resolution = 300;
-	r.m_width = 4;
-	r.m_height = 5;
-
-	EXPECT_CALL(predRaster, raw_GetRegionEx(0, _))
-		.WillOnce(DoAll(SetArgPointee<1>(r), Return(S_OK)));
-
-	EXPECT_CALL(predRaster, raw_GetSectionDataType(0, _))
-		.WillOnce(DoAll(SetArgPointee<1>(RasterSectionType::RasterSectionType_Double), Return(S_OK)));
-
-	EXPECT_CALL(predRaster, raw_CreateTileIterator(0, _))
-		.WillOnce(DoAll(SetArgPointee<1>(&tileIterator), Return(S_OK)));
-
-	EXPECT_CALL(tileIterator, raw_GetNextTile(_))
-		.WillOnce(DoAll(SetArgPointee<0>(&tile), Return(S_OK)));
-
-	EXPECT_CALL(tile, raw_GetTileRegion(_))
-		.WillOnce(DoAll(SetArgPointee<0>(r), Return(S_OK)));
-
-	auto bounds = makeBox(int(r.m_eastMin / 100), int(r.m_northMax - r.m_height * r.m_resolution) / 100,
-	                      int(r.m_eastMin + r.m_width * r.m_resolution) / 100, int(r.m_northMax) / 100);
-
-	Auxiliary expected(bounds, { {0, GDT_Float64} }, {r.m_width, r.m_height});
-
-	auto actual = wrapper.getAuxiliary(0);
-	EXPECT_EQ(expected, actual);
-}
-
 TEST_F(ApiWrapperTest, getSectionNums)
 {
 	std::vector<unsigned long> expected = {7, 11, 3};
@@ -81,31 +48,80 @@ TEST_F(ApiWrapperTest, getSectionNums)
 	EXPECT_EQ(expected, actual);
 }
 
-TEST_F(ApiWrapperTest, getSectionInfos)
+TEST_F(ApiWrapperTest, getDataType)
+{
+	EXPECT_CALL(predRaster, raw_GetSectionDataType(1, _))
+		.WillOnce(DoAll(SetArgPointee<1>(RasterSectionType::RasterSectionType_UnsignedInt), Return(S_OK)));
+
+	auto actual = wrapper.getDataType(1);
+
+	EXPECT_EQ(GDT_UInt32, actual);
+}
+
+
+TEST_F(ApiWrapperTest, getSectionDataTypes)
 {
 	// Given
 	MockApiWrapper mApiWrapper(params, &predRaster);
-	
-	Auxiliary auxiliary({{0,0}, {1,1}}, { {1, GDT_Float64}, {3, GDT_Int16} }, {1, 2});
 
 	EXPECT_CALL(mApiWrapper, getSectionNums())
 		.WillOnce(Return(std::vector<unsigned long>{1, 3}));
-	/*
-	EXPECT_CALL(mApiWrapper, getAuxiliary(1))
-		.WillOnce(Return(sectionInfo1));
-	EXPECT_CALL(mApiWrapper, getAuxiliary(3))
-		.WillOnce(Return(sectionInfo3));
+	EXPECT_CALL(mApiWrapper, getDataType(1))
+		.WillOnce(Return(GDT_Float64));
+	EXPECT_CALL(mApiWrapper, getDataType(3))
+		.WillOnce(Return(GDT_Int16));
 
 	// When
-	auto actual = mApiWrapper.ApiWrapper::getSectionInfos();
+	auto actual = mApiWrapper.ApiWrapper::getSectionDataTypes();
 
 	// Then
-	std::map<unsigned long, Auxiliary> expected;
-	expected.emplace(1, sectionInfo1);
-	expected.emplace(3, sectionInfo3);
+	std::map<unsigned long, GDALDataType> expected;
+	expected.emplace(1, GDT_Float64);
+	expected.emplace(3, GDT_Int16);
 
 	EXPECT_EQ(expected, actual);	
-	*/
 }
+
+
+TEST_F(ApiWrapperTest, getAuxiliary)
+{
+	// Given
+	MockApiWrapper mApiWrapper(params, &predRaster);
+
+	_REGIONEX r;
+	r.m_eastMin = 100;
+	r.m_northMax = 200;
+	r.m_resolution = 300;
+	r.m_width = 4;
+	r.m_height = 5;
+
+	EXPECT_CALL(mApiWrapper, getSectionNums())
+		.WillOnce(Return(std::vector<unsigned long>{1, 3}));
+
+	EXPECT_CALL(predRaster, raw_CreateTileIterator(1, _))
+		.WillOnce(DoAll(SetArgPointee<1>(&tileIterator), Return(S_OK)));
+
+	EXPECT_CALL(predRaster, raw_GetRegionEx(1, _))
+		.WillOnce(DoAll(SetArgPointee<1>(r), Return(S_OK)));
+
+	EXPECT_CALL(mApiWrapper, getSectionDataTypes())
+		.WillOnce(Return(std::map<unsigned long, GDALDataType>{ {1, GDT_Float64}, {3, GDT_Byte} }));
+
+	EXPECT_CALL(tileIterator, raw_GetNextTile(_))
+		.WillOnce(DoAll(SetArgPointee<0>(&tile), Return(S_OK)));
+
+	EXPECT_CALL(tile, raw_GetTileRegion(_))
+		.WillOnce(DoAll(SetArgPointee<0>(r), Return(S_OK)));
+
+	// When
+	auto actual = mApiWrapper.ApiWrapper::getAuxiliary();
+
+	// Then
+	auto bounds = makeBox(int(r.m_eastMin / 100), int(r.m_northMax - r.m_height * r.m_resolution) / 100,
+	                      int(r.m_eastMin + r.m_width * r.m_resolution) / 100, int(r.m_northMax) / 100);
+	Auxiliary expected(bounds, { {1, GDT_Float64}, {3, GDT_Byte} }, {r.m_width, r.m_height});
+	EXPECT_EQ(expected, actual);
+}
+
 
 }}

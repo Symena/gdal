@@ -133,7 +133,7 @@ TEST_F(PredRasterDatasetTests, ExceptionOnInvalidDimensions)
 	json << L"[10, 3]";
 	boost::property_tree::json_parser::read_json(json, bottomLeft);
 
-	sampleGapTree.get_child(L"Sections.0.bottomLeft").swap(bottomLeft);
+	sampleGapTree.get_child(L"Auxiliary.BoundingBox.BottomLeft").swap(bottomLeft);
 
 	EXPECT_THROW(Dataset(sampleGapTree, warnings), std::runtime_error);
 }
@@ -144,14 +144,13 @@ TEST_F(PredRasterDatasetTests, OnlyOneBandWhenSectionSpecified)
 	EXPECT_EQ(1, dataset.GetRasterCount());
 }
 
-TEST_F(PredRasterDatasetTests, LoadSectionsFromApi)
+TEST_F(PredRasterDatasetTests, LoadAuxiliaryFromApi)
 {
-	sampleGapTree.erase(L"Sections");
+	sampleGapTree.erase(L"Auxiliary");
 
-	std::map<unsigned long, Auxiliary> sectionInfos;
-	sectionInfos.emplace(0, Auxiliary({{0, 0}, {10, 10}}, { {0, GDT_Byte} }, {1, 1}));
+	Auxiliary aux({{0, 0}, {10, 10}}, { {0, GDT_Byte} }, {1, 1});
 
-	EXPECT_CALL(*apiWrapper, getSectionInfos()).WillOnce(Return(sectionInfos));
+	EXPECT_CALL(*apiWrapper, getAuxiliary()).WillOnce(Return(aux));
 
 	Dataset(sampleGapTree, apiWrapper, warnings);
 }
