@@ -3,8 +3,6 @@
 #include "API.h"
 #include "ApiParams.h"
 
-#include <map>
-#include <mutex>
 #include <string>
 
 namespace aircom { namespace pred_raster {
@@ -21,6 +19,8 @@ public:
 	};
 
 	static IPredRaster5Ptr createPredRaster(const ApiParams& params);
+
+	static void cleanup();
 
 private:
 	static CLSID getClassID(const std::wstring& idString);

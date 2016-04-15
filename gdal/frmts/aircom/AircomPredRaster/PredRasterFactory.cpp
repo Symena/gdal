@@ -2,6 +2,8 @@
 
 #include "StringUtils.h"
 
+#include <map>
+#include <mutex>
 #include <thread>
 #include <unordered_set>
 
@@ -125,6 +127,12 @@ IPredRaster5Ptr PredRasterFactory::createPredRaster(const ApiParams& params)
 	predRaster->Attach(rasterHandle);
 
 	return predRaster;
+}
+
+void PredRasterFactory::cleanup()
+{
+	std::lock_guard<std::mutex> lock(mutex);
+	predAccessMap.clear();
 }
 
 }}

@@ -31,7 +31,6 @@ public:
 
 	virtual const char* GetProjectionRef() override;
 
-	// Hull of section bounding boxes
 	const auto& getBoundingBox() const { return auxiliary.boundingBox; }
 
 	double getResolution() const { return apiWrapper->getParams().predData.nResolution_cm / 100.0; }
