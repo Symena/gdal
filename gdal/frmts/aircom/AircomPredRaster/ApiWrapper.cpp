@@ -25,16 +25,6 @@ MapBox getSectionArea(IPredRaster5Ptr predRaster, unsigned long sectionNum, int&
 	return { bottomLeft, topRight };
 }
 
-MapPoint getTileSizeInPixels(IPredRasterTileIteratorPtr tileIterator)
-{
-	auto firstTile = tileIterator->GetNextTile();
-
-	_REGIONEX tileRegion;
-	firstTile->GetTileRegion(&tileRegion);
-
-	return { tileRegion.m_width, tileRegion.m_height };
-}
-
 std::mutex coInitialize_mutex;
 std::unordered_map<std::thread::id, bool> coInitialized;
 
@@ -96,26 +86,37 @@ GDALDataType ApiWrapper::getDataType(unsigned long sectionNum)
 	}
 }
 
-std::map<unsigned long, GDALDataType> ApiWrapper::getSectionDataTypes()
+MapPoint ApiWrapper::getTileSizeInPixels(unsigned long sectionNum)
 {
-	std::map<unsigned long, GDALDataType> ret;
-	for (const auto sectionNum : getSectionNums())
-		ret.emplace(sectionNum, getDataType(sectionNum));
+	auto firstTile = getPredRaster()->CreateTileIterator(sectionNum)->GetNextTile();
 
-	return ret;
+	_REGIONEX tileRegion;
+	firstTile->GetTileRegion(&tileRegion);
+
+	return { tileRegion.m_width, tileRegion.m_height };
+}
+
+SectionInfos ApiWrapper::getSectionInfos()
+{
+	SectionInfos result;
+	for (auto sectionNum : getSectionNums())
+	{
+		SectionInfo sectionInfo = { getDataType(sectionNum), getTileSizeInPixels(sectionNum) };
+		result.emplace(sectionNum, sectionInfo);
+	}
+
+	return result;
 }
 
 Auxiliary ApiWrapper::getAuxiliary()
 {
-	auto predRaster = getPredRaster();
-	auto sectionNums = getSectionNums();
-	auto firstSection = sectionNums[0];
+	auto sectionInfos = getSectionInfos();
+	auto firstSectionNum = sectionInfos.begin()->first;
 
 	int epsg;
-	auto bounds = getSectionArea(predRaster, firstSection, epsg);
-	auto tileSizeInPixels = getTileSizeInPixels(predRaster->CreateTileIterator(firstSection));
+	auto bounds = getSectionArea(getPredRaster(), firstSectionNum, epsg);
 
-	return Auxiliary(bounds, epsg, getSectionDataTypes(), tileSizeInPixels);
+	return Auxiliary(bounds, epsg, std::move(sectionInfos));
 }
 
 }}

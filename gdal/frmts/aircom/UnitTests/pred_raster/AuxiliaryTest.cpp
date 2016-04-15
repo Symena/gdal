@@ -19,8 +19,13 @@ struct AuxiliaryTest : public testing::Test
 		std::wstring sectionJson = LR"({
 			"BoundingBox": { "BottomLeft": [1, 3], "TopRight": [2, 4] },
 			"EPSG": 123,
-			"SectionDataTypes": { "0": "R64" },
-			"TileSizeInPixels": [5, 6] })";
+			"Sections": {
+				"0": {
+					"DataType": "R64",
+					"TileSizeInPixels": [5, 6]
+				}
+			}
+		})";
 
 		std::wstringstream stream;
 		stream << sectionJson;
@@ -33,7 +38,7 @@ TEST_F(AuxiliaryTest, ParsesJsonNode)
 	Auxiliary auxiliary(auxiliaryNode);
 
 	MapBox bounds({1, 3}, {2, 4});
-	Auxiliary expected(bounds, 123, { {0, GDT_Float64} }, {5, 6});
+	Auxiliary expected(bounds, 123, { {0, {GDT_Float64, {5, 6}}} });
 
 	EXPECT_EQ(expected, auxiliary);
 }
@@ -43,7 +48,7 @@ TEST_F(AuxiliaryTest, AsPropertyTree)
 	Auxiliary auxiliary(auxiliaryNode);
 
 	auto actual = auxiliary.asPropertyTree();
-	
+
 	EXPECT_EQ(auxiliary, Auxiliary(actual));
 
 	actual.sort();

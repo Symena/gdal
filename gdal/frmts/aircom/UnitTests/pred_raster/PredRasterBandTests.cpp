@@ -21,7 +21,7 @@ struct PredRasterBandTest : public Test
 TEST_F(PredRasterBandTest, fillsBlocksWithoutTileWithNoDataValue)
 {
 	RasterBand band(nullptr, {2, 2}, 1, std::make_shared<ApiWrapper>(apiParams, &predRaster),
-		0, Auxiliary({}, 0, { {0, GDT_Byte} }, {2, 2}));
+		0, {GDT_Byte, {2, 2}});
 
 	EXPECT_CALL(predRaster, raw_CreateTileIterator(0, _))
 		.WillOnce(DoAll(SetArgPointee<1>(&tileIterator), Return(S_OK)));
@@ -42,7 +42,7 @@ TEST_F(PredRasterBandTest, fillsPartialBlocksCorrectly)
 	// => last tile at (1,1) is 3x2 pixels
 
 	RasterBand band(nullptr, {8, 7}, 1, std::make_shared<ApiWrapper>(apiParams, &predRaster),
-		0, Auxiliary({}, 0, { {0, GDT_Float32} }, {5, 5}));
+		0, {GDT_Float32, {5, 5}});
 
 	MockTile tile;
 

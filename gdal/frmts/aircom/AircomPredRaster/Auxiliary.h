@@ -8,14 +8,26 @@
 
 namespace aircom { namespace pred_raster {
 
+struct SectionInfo
+{
+	GDALDataType dataType;
+	MapPoint tileSizeInPixels;
+
+	bool operator==(const SectionInfo& r) const
+	{
+		return dataType == r.dataType && tileSizeInPixels == r.tileSizeInPixels;
+	}
+};
+
+using SectionInfos = std::map<unsigned long, SectionInfo>; // sectionNum => SectionInfo
+
 struct Auxiliary
 {
 	MapBox boundingBox;
 	int epsg;
-	std::map<unsigned long, GDALDataType> sectionDataTypes;
-	MapPoint tileSizeInPixels;
+	SectionInfos sectionInfos;
 
-	Auxiliary(const MapBox& boundingBox, int epsg, std::map<unsigned long, GDALDataType> dataType, MapPoint tileSizeInPixels);
+	Auxiliary(const MapBox& boundingBox, int epsg, SectionInfos sectionInfos);
 	explicit Auxiliary(const boost::property_tree::wptree& auxiliaryNode);
 
 	boost::property_tree::wptree asPropertyTree() const;

@@ -31,20 +31,20 @@ void fillWithNoDataValue(const T noDataValue, void* data, const size_t numPixels
 
 RasterBand::RasterBand(Dataset* owningDataSet, MapPoint sizeInPixels,
 	int bandIndex, std::shared_ptr<ApiWrapper> tmpApiWrapper,
-	unsigned long sectionNum, const Auxiliary& auxiliary)
+	unsigned long sectionNum, const SectionInfo& sectionInfo)
 	: apiWrapper(std::move(tmpApiWrapper))
 	, sectionNum(sectionNum)
-	, noDataValue(getNoDataValue(auxiliary.sectionDataTypes.at(sectionNum)))
+	, noDataValue(getNoDataValue(sectionInfo.dataType))
 {
 	poDS = owningDataSet;
 	nBand = bandIndex;
-	eDataType = auxiliary.sectionDataTypes.at(sectionNum);
+	eDataType = sectionInfo.dataType;
 
 	nRasterXSize = sizeInPixels.get<0>();
 	nRasterYSize = sizeInPixels.get<1>();
 
-	nBlockXSize = auxiliary.tileSizeInPixels.get<0>();
-	nBlockYSize = auxiliary.tileSizeInPixels.get<1>();
+	nBlockXSize = sectionInfo.tileSizeInPixels.get<0>();
+	nBlockYSize = sectionInfo.tileSizeInPixels.get<1>();
 
 	nBlocksPerRow = DIV_ROUND_UP(nRasterXSize, nBlockXSize);
 	nBlocksPerColumn = DIV_ROUND_UP(nRasterYSize, nBlockYSize);

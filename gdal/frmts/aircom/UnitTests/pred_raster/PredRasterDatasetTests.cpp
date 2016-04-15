@@ -61,9 +61,11 @@ struct PredRasterDatasetTests : public Test
 					"TopRight": [6, 13]
 				},
 				"EPSG": 123,
-				"TileSizeInPixels": [3, 4],
-				"SectionDataTypes": {
-					"0": "R64"
+				"Sections": {
+					"0": {
+						"DataType": "R64",
+						"TileSizeInPixels": [3, 4]
+					}
 				}
 			}
 		})";
@@ -149,7 +151,7 @@ TEST_F(PredRasterDatasetTests, LoadAuxiliaryFromApi)
 {
 	sampleGapTree.erase(L"Auxiliary");
 
-	Auxiliary aux({{0, 0}, {10, 10}}, 0, { {0, GDT_Byte} }, {1, 1});
+	Auxiliary aux({{0, 0}, {10, 10}}, 0, { {0, {GDT_Byte, {1, 1}}} });
 
 	EXPECT_CALL(*apiWrapper, getAuxiliary()).WillOnce(Return(aux));
 
@@ -168,8 +170,8 @@ TEST_F(PredRasterDatasetTests, AutoCompleteAuxiliaryInGapFile)
 	std::wstringstream gapStream;
 	boost::property_tree::write_json(gapStream, sampleGapTree);
 
-	Auxiliary auxiliary({{1, 2}, {11, 12}}, 123, {{4, GDT_Int16}, {7, GDT_UInt32}}, {1, 2});
-	EXPECT_CALL(*apiWrapper, getAuxiliary()).WillOnce(Return(auxiliary));		
+	Auxiliary auxiliary({{1, 2}, {11, 12}}, 123, { {4, {GDT_Int16, {1, 2}}}, {7, {GDT_UInt32, {3, 4}}} });
+	EXPECT_CALL(*apiWrapper, getAuxiliary()).WillOnce(Return(auxiliary));
 
 	struct SelfDeletingFile
 	{
@@ -196,16 +198,21 @@ TEST_F(PredRasterDatasetTests, AutoCompleteAuxiliaryInGapFile)
 
 	auto expectedGapTree = sampleGapTree;
 	std::wstringstream expectedAuxiliary;
-	expectedAuxiliary << LR"({ 
+	expectedAuxiliary << LR"({
 		"BoundingBox": {
 			"BottomLeft": [1, 2],
 			"TopRight": [11, 12]
 		},
 		"EPSG": 123,
-		"TileSizeInPixels": [1, 2],
-		"SectionDataTypes": {
-			"4": "I16",
-			"7": "U32"
+		"Sections": {
+			"4": {
+				"DataType": "I16",
+				"TileSizeInPixels": [1, 2]
+			},
+			"7": {
+				"DataType": "U32",
+				"TileSizeInPixels": [3, 4]
+			}
 		}
 	})";
 	boost::property_tree::read_json(expectedAuxiliary, expectedGapTree.get_child(L"Auxiliary"));

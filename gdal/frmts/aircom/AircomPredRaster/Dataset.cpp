@@ -130,12 +130,12 @@ Dataset::Dataset(const wptree& gapTree, std::shared_ptr<ApiWrapper> tmpApiWrappe
 	const auto requestedSection = apiWrapper->getParams().section;
 	const MapPoint sizeInPixels = { nRasterXSize, nRasterYSize };
 
-	for (const auto& sectionPair : auxiliary.sectionDataTypes)
+	for (const auto& sectionPair : auxiliary.sectionInfos)
 	{
 		const auto sectionNum = sectionPair.first;
 		const int bandIndex = sectionNum + 1;
 		if (requestedSection == Section::Unspecified || static_cast<int>(requestedSection) == sectionNum)
-			SetBand(bandIndex, new RasterBand(this, sizeInPixels, bandIndex, apiWrapper, sectionNum, auxiliary));
+			SetBand(bandIndex, new RasterBand(this, sizeInPixels, bandIndex, apiWrapper, sectionNum, sectionPair.second));
 	}
 }
 

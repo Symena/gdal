@@ -30,30 +30,34 @@ MapBox parseBoundingBox(const wptree& sectionNode)
 	};
 }
 
-const std::map<std::wstring, GDALDataType> dataTypeMap = {
-		{ L"U8", GDT_Byte},
-		{ L"I16", GDT_Int16},
-		{ L"U16", GDT_UInt16},
-		{ L"I32", GDT_Int32},
-		{ L"U32", GDT_UInt32},
-		{ L"R32", GDT_Float32},
-		{ L"R64", GDT_Float64}
-	};
+const std::map<std::wstring, GDALDataType> dataTypesMap = {
+	{ L"U8",  GDT_Byte},
+	{ L"I16", GDT_Int16},
+	{ L"U16", GDT_UInt16},
+	{ L"I32", GDT_Int32},
+	{ L"U32", GDT_UInt32},
+	{ L"R32", GDT_Float32},
+	{ L"R64", GDT_Float64}
+};
 
-std::map<unsigned long, GDALDataType> parseSectionDataTypes(const wptree& sectionDataTypesNode)
+SectionInfos parseSectionInfos(const wptree& sectionsNode)
 {
-	std::map<unsigned long, GDALDataType> ret;
-	for (const auto& kv : sectionDataTypesNode)
+	SectionInfos result;
+	for (const auto& kv : sectionsNode)
 	{
-		auto string = kv.second.get_value<std::wstring>();
-		auto mapLookup = dataTypeMap.find(string);
-		if (mapLookup == dataTypeMap.end())
-			throw std::runtime_error(format("Unsupported section data type %s", string));
+		const auto sectionNum = boost::lexical_cast<unsigned long>(kv.first);
+		const auto& sectionInfoNode = kv.second;
 
-		ret.emplace(boost::lexical_cast<unsigned long>(kv.first), mapLookup->second);
+		const auto dataTypeString = sectionInfoNode.get<std::wstring>(L"DataType");
+		const auto it = dataTypesMap.find(dataTypeString);
+		if (it == dataTypesMap.end())
+			throw std::runtime_error(format("Unsupported section data type %s", dataTypeString));
+
+		SectionInfo sectionInfo = { it->second, parsePoint(sectionInfoNode.get_child(L"TileSizeInPixels")) };
+		result.emplace(sectionNum, sectionInfo);
 	}
 
-	return ret;
+	return result;
 }
 
 void addMapPointChild(wptree& tree, const std::wstring& path, const MapPoint& mapPoint)
@@ -70,66 +74,68 @@ void addMapPointChild(wptree& tree, const std::wstring& path, const MapPoint& ma
 
 }
 
-Auxiliary::Auxiliary(const MapBox& boundingBox, int epsg, std::map<unsigned long, GDALDataType> sectionDataTypes, MapPoint tileSizeInPixels)
+Auxiliary::Auxiliary(const MapBox& boundingBox, int epsg, SectionInfos sectionInfos)
 	: boundingBox(boundingBox)
 	, epsg(epsg)
-	, sectionDataTypes(std::move(sectionDataTypes))
-	, tileSizeInPixels(tileSizeInPixels)
+	, sectionInfos(std::move(sectionInfos))
 {}
 
 Auxiliary::Auxiliary(const wptree& auxiliaryNode)
 	: boundingBox(parseBoundingBox(auxiliaryNode.get_child(L"BoundingBox")))
 	, epsg(auxiliaryNode.get<int>(L"EPSG"))
-	, sectionDataTypes(parseSectionDataTypes(auxiliaryNode.get_child(L"SectionDataTypes")))
-	, tileSizeInPixels(parsePoint(auxiliaryNode.get_child(L"TileSizeInPixels")))
+	, sectionInfos(parseSectionInfos(auxiliaryNode.get_child(L"Sections")))
 {}
 
 boost::property_tree::wptree Auxiliary::asPropertyTree() const
 {
-	wptree auxiliary, ptBoundingBox, ptSectionDatatTypes;
-	addMapPointChild(ptBoundingBox, L"BottomLeft", boundingBox.min_corner());
-	addMapPointChild(ptBoundingBox, L"TopRight", boundingBox.max_corner());
+	wptree auxiliaryNode;
 
-	auxiliary.add_child(L"BoundingBox", ptBoundingBox);
-	auxiliary.add(L"EPSG", epsg);
-	addMapPointChild(auxiliary, L"TileSizeInPixels", tileSizeInPixels);
-	
-	for (const auto& sectionPair : sectionDataTypes)
+	auto& boundingBoxNode = auxiliaryNode.add_child(L"BoundingBox", wptree());
+	addMapPointChild(boundingBoxNode, L"BottomLeft", boundingBox.min_corner());
+	addMapPointChild(boundingBoxNode, L"TopRight", boundingBox.max_corner());
+
+	auxiliaryNode.add(L"EPSG", epsg);
+
+	auto& sectionsNode = auxiliaryNode.add_child(L"Sections", wptree());
+	for (const auto& sectionPair : sectionInfos)
 	{
-		std::wstring stringDataType;
-		for (const auto& kv : dataTypeMap)
-			if (kv.second == sectionPair.second)
+		const auto dataType = sectionPair.second.dataType;
+
+		std::wstring dataTypeString;
+		for (const auto& kv : dataTypesMap)
+		{
+			if (kv.second == dataType)
 			{
-				stringDataType = kv.first;
+				dataTypeString = kv.first;
 				break;
 			}
+		}
 
-		if (stringDataType.empty())
-			throw std::runtime_error(format("No string representation found for GDALDataType %d", sectionPair.second));
+		if (dataTypeString.empty())
+			throw std::runtime_error(format("No string representation found for GDALDataType %d", dataType));
 
-		ptSectionDatatTypes.add(std::to_wstring(sectionPair.first), stringDataType);
+		auto& sectionNode = sectionsNode.add_child(std::to_wstring(sectionPair.first), wptree());
+		sectionNode.add(L"DataType", dataTypeString);
+		addMapPointChild(sectionNode, L"TileSizeInPixels", sectionPair.second.tileSizeInPixels);
 	}
-	
-	auxiliary.add_child(L"SectionDataTypes", ptSectionDatatTypes);
 
-	return auxiliary;
+	return auxiliaryNode;
 }
 
 bool Auxiliary::operator==(const Auxiliary& r) const
 {
 	return boundingBox == r.boundingBox
 		&& epsg == r.epsg
-		&& sectionDataTypes == r.sectionDataTypes
-		&& tileSizeInPixels == r.tileSizeInPixels;
+		&& sectionInfos == r.sectionInfos;
 }
 
-std::ostream& operator<<(std::ostream& stream, const std::map<unsigned long, GDALDataType> sectionDataTypes)
+std::ostream& operator<<(std::ostream& stream, const SectionInfos& sectionInfos)
 {
 	stream << "{ ";
 	bool first = true;
-	for (const auto& kv : sectionDataTypes)
+	for (const auto& kv : sectionInfos)
 	{
-		stream << kv.first << ": " << kv.second;
+		stream << kv.first << ": { data type: " << kv.second.dataType << ", tile size: " << kv.second.tileSizeInPixels << " }";
 		if (!first)
 			stream << ", ";
 		first = false;
@@ -140,11 +146,10 @@ std::ostream& operator<<(std::ostream& stream, const std::map<unsigned long, GDA
 
 std::ostream& operator<<(std::ostream& stream, const Auxiliary& auxiliary)
 {
-	stream << "{" 
+	stream << "{"
 		<< auxiliary.boundingBox
 		<< ", EPSG: " << auxiliary.epsg
-		<< ", dataTypes: " << auxiliary.sectionDataTypes
-		<< ", tile size: " << auxiliary.tileSizeInPixels
+		<< ", sections: " << auxiliary.sectionInfos
 		<< "}";
 
 	return stream;
