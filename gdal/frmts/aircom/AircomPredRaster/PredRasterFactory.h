@@ -12,9 +12,6 @@ namespace aircom { namespace pred_raster {
 class PredRasterFactory
 {
 public:
-	static IPredRaster5Ptr createPredRaster(const ApiParams& params);
-
-private:
 	struct PredAccessKey
 	{
 		CLSID classID;
@@ -23,9 +20,9 @@ private:
 		bool operator<(const PredAccessKey& r) const;
 	};
 
-	static std::mutex mutex;
-	static std::map<PredAccessKey, IAircomPredAccess4Ptr> predAccessMap;
+	static IPredRaster5Ptr createPredRaster(const ApiParams& params);
 
+private:
 	static CLSID getClassID(const std::wstring& idString);
 
 	static IAircomPredAccess4Ptr getPredAccess(const ApiParams& params);

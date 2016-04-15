@@ -4,7 +4,6 @@
 #include "ApiParams.h"
 #include "Auxiliary.h"
 
-#include <map>
 #include <vector>
 
 namespace aircom { namespace pred_raster {
@@ -26,6 +25,7 @@ private:
 	std::vector<unsigned long> getSectionNums();
 	GDALDataType getDataType(unsigned long sectionNum);
 	MapPoint getTileSizeInPixels(unsigned long sectionNum);
+	MapBox getBounds(unsigned long sectionNum, int& epsg);
 	SectionInfos getSectionInfos();
 };
 

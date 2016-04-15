@@ -72,7 +72,7 @@ struct PredRasterDatasetTests : public Test
 
 		std::wstringstream stream;
 		stream << json;
-		
+
 		wptree ret;
 		boost::property_tree::json_parser::read_json(stream, ret);
 		return ret;
@@ -187,7 +187,7 @@ TEST_F(PredRasterDatasetTests, AutoCompleteAuxiliaryInGapFile)
 	};
 	SelfDeletingFile gapFile("PredRasterTest-%%%%%%%%%.gap");
 
-	// When		
+	// When
 	Dataset::AutoCompleteAuxiliary(actualGapTree, gapFile.path, *apiWrapper);
 	
 	// Then

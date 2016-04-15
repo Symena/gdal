@@ -2,6 +2,9 @@
 
 #include "StringUtils.h"
 
+#include <thread>
+#include <unordered_set>
+
 namespace aircom { namespace pred_raster {
 
 namespace {
@@ -29,6 +32,10 @@ std::string getPredAccessStatusText(IAircomPredAccess4Ptr predAccess, unsigned s
 	return static_cast<const char*>(statusText);
 }
 
+std::mutex mutex;
+std::unordered_set<std::thread::id> initializedThreads;
+std::map<PredRasterFactory::PredAccessKey, IAircomPredAccess4Ptr> predAccessMap;
+
 }
 
 bool PredRasterFactory::PredAccessKey::operator<(const PredAccessKey& r) const
@@ -41,9 +48,6 @@ bool PredRasterFactory::PredAccessKey::operator<(const PredAccessKey& r) const
 }
 
 
-std::mutex PredRasterFactory::mutex;
-std::map<PredRasterFactory::PredAccessKey, IAircomPredAccess4Ptr> PredRasterFactory::predAccessMap;
-
 CLSID PredRasterFactory::getClassID(const std::wstring& idString)
 {
 	CLSID classID;
@@ -54,9 +58,20 @@ CLSID PredRasterFactory::getClassID(const std::wstring& idString)
 
 IAircomPredAccess4Ptr PredRasterFactory::getPredAccess(const ApiParams& params)
 {
+	const auto threadID = std::this_thread::get_id();
+	const PredAccessKey key = { getClassID(params.predAccessClassID), params.predictionFolder };
+
 	std::lock_guard<std::mutex> lock(mutex);
 
-	const PredAccessKey key = { getClassID(params.predAccessClassID), params.predictionFolder };
+	// Make sure the COM system is initialized for this thread before attempting
+	// to create COM instances.
+	// We don't use CoUninitialize to prevent invalidating cached PredAccess
+	// instances.
+	if (initializedThreads.find(threadID) == initializedThreads.end())
+	{
+		CoInitialize(nullptr);
+		initializedThreads.insert(threadID);
+	}
 
 	auto it = predAccessMap.find(key);
 	if (it != predAccessMap.end())

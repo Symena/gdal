@@ -3,45 +3,12 @@
 #include "PredRasterFactory.h"
 #include "StringUtils.h"
 
-#include <mutex>
-#include <unordered_map>
-
 namespace aircom { namespace pred_raster {
-
-namespace {
-
-MapBox getSectionArea(IPredRaster5Ptr predRaster, unsigned long sectionNum, int& epsg)
-{
-	_REGIONEX region;
-	predRaster->GetRegionEx(sectionNum, &region);
-
-	const MapPoint topLeft(int(region.m_eastMin / 100), int(region.m_northMax / 100));
-
-	const int res = region.m_resolution / 100;
-	const MapPoint bottomLeft(topLeft.get<0>(), topLeft.get<1>() - region.m_height * res);
-	const MapPoint topRight(topLeft.get<0>() + region.m_width * res, topLeft.get<1>());
-
-	epsg = region.m_EPSG;
-	return { bottomLeft, topRight };
-}
-
-std::mutex coInitialize_mutex;
-std::unordered_map<std::thread::id, bool> coInitialized;
-
-}
 
 ApiWrapper::ApiWrapper(ApiParams apiParams, IPredRaster5Ptr predRaster)
 	: params(std::move(apiParams)) 
 	, predRaster(predRaster)
-{
-	auto threadId = std::this_thread::get_id();
-	std::lock_guard<std::mutex> lock(coInitialize_mutex);
-	if (!coInitialized[threadId])
-	{
-		CoInitialize(nullptr);
-		coInitialized[threadId] = true;
-	}
-}
+{}
 
 IPredRaster5Ptr ApiWrapper::getPredRaster()
 {
@@ -96,6 +63,21 @@ MapPoint ApiWrapper::getTileSizeInPixels(unsigned long sectionNum)
 	return { tileRegion.m_width, tileRegion.m_height };
 }
 
+MapBox ApiWrapper::getBounds(unsigned long sectionNum, int& epsg)
+{
+	_REGIONEX region;
+	getPredRaster()->GetRegionEx(sectionNum, &region);
+
+	const MapPoint topLeft(int(region.m_eastMin / 100), int(region.m_northMax / 100));
+
+	const int res = region.m_resolution / 100;
+	const MapPoint bottomLeft(topLeft.get<0>(), topLeft.get<1>() - region.m_height * res);
+	const MapPoint topRight(topLeft.get<0>() + region.m_width * res, topLeft.get<1>());
+
+	epsg = region.m_EPSG;
+	return { bottomLeft, topRight };
+}
+
 SectionInfos ApiWrapper::getSectionInfos()
 {
 	SectionInfos result;
@@ -111,10 +93,10 @@ SectionInfos ApiWrapper::getSectionInfos()
 Auxiliary ApiWrapper::getAuxiliary()
 {
 	auto sectionInfos = getSectionInfos();
-	auto firstSectionNum = sectionInfos.begin()->first;
 
+	const auto firstSectionNum = sectionInfos.begin()->first;
 	int epsg;
-	auto bounds = getSectionArea(getPredRaster(), firstSectionNum, epsg);
+	const auto bounds = getBounds(firstSectionNum, epsg);
 
 	return Auxiliary(bounds, epsg, std::move(sectionInfos));
 }
