@@ -4,14 +4,14 @@ namespace aircom { namespace pred_raster {
 
 namespace {
 
-boost::optional<double> getNoDataValue(GDALDataType dataType)
+boost::optional<double> getNoDataValue(const SectionInfo& sectionInfo)
 {
-	switch (dataType)
+	switch (sectionInfo.dataType)
 	{
 	case GDT_Float32:
-		return -9999; // at least for unmasked loss according to docs
+		return -9999; // at least for unmasked pathloss according to Aircom docs, but apparently 200 in practice
 	case GDT_Int16:
-		return -9999; // at least for unmasked angles
+		return -9999; // at least for unmasked angles, but potentially 0 in practice
 	case GDT_Byte:
 		return 200;   // at least for masked loss and masked+unmasked LineOfSightInfo
 	}
@@ -34,7 +34,7 @@ RasterBand::RasterBand(Dataset* owningDataSet, MapPoint sizeInPixels,
 	unsigned long sectionNum, const SectionInfo& sectionInfo)
 	: apiWrapper(std::move(tmpApiWrapper))
 	, sectionNum(sectionNum)
-	, noDataValue(getNoDataValue(sectionInfo.dataType))
+	, noDataValue(getNoDataValue(sectionInfo))
 {
 	poDS = owningDataSet;
 	nBand = bandIndex;
@@ -97,11 +97,11 @@ CPLErr RasterBand::IReadBlock(int nXBlockOff, int nYBlockOff, void* pImage)
 			fillPartialBlock(tile, pImage);
 		}
 	}
-	catch (std::exception& e)
+	catch (const std::exception& e)
 	{
-		CPLError( CE_Failure, CPLE_AppDefined, e.what() );
-        return CE_Failure;
-	}	
+		CPLError(CE_Failure, CPLE_AppDefined, e.what());
+		return CE_Failure;
+	}
 
 	return CPLErr::CE_None;
 }
@@ -191,6 +191,51 @@ void RasterBand::fillPartialBlock(IRasterTilePtr tile, void* blockData) const
 		void* blockRow = static_cast<char*>(blockData) + (y * nBlockXSize * bytesPerPixel);
 		memcpy(blockRow, tileRow, tileRegion.m_width * bytesPerPixel);
 	}
+}
+
+void RasterBand::computeRowSegmentsInsidePredictionRadius()
+{
+	const auto& predData = apiWrapper->getParams().predData;
+	const auto& boundingBox = apiWrapper->getAuxiliary().boundingBox;
+
+	const double res = predData.nResolution_cm / 100.0;
+	const double radius = predData.nRadius_cm / 100.0;
+	const double radiusSquared = radius * radius;
+
+	const double txX = predData.nX_cm / 100.0;
+	const double txY = predData.nY_cm / 100.0;
+
+	const double leftmostPixelCenter = boundingBox.min_corner().get<0>() + 0.5 * res;
+	const double topmostPixelCenter = boundingBox.max_corner().get<1>() - 0.5 * res;
+
+	rowSegmentsInsidePredictionRadius.resize(nRasterYSize);
+	for (int rowIndex = 0; rowIndex < nRasterYSize; ++rowIndex)
+	{
+		auto& rowSegment = rowSegmentsInsidePredictionRadius[rowIndex];
+
+		const double y = topmostPixelCenter - rowIndex * res;
+		const double yDistance = std::abs(y - txY);
+
+		if (yDistance > radius)
+		{
+			rowSegment = { 0, 0 };
+			continue;
+		}
+
+		const double xDistance = std::sqrt(radiusSquared - yDistance*yDistance);
+		const double segmentStart = txX - xDistance;
+		const double segmentEnd = txX + xDistance;
+
+		rowSegment = {
+			int(std::ceil((segmentStart - leftmostPixelCenter) / res)),   // leftmost pixel whose center is inside the exact segment
+			int(std::floor((segmentEnd - leftmostPixelCenter) / res)) + 1 // pixel to the right of the rightmost pixel whose center is inside the exact segment
+		};
+	}
+}
+
+void RasterBand::postProcessBlock(void* blockData) const
+{
+	
 }
 
 }}
