@@ -71,29 +71,37 @@ double RasterBand::GetNoDataValue(int* pbSuccess)
 
 CPLErr RasterBand::IReadBlock(int nXBlockOff, int nYBlockOff, void* pImage)
 {
-	auto tileIterator = getPredRaster()->CreateTileIterator(sectionNum);
-
-	IRasterTilePtr tile;
-	if (FAILED(tileIterator->raw_GetTile(nXBlockOff, nYBlockOff, &tile)))
+	try
 	{
-		// missing tile
-		fillNoDataBlock(pImage);
-		return CPLErr::CE_None;
-	}
+		auto tileIterator = getPredRaster()->CreateTileIterator(sectionNum);
 
-	const size_t numTilePixels = tile->GetPixelCount();
-	const size_t numBlockPixels = getNumPixelsPerBlock();
+		IRasterTilePtr tile;
+		if (FAILED(tileIterator->raw_GetTile(nXBlockOff, nYBlockOff, &tile)))
+		{
+			// missing tile
+			fillNoDataBlock(pImage);
+			return CPLErr::CE_None;
+		}
 
-	if (numTilePixels == numBlockPixels)
-	{
-		// full tile
-		readTile(tile, numBlockPixels, pImage);
+		const size_t numTilePixels = tile->GetPixelCount();
+		const size_t numBlockPixels = getNumPixelsPerBlock();
+
+		if (numTilePixels == numBlockPixels)
+		{
+			// full tile
+			readTile(tile, numBlockPixels, pImage);
+		}
+		else
+		{
+			// the tile is smaller than the GDAL block
+			fillPartialBlock(tile, pImage);
+		}
 	}
-	else
+	catch (std::exception& e)
 	{
-		// the tile is smaller than the GDAL block
-		fillPartialBlock(tile, pImage);
-	}
+		CPLError( CE_Failure, CPLE_AppDefined, e.what() );
+        return CE_Failure;
+	}	
 
 	return CPLErr::CE_None;
 }
