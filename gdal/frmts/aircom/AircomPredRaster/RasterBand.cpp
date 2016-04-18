@@ -19,23 +19,6 @@ boost::optional<double> getNoDataValue(const SectionInfo& sectionInfo)
 	return boost::none;
 }
 
-bool getValidValuesRange(const unsigned long sectionNum, double& minValue, double& maxValue)
-{
-	switch (sectionNum)
-	{
-	case 0: // pathloss
-		minValue = 0;
-		maxValue = 200;
-		return true;
-	case 1: // angle
-		minValue = -18000; // -180°
-		maxValue =  18000; // +180°
-		return true;
-	default:
-		return false;
-	}
-}
-
 template <typename T>
 void fillWithNoDataValue(const T noDataValue, void* const data, const size_t numPixels)
 {
@@ -47,41 +30,15 @@ void fillWithNoDataValue(const T noDataValue, void* const data, const size_t num
 template <typename T>
 void postProcessBlockRow(void* const data, const int widthInPixels,
 	const RasterBand::RowSegment blockRowSegmentInsidePredictionRadius,
-	const boost::optional<double> noDataValue, const double minValue, const double maxValue)
+	const double noDataValue)
 {
 	T* const typedData = static_cast<T*>(data);
-	const T typedMinValue = static_cast<T>(minValue);
-	const T typedMaxValue = static_cast<T>(maxValue);
+	const T typedNoDataValue = static_cast<T>(noDataValue);
 
-	T typedNoDataValue;
-	if (noDataValue)
-		typedNoDataValue = static_cast<T>(*noDataValue);
-
-	if (noDataValue)
-	{
-		for (int x = 0; x < blockRowSegmentInsidePredictionRadius.start; ++x)
-			typedData[x] = typedNoDataValue;
-	}
-
-	for (int x = blockRowSegmentInsidePredictionRadius.start; x < blockRowSegmentInsidePredictionRadius.end; ++x)
-	{
-		T& value = typedData[x];
-
-		// skip existing no-data values
-		if (noDataValue && value == typedNoDataValue)
-			continue;
-
-		if (value < typedMinValue)
-			value = typedMinValue;
-		else if (value > typedMaxValue)
-			value = typedMaxValue;
-	}
-
-	if (noDataValue)
-	{
-		for (int x = blockRowSegmentInsidePredictionRadius.end; x < widthInPixels; ++x)
-			typedData[x] = typedNoDataValue;
-	}
+	for (int x = 0; x < blockRowSegmentInsidePredictionRadius.start; ++x)
+		typedData[x] = typedNoDataValue;
+	for (int x = blockRowSegmentInsidePredictionRadius.end; x < widthInPixels; ++x)
+		typedData[x] = typedNoDataValue;
 }
 
 }
@@ -262,6 +219,9 @@ void RasterBand::fillPartialBlock(IRasterTilePtr tile, void* blockData) const
 
 void RasterBand::postProcessBlock(MapPoint blockIndex, void* data)
 {
+	if (!noDataValue)
+		return;
+
 	if (rowSegmentsInsidePredictionRadius.empty())
 		computeRowSegmentsInsidePredictionRadius();
 
@@ -286,39 +246,35 @@ void RasterBand::postProcessBlock(MapPoint blockIndex, void* data)
 		};
 	};
 
-	double minValue = std::numeric_limits<double>::quiet_NaN();
-	double maxValue = minValue;
-	getValidValuesRange(sectionNum, minValue, maxValue);
-
 	switch (eDataType)
 	{
 	case GDT_Byte:
 		for (int y = 0; y < nBlockYSize; ++y)
-			postProcessBlockRow<std::uint8_t>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), noDataValue, minValue, maxValue);
+			postProcessBlockRow<std::uint8_t>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), *noDataValue);
 		break;
 	case GDT_Int16:
 		for (int y = 0; y < nBlockYSize; ++y)
-			postProcessBlockRow<std::int16_t>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), noDataValue, minValue, maxValue);
+			postProcessBlockRow<std::int16_t>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), *noDataValue);
 		break;
 	case GDT_UInt16:
 		for (int y = 0; y < nBlockYSize; ++y)
-			postProcessBlockRow<std::uint16_t>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), noDataValue, minValue, maxValue);
+			postProcessBlockRow<std::uint16_t>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), *noDataValue);
 		break;
 	case GDT_Int32:
 		for (int y = 0; y < nBlockYSize; ++y)
-			postProcessBlockRow<std::int32_t>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), noDataValue, minValue, maxValue);
+			postProcessBlockRow<std::int32_t>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), *noDataValue);
 		break;
 	case GDT_UInt32:
 		for (int y = 0; y < nBlockYSize; ++y)
-			postProcessBlockRow<std::uint32_t>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), noDataValue, minValue, maxValue);
+			postProcessBlockRow<std::uint32_t>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), *noDataValue);
 		break;
 	case GDT_Float32:
 		for (int y = 0; y < nBlockYSize; ++y)
-			postProcessBlockRow<float>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), noDataValue, minValue, maxValue);
+			postProcessBlockRow<float>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), *noDataValue);
 		break;
 	case GDT_Float64:
 		for (int y = 0; y < nBlockYSize; ++y)
-			postProcessBlockRow<double>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), noDataValue, minValue, maxValue);
+			postProcessBlockRow<double>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), *noDataValue);
 		break;
 	}
 }
