@@ -273,7 +273,11 @@ void RasterBand::postProcessBlock(MapPoint blockIndex, void* data)
 
 	const auto computeBlockRowSegment = [&, this](int y) -> RowSegment
 	{
-		const auto& rowSegment = rowSegmentsInsidePredictionRadius[startRowIndex + y];
+		const auto rowIndex = startRowIndex + y;
+		if (rowIndex >= rowSegmentsInsidePredictionRadius.size())
+			return {0,0};
+
+		const auto& rowSegment = rowSegmentsInsidePredictionRadius[rowIndex];
 
 		// make the row segment relative to the block and clip it
 		return {

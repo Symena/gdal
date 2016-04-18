@@ -77,6 +77,30 @@ TEST_F(PredRasterBandTest, readBlock_fillsPartialBlocksCorrectly)
 	EXPECT_THAT(blockData, ContainerEq(expectedBlockData));
 }
 
+TEST_F(PredRasterBandTest, postProcessLastPartialTile)
+{
+	MockPredRaster predRaster;
+	apiParams.predData.nX_cm = 25 * 100;
+	apiParams.predData.nY_cm = 25 * 100;
+	apiParams.predData.nResolution_cm = 10 * 100;
+	apiParams.predData.nRadius_cm = 20 * 100;
+	auto apiWrapper = std::make_shared<MockApiWrapper>(apiParams, &predRaster);
+	SectionInfo sectionInfo{GDT_Float32, {2, 2}};
+	Auxiliary auxiliary({{0,0}, {50, 50}}, 0, {{0, sectionInfo}});
+	RasterBand band(nullptr, {5, 5}, 1, apiWrapper, 0, sectionInfo);
+	
+	EXPECT_CALL(*apiWrapper, getAuxiliary())
+		.WillOnce(Return(auxiliary));
+
+	std::vector<float> data(2 * 2);
+	band.postProcessBlock({2, 2}, data.data());
+
+	EXPECT_EQ(-9999, data[0]);
+	EXPECT_EQ(-9999, data[1]);
+	EXPECT_EQ(-9999, data[2]);
+	EXPECT_EQ(-9999, data[3]);
+}
+
 TEST_F(PredRasterBandTest, maskValuesOutsideRadius_withMultipleBlocks)
 {
 	// 3x2 tiles à 4x6 pixels
