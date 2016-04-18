@@ -19,12 +19,69 @@ boost::optional<double> getNoDataValue(const SectionInfo& sectionInfo)
 	return boost::none;
 }
 
+bool getValidValuesRange(const unsigned long sectionNum, double& minValue, double& maxValue)
+{
+	switch (sectionNum)
+	{
+	case 0: // pathloss
+		minValue = 0;
+		maxValue = 200;
+		return true;
+	case 1: // angle
+		minValue = -18000; // -180°
+		maxValue =  18000; // +180°
+		return true;
+	default:
+		return false;
+	}
+}
+
 template <typename T>
-void fillWithNoDataValue(const T noDataValue, void* data, const size_t numPixels)
+void fillWithNoDataValue(const T noDataValue, void* const data, const size_t numPixels)
 {
 	T* typedData = static_cast<T*>(data);
 	for (size_t i = 0; i < numPixels; ++i)
 		typedData[i] = noDataValue;
+}
+
+template <typename T>
+void postProcessBlockRow(void* const data, const int widthInPixels,
+	const RasterBand::RowSegment blockRowSegmentInsidePredictionRadius,
+	const boost::optional<double> noDataValue, const double minValue, const double maxValue)
+{
+	T* const typedData = static_cast<T*>(data);
+	const T typedMinValue = static_cast<T>(minValue);
+	const T typedMaxValue = static_cast<T>(maxValue);
+
+	T typedNoDataValue;
+	if (noDataValue)
+		typedNoDataValue = static_cast<T>(*noDataValue);
+
+	if (noDataValue)
+	{
+		for (int x = 0; x < blockRowSegmentInsidePredictionRadius.start; ++x)
+			typedData[x] = typedNoDataValue;
+	}
+
+	for (int x = blockRowSegmentInsidePredictionRadius.start; x < blockRowSegmentInsidePredictionRadius.end; ++x)
+	{
+		T& value = typedData[x];
+
+		// skip existing no-data values
+		if (noDataValue && value == typedNoDataValue)
+			continue;
+
+		if (value < typedMinValue)
+			value = typedMinValue;
+		else if (value > typedMaxValue)
+			value = typedMaxValue;
+	}
+
+	if (noDataValue)
+	{
+		for (int x = blockRowSegmentInsidePredictionRadius.end; x < widthInPixels; ++x)
+			typedData[x] = typedNoDataValue;
+	}
 }
 
 }
@@ -73,29 +130,11 @@ CPLErr RasterBand::IReadBlock(int nXBlockOff, int nYBlockOff, void* pImage)
 {
 	try
 	{
+		const MapPoint blockIndex = { nXBlockOff, nYBlockOff };
 		auto tileIterator = getPredRaster()->CreateTileIterator(sectionNum);
 
-		IRasterTilePtr tile;
-		if (FAILED(tileIterator->raw_GetTile(nXBlockOff, nYBlockOff, &tile)))
-		{
-			// missing tile
-			fillNoDataBlock(pImage);
-			return CPLErr::CE_None;
-		}
-
-		const size_t numTilePixels = tile->GetPixelCount();
-		const size_t numBlockPixels = getNumPixelsPerBlock();
-
-		if (numTilePixels == numBlockPixels)
-		{
-			// full tile
-			readTile(tile, numBlockPixels, pImage);
-		}
-		else
-		{
-			// the tile is smaller than the GDAL block
-			fillPartialBlock(tile, pImage);
-		}
+		if (readBlock(tileIterator, blockIndex, pImage))
+			postProcessBlock(blockIndex, pImage);
 	}
 	catch (const std::exception& e)
 	{
@@ -104,6 +143,34 @@ CPLErr RasterBand::IReadBlock(int nXBlockOff, int nYBlockOff, void* pImage)
 	}
 
 	return CPLErr::CE_None;
+}
+
+// Returns false if there's no tile for this block, i.e., if it only contains no-data values.
+bool RasterBand::readBlock(IPredRasterTileIteratorPtr tileIterator, MapPoint blockIndex, void* data) const
+{
+	IRasterTilePtr tile;
+	if (FAILED(tileIterator->raw_GetTile(blockIndex.get<0>(), blockIndex.get<1>(), &tile)))
+	{
+		// missing tile
+		fillNoDataBlock(data);
+		return false;
+	}
+
+	const size_t numTilePixels = tile->GetPixelCount();
+	const size_t numBlockPixels = getNumPixelsPerBlock();
+
+	if (numTilePixels == numBlockPixels)
+	{
+		// full tile
+		readTile(tile, numBlockPixels, data);
+	}
+	else
+	{
+		// the tile is smaller than the GDAL block
+		fillPartialBlock(tile, data);
+	}
+
+	return true;
 }
 
 void RasterBand::readTile(IRasterTilePtr tile, size_t numPixels, void* data) const
@@ -193,6 +260,65 @@ void RasterBand::fillPartialBlock(IRasterTilePtr tile, void* blockData) const
 	}
 }
 
+void RasterBand::postProcessBlock(MapPoint blockIndex, void* data)
+{
+	if (rowSegmentsInsidePredictionRadius.empty())
+		computeRowSegmentsInsidePredictionRadius();
+
+	const int startColumnIndex = blockIndex.get<0>() * nBlockXSize;
+	const int startRowIndex = blockIndex.get<1>() * nBlockYSize;
+
+	char* const charData = static_cast<char*>(data);
+	const size_t blockRowSize = size_t(nBlockXSize) * (GDALGetDataTypeSize(eDataType) / 8);
+
+	const auto computeBlockRowSegment = [&, this](int y) -> RowSegment
+	{
+		const auto& rowSegment = rowSegmentsInsidePredictionRadius[startRowIndex + y];
+
+		// make the row segment relative to the block and clip it
+		return {
+			std::max(0, rowSegment.start - startColumnIndex),
+			std::min(nBlockXSize, rowSegment.end - startColumnIndex)
+		};
+	};
+
+	double minValue = std::numeric_limits<double>::quiet_NaN();
+	double maxValue = minValue;
+	getValidValuesRange(sectionNum, minValue, maxValue);
+
+	switch (eDataType)
+	{
+	case GDT_Byte:
+		for (int y = 0; y < nBlockYSize; ++y)
+			postProcessBlockRow<std::uint8_t>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), noDataValue, minValue, maxValue);
+		break;
+	case GDT_Int16:
+		for (int y = 0; y < nBlockYSize; ++y)
+			postProcessBlockRow<std::int16_t>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), noDataValue, minValue, maxValue);
+		break;
+	case GDT_UInt16:
+		for (int y = 0; y < nBlockYSize; ++y)
+			postProcessBlockRow<std::uint16_t>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), noDataValue, minValue, maxValue);
+		break;
+	case GDT_Int32:
+		for (int y = 0; y < nBlockYSize; ++y)
+			postProcessBlockRow<std::int32_t>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), noDataValue, minValue, maxValue);
+		break;
+	case GDT_UInt32:
+		for (int y = 0; y < nBlockYSize; ++y)
+			postProcessBlockRow<std::uint32_t>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), noDataValue, minValue, maxValue);
+		break;
+	case GDT_Float32:
+		for (int y = 0; y < nBlockYSize; ++y)
+			postProcessBlockRow<float>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), noDataValue, minValue, maxValue);
+		break;
+	case GDT_Float64:
+		for (int y = 0; y < nBlockYSize; ++y)
+			postProcessBlockRow<double>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), noDataValue, minValue, maxValue);
+		break;
+	}
+}
+
 void RasterBand::computeRowSegmentsInsidePredictionRadius()
 {
 	const auto& predData = apiWrapper->getParams().predData;
@@ -231,11 +357,6 @@ void RasterBand::computeRowSegmentsInsidePredictionRadius()
 			int(std::floor((segmentEnd - leftmostPixelCenter) / res)) + 1 // pixel to the right of the rightmost pixel whose center is inside the exact segment
 		};
 	}
-}
-
-void RasterBand::postProcessBlock(void* blockData) const
-{
-	
 }
 
 }}

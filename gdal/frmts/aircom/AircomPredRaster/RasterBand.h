@@ -9,6 +9,8 @@ namespace aircom { namespace pred_raster {
 class RasterBand : public GDALRasterBand
 {
 public:
+	struct RowSegment { int start, end; };
+
 	RasterBand(Dataset* owningDataSet, MapPoint sizeInPixels,
 		int bandIndex, std::shared_ptr<ApiWrapper> apiWrapper,
 		unsigned long sectionNum, const SectionInfo& sectionInfo);
@@ -18,12 +20,13 @@ public:
 	virtual CPLErr SetNoDataValue(double value) override;
 	virtual double GetNoDataValue(int* pbSuccess = nullptr) override;
 
+	bool readBlock(IPredRasterTileIteratorPtr tileIterator, MapPoint blockIndex, void* data) const;
+	void postProcessBlock(MapPoint blockIndex, void* data);
+
 protected:
 	virtual CPLErr IReadBlock(int nXBlockOff, int nYBlockOff, void* pImage) override;
 
 private:
-	struct RowSegment { int start, end; };
-
 	std::shared_ptr<ApiWrapper> apiWrapper;
 	const unsigned long sectionNum;
 	boost::optional<double> noDataValue;
@@ -39,8 +42,6 @@ private:
 	void fillPartialBlock(IRasterTilePtr tile, void* blockData) const;
 
 	void computeRowSegmentsInsidePredictionRadius();
-
-	void postProcessBlock(void* blockData) const;
 };
 
 }}
