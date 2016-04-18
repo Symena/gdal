@@ -77,4 +77,56 @@ TEST_F(PredRasterBandTest, fillsPartialBlocksCorrectly)
 	EXPECT_THAT(blockData, ContainerEq(expectedBlockData));
 }
 
+TEST_F(PredRasterBandTest, maskValuesOutsideRadius)
+{
+	// 3x2 tiles à 4x6 pixels
+	// res = 2 => 24x24 m
+	// tx => (13, 11)
+	MockPredRaster predRaster;
+	apiParams.predData.nX_cm = 13 * 100;
+	apiParams.predData.nY_cm = 11 * 100;
+	apiParams.predData.nResolution_cm = 2 * 100;
+
+	auto apiWrapper = std::make_shared<MockApiWrapper>(apiParams, &predRaster);
+	SectionInfo sectionInfo{GDT_Float32, {4, 6}};
+	RasterBand band(nullptr, {12, 12}, 1, apiWrapper, 0, sectionInfo);
+	Auxiliary auxiliary({{0,0}, {24, 24}}, 0, {{0, sectionInfo}});
+
+	EXPECT_CALL(*apiWrapper, getAuxiliary())
+		.WillOnce(Return(auxiliary));
+
+	EXPECT_CALL(predRaster, raw_CreateTileIterator(0, _))
+		.WillRepeatedly(DoAll(SetArgPointee<1>(&tileIterator), Return(S_OK)));
+
+	MockTile tile;
+	std::vector<float> filledTile(4 * 6);
+	filledTile.assign(filledTile.size(), 1);
+
+	EXPECT_CALL(tileIterator, raw_GetTile(_, _, _))
+		.WillRepeatedly(DoAll(SetArgPointee<2>(&tile), Return(S_OK)));
+
+	EXPECT_CALL(tile, raw_GetPixelCount(_))
+		.WillRepeatedly(DoAll(SetArgPointee<0>(filledTile.size()), Return(S_OK)));
+
+	EXPECT_CALL(tile, raw_GetFloatData(filledTile.size(), _))
+		.WillRepeatedly(Invoke([&](auto numElements, auto* rasterData) { 
+		for (auto i = 0; i < numElements; ++i)
+			rasterData[i] = filledTile[i];
+		return S_OK; 
+	}));
+	
+	// When
+	std::vector<float> actual(12 * 12);
+	band.RasterIO(GF_Read, 0, 0, 12, 12, actual.data(), 12, 12, GDT_Float32, 0, 0);
+
+	// Then
+	auto noDataValue = band.GetNoDataValue();
+	EXPECT_DOUBLE_EQ(-9999, noDataValue);
+	EXPECT_EQ(noDataValue, actual[0]);
+	EXPECT_EQ(1, actual[actual.size() / 2]);
+	EXPECT_EQ(noDataValue, actual[actual.size() - 1]);
+
+
+}
+
 }}
