@@ -17,7 +17,7 @@ struct PredRasterBandTest : public Test
 	ApiParams apiParams = ApiParams(L"", PredData(), L"", L"", Section::Unspecified);
 };
 
-TEST_F(PredRasterBandTest, fillsBlocksWithoutTileWithNoDataValue)
+TEST_F(PredRasterBandTest, readBlock_fillsBlocksWithoutTileWithNoDataValue)
 {
 	RasterBand band(nullptr, {2, 2}, 1, std::make_shared<ApiWrapper>(apiParams, nullptr),
 		0, {GDT_Byte, {2, 2}});
@@ -31,7 +31,7 @@ TEST_F(PredRasterBandTest, fillsBlocksWithoutTileWithNoDataValue)
 	EXPECT_THAT(blockData, ElementsAre(200, 200, 200, 200));
 }
 
-TEST_F(PredRasterBandTest, fillsPartialBlocksCorrectly)
+TEST_F(PredRasterBandTest, readBlock_fillsPartialBlocksCorrectly)
 {
 	// overall size: 8x7 pixels
 	// tile size: 5x5 pixels
@@ -77,7 +77,7 @@ TEST_F(PredRasterBandTest, fillsPartialBlocksCorrectly)
 	EXPECT_THAT(blockData, ContainerEq(expectedBlockData));
 }
 
-TEST_F(PredRasterBandTest, maskValuesOutsideRadius)
+TEST_F(PredRasterBandTest, maskValuesOutsideRadius_withMultipleBlocks)
 {
 	// 3x2 tiles à 4x6 pixels
 	// res = 2 => 24x24 m
@@ -85,6 +85,7 @@ TEST_F(PredRasterBandTest, maskValuesOutsideRadius)
 	MockPredRaster predRaster;
 	apiParams.predData.nX_cm = 13 * 100;
 	apiParams.predData.nY_cm = 11 * 100;
+	apiParams.predData.nRadius_cm = 10 * 100;
 	apiParams.predData.nResolution_cm = 2 * 100;
 
 	auto apiWrapper = std::make_shared<MockApiWrapper>(apiParams, &predRaster);
@@ -121,12 +122,23 @@ TEST_F(PredRasterBandTest, maskValuesOutsideRadius)
 
 	// Then
 	auto noDataValue = band.GetNoDataValue();
-	EXPECT_DOUBLE_EQ(-9999, noDataValue);
-	EXPECT_EQ(noDataValue, actual[0]);
-	EXPECT_EQ(1, actual[actual.size() / 2]);
-	EXPECT_EQ(noDataValue, actual[actual.size() - 1]);
-
-
+	EXPECT_EQ(-9999, noDataValue);
+	const float O = noDataValue;
+	const float expected[] = {
+		O,O,O,O,O,O,O,O,O,O,O,O,
+		O,O,O,O,O,O,1,O,O,O,O,O,
+		O,O,O,1,1,1,1,1,1,1,O,O,
+		O,O,1,1,1,1,1,1,1,1,1,O,
+		O,O,1,1,1,1,1,1,1,1,1,O,
+		O,O,1,1,1,1,1,1,1,1,1,O,
+		O,1,1,1,1,1,1,1,1,1,1,1,
+		O,O,1,1,1,1,1,1,1,1,1,O,
+		O,O,1,1,1,1,1,1,1,1,1,O,
+		O,O,1,1,1,1,1,1,1,1,1,O,
+		O,O,O,1,1,1,1,1,1,1,O,O,
+		O,O,O,O,O,O,1,O,O,O,O,O
+	};
+	EXPECT_THAT(actual, ElementsAreArray(expected));
 }
 
 }}
