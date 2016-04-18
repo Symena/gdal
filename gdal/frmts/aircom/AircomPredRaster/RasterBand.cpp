@@ -277,8 +277,8 @@ void RasterBand::postProcessBlock(MapPoint blockIndex, void* data)
 
 		// make the row segment relative to the block and clip it
 		return {
-			std::max(0, rowSegment.start - startColumnIndex),
-			std::min(nBlockXSize, rowSegment.end - startColumnIndex)
+			std::max(0, std::min(nBlockXSize, rowSegment.start - startColumnIndex)),
+			std::max(0, std::min(nBlockXSize, rowSegment.end - startColumnIndex))
 		};
 	};
 
