@@ -1,72 +1,72 @@
 #pragma once
 
-#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/box.hpp>
 #include <ostream>
 
 namespace aircom {
 
-using MapPoint = boost::geometry::model::point<int, 2, boost::geometry::cs::cartesian>;
-using MapBox = boost::geometry::model::box<MapPoint>;
+using Point = boost::geometry::model::d2::point_xy<int>;
+using Rectangle = boost::geometry::model::box<Point>;
 
-inline MapBox makeBox(int minX, int minY, int maxX, int maxY)
+inline Rectangle makeRectangle(int minX, int minY, int maxX, int maxY)
 {
-	return { MapPoint(minX, minY), MapPoint(maxX, maxY) };
+	return { Point(minX, minY), Point(maxX, maxY) };
 }
 
 }
 
 namespace boost { namespace geometry { namespace model {
 
-inline int width(const aircom::MapBox& box)
+inline int width(const aircom::Rectangle& box)
 {
-	return box.max_corner().get<0>() - box.min_corner().get<0>();
+	return box.max_corner().x() - box.min_corner().x();
 }
 
-inline int height(const aircom::MapBox& box)
+inline int height(const aircom::Rectangle& box)
 {
-	return box.max_corner().get<1>() - box.min_corner().get<1>();
+	return box.max_corner().y() - box.min_corner().y();
 }
 
-inline aircom::MapPoint upper_left(const aircom::MapBox& box)
+inline aircom::Point upper_left(const aircom::Rectangle& box)
 {
-	return {box.min_corner().get<0>(), box.max_corner().get<1>()};
+	return {box.min_corner().x(), box.max_corner().y()};
 }
 
-inline aircom::MapPoint lower_right(const aircom::MapBox& box)
+inline aircom::Point lower_right(const aircom::Rectangle& box)
 {
-	return {box.max_corner().get<0>(), box.min_corner().get<1>()};
+	return {box.max_corner().x(), box.min_corner().y()};
 }
 
-inline aircom::MapPoint operator+(aircom::MapPoint lhs, aircom::MapPoint rhs)
+inline aircom::Point operator+(aircom::Point lhs, aircom::Point rhs)
 {
-	return { lhs.get<0>() + rhs.get<0>(), lhs.get<1>() + rhs.get<1>() };
+	return { lhs.x() + rhs.x(), lhs.y() + rhs.y() };
 }
 
-inline aircom::MapPoint operator-(aircom::MapPoint lhs, aircom::MapPoint rhs)
+inline aircom::Point operator-(aircom::Point lhs, aircom::Point rhs)
 {
-	return { lhs.get<0>() - rhs.get<0>(), lhs.get<1>() - rhs.get<1>() };
+	return { lhs.x() - rhs.x(), lhs.y() - rhs.y() };
 }
 
-inline bool operator==(const aircom::MapPoint& lhs, const aircom::MapPoint& rhs)
+inline bool operator==(const aircom::Point& lhs, const aircom::Point& rhs)
 {
-	return lhs.get<0>() == rhs.get<0>()
-		&& lhs.get<1>() == rhs.get<1>();
+	return lhs.x() == rhs.x()
+		&& lhs.y() == rhs.y();
 }
 
-inline bool operator==(const aircom::MapBox& lhs, const aircom::MapBox& rhs)
+inline bool operator==(const aircom::Rectangle& lhs, const aircom::Rectangle& rhs)
 {
 	return lhs.min_corner() == rhs.min_corner()
 		&& lhs.max_corner() == rhs.max_corner();
 }
 
-inline std::ostream& operator<<(std::ostream& stream, const aircom::MapPoint& p)
+inline std::ostream& operator<<(std::ostream& stream, const aircom::Point& p)
 {
-	stream << "{ x: " << p.get<0>() << ", y: " << p.get<1>() << " }";
+	stream << "{ x: " << p.x() << ", y: " << p.y() << " }";
 	return stream;
 }
 
-inline std::ostream& operator<<(std::ostream& stream, const aircom::MapBox& b)
+inline std::ostream& operator<<(std::ostream& stream, const aircom::Rectangle& b)
 {
 	stream << "{ BL: " << b.min_corner() << ", TR: " << b.max_corner() << " }";
 	return stream;

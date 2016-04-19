@@ -13,7 +13,7 @@ Line makeLine(int minX, int minY, int maxX, int maxY, int resolution = 1)
 
 vector<int> getIndicesOfIntersectingBlocks(Blocks& blocks, int minX, int minY, int maxX, int maxY)
 {
-	auto intersectingBlocks = blocks.getIntersectingBlocks(makeBox(minX, minY, maxX, maxY));
+	auto intersectingBlocks = blocks.getIntersectingBlocks(makeRectangle(minX, minY, maxX, maxY));
 
 	vector<int> indices;
 	indices.reserve(intersectingBlocks.size());
@@ -25,7 +25,7 @@ vector<int> getIndicesOfIntersectingBlocks(Blocks& blocks, int minX, int minY, i
 
 TEST(Block, constructors)
 {
-	const auto box = makeBox(-3, 2, 7, 6);
+	const auto box = makeRectangle(-3, 2, 7, 6);
 	Block block(box, 2, nullptr, 1);
 
 	for (int i = 0; i < 2; ++i)
@@ -45,10 +45,10 @@ TEST(Block, constructors)
 TEST(Blocks, constructorSetsBoundingBox)
 {
 	Blocks blocks;
-	EXPECT_EQ(makeBox(0, 0, 0, 0), blocks.getBoundingBox());
+	EXPECT_EQ(makeRectangle(0, 0, 0, 0), blocks.getBoundingBox());
 
 	blocks = Blocks({ makeLine(-3, 2, 7, 6, 2), makeLine(2, -4, 8, 2, 1) });
-	EXPECT_EQ(makeBox(-3, -4, 8, 6), blocks.getBoundingBox());
+	EXPECT_EQ(makeRectangle(-3, -4, 8, 6), blocks.getBoundingBox());
 }
 
 TEST(Blocks, constructorSetsResolutions)

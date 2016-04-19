@@ -35,12 +35,12 @@ protected:
 		*clutterFile << std::to_string(code) << " " << name.c_str() << "\n";
 	}
 
-	std::vector<std::int16_t> readPixels(const MapBox& sourceRegion, int widthInPixels, int heightInPixels)
+	std::vector<std::int16_t> readPixels(const Rectangle& sourceRegion, int widthInPixels, int heightInPixels)
 	{
 		std::vector<std::int16_t> pixels(static_cast<size_t>(widthInPixels) * heightInPixels);
 
 		auto error = getDataset().RasterIO(GDALRWFlag::GF_Read,
-			sourceRegion.min_corner().get<0>(), sourceRegion.min_corner().get<1>(),
+			sourceRegion.min_corner().x(), sourceRegion.min_corner().y(),
 			width(sourceRegion), height(sourceRegion),
 			pixels.data(), widthInPixels, heightInPixels, GDALDataType::GDT_Int16,
 			1, nullptr, // 1 band is required
@@ -143,13 +143,13 @@ TEST_F(DatasetTests, rasterIO)
 		  14, 16 });
 
 	// whole bounding box with resolution = 2
-	auto pixels = readPixels(makeBox(0, 0, 4, 4), 2, 2);
+	auto pixels = readPixels(makeRectangle(0, 0, 4, 4), 2, 2);
 	EXPECT_THAT(pixels, testing::ElementsAre(
 		0, 1, // top-down
 		2, 13));
 
 	// a region with resolution = 1
-	pixels = readPixels(makeBox(2, 1, 4, 4), 2, 3);
+	pixels = readPixels(makeRectangle(2, 1, 4, 4), 2, 3);
 	EXPECT_THAT(pixels, testing::ElementsAre(
 		1, 1,
 		2, 2,

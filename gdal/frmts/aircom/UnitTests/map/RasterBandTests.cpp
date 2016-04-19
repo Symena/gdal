@@ -51,12 +51,12 @@ TEST(RasterBand, rasterIO)
 	Dataset dataset(builder.create(), nullptr, "");
 	auto& band = *dataset.GetRasterBand(1);
 
-	auto readPixels = [&band](const MapBox& sourceRegion, int widthInPixels, int heightInPixels)
+	auto readPixels = [&band](const Rectangle& sourceRegion, int widthInPixels, int heightInPixels)
 	{
 		std::vector<std::int16_t> pixels(static_cast<size_t>(widthInPixels) * heightInPixels);
 
 		auto error = band.RasterIO(GDALRWFlag::GF_Read,
-			sourceRegion.min_corner().get<0>(), sourceRegion.min_corner().get<1>(),
+			sourceRegion.min_corner().x(), sourceRegion.min_corner().y(),
 			width(sourceRegion), height(sourceRegion),
 			pixels.data(), widthInPixels, heightInPixels, GDALDataType::GDT_Int16,
 			0, 0,
@@ -67,13 +67,13 @@ TEST(RasterBand, rasterIO)
 	};
 
 	// whole bounding box with resolution = 2
-	auto pixels = readPixels(makeBox(0, 0, 4, 4), 2, 2);
+	auto pixels = readPixels(makeRectangle(0, 0, 4, 4), 2, 2);
 	EXPECT_THAT(pixels, testing::ElementsAre(
 		0, 1, // top-down
 		2, 13));
 
 	// a region with resolution = 1
-	pixels = readPixels(makeBox(2, 1, 4, 4), 2, 3);
+	pixels = readPixels(makeRectangle(2, 1, 4, 4), 2, 3);
 	EXPECT_THAT(pixels, testing::ElementsAre(
 		1, 1,
 		2, 2,

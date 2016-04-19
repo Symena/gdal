@@ -153,10 +153,10 @@ void Dataset::setBoundingBox()
 	nRasterYSize = height(bounds);
 
 	double transformMatrix[6];
-	transformMatrix[0] = bounds.min_corner().get<0>(); // minX
+	transformMatrix[0] = bounds.min_corner().x(); // minX
 	transformMatrix[1] = 1; // x resolution is always 1
 	transformMatrix[2] = 0;
-	transformMatrix[3] = bounds.min_corner().get<1>(); // minY
+	transformMatrix[3] = bounds.min_corner().y(); // minY
 	transformMatrix[4] = 0;
 	transformMatrix[5] = 1; // y resolution is always 1 (rows are stored bottom-up)
 	SetGeoTransform(transformMatrix);
@@ -172,7 +172,7 @@ void Dataset::provideResolutionsAsMetadata()
 }
 
 bool Dataset::render(std::int16_t* dst, DataOrientation dataOrientation, int dstWidth, int dstHeight, int dstResolution,
-	MapPoint bottomLeftCornerInMeters, GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm)
+	Point bottomLeftCornerInMeters, GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm)
 {
 	Warnings warnings;
 	WarningsReporter warningsReporter(warnings);
@@ -235,7 +235,7 @@ CPLErr Dataset::IRasterIO(GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXSize, 
 		: GDALRIOResampleAlg::GRIORA_Bilinear);
 
 	bool success = render(static_cast<std::int16_t*>(pData), DataOrientation::TopDown, nBufXSize, nBufYSize, resX,
-		blocks.getBoundingBox().min_corner() + MapPoint(nXOff, nYOff), algorithm, algorithm);
+		blocks.getBoundingBox().min_corner() + Point(nXOff, nYOff), algorithm, algorithm);
 
 	return success ? CPLErr::CE_None : CPLErr::CE_Failure;
 }

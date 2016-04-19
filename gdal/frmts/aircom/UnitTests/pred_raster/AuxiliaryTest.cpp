@@ -37,7 +37,7 @@ TEST_F(AuxiliaryTest, ParsesJsonNode)
 {
 	Auxiliary auxiliary(auxiliaryNode);
 
-	MapBox bounds({1, 3}, {2, 4});
+	Rectangle bounds({1, 3}, {2, 4});
 	Auxiliary expected(bounds, 123, { {0, {GDT_Float64, {5, 6}}} });
 
 	EXPECT_EQ(expected, auxiliary);

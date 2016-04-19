@@ -37,7 +37,7 @@ public:
 	const boost::filesystem::path dataRoot;
 
 	bool render(std::int16_t* dst, DataOrientation dataOrientation, int dstWidth, int dstHeight, int dstResolution,
-		MapPoint bottomLeftCornerInMeters,
+		Point bottomLeftCornerInMeters,
 		GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm);
 
 protected:

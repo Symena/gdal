@@ -122,7 +122,7 @@ Dataset::Dataset(const wptree& gapTree, std::shared_ptr<ApiWrapper> tmpApiWrappe
 	}
 
 	const auto requestedSection = apiWrapper->getParams().section;
-	const MapPoint sizeInPixels = { nRasterXSize, nRasterYSize };
+	const Point sizeInPixels = { nRasterXSize, nRasterYSize };
 
 	for (const auto& sectionPair : auxiliary.sectionInfos)
 	{
@@ -140,11 +140,11 @@ CPLErr Dataset::GetGeoTransform(double* padfTransform)
 
 	const double res = getResolution();
 
-	padfTransform[0] = getBoundingBox().min_corner().get<0>(); // min x
+	padfTransform[0] = getBoundingBox().min_corner().x(); // min x
 	padfTransform[1] = res;
 	padfTransform[2] = 0;
 	// top-down
-	padfTransform[3] = getBoundingBox().max_corner().get<1>(); // max y
+	padfTransform[3] = getBoundingBox().max_corner().y(); // max y
 	padfTransform[4] = 0;
 	padfTransform[5] = -res;
 

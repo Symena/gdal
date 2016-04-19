@@ -112,7 +112,7 @@ TEST_F(PredRasterDatasetTests, LoadsBoundingBoxFromGapFile)
 {
 	Dataset dataset(sampleGapTree, apiWrapper, warnings);
 
-	MapBox bounds({1, 3}, {6, 13});
+	Rectangle bounds({1, 3}, {6, 13});
 
 	EXPECT_EQ(bounds, dataset.getBoundingBox()); 
 	EXPECT_EQ(1, dataset.GetRasterXSize());

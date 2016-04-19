@@ -10,7 +10,7 @@ namespace aircom { namespace pred_raster {
 
 namespace {
 
-MapPoint parsePoint(const wptree& pointNode)
+Point parsePoint(const wptree& pointNode)
 {
 	if (pointNode.size() != 2)
 		throw std::runtime_error("Failed to parse a 2D point - 2 coordinates expected");
@@ -22,7 +22,7 @@ MapPoint parsePoint(const wptree& pointNode)
 	return { x, y };
 }
 
-MapBox parseBoundingBox(const wptree& sectionNode)
+Rectangle parseBoundingBox(const wptree& sectionNode)
 {
 	return {
 		parsePoint(sectionNode.get_child(L"BottomLeft")),
@@ -60,11 +60,11 @@ SectionInfos parseSectionInfos(const wptree& sectionsNode)
 	return result;
 }
 
-void addPoint(wptree& tree, const std::wstring& path, const MapPoint& point)
+void addPoint(wptree& tree, const std::wstring& path, const Point& point)
 {
 	wptree x, y;
-	x.put(L"", point.get<0>());
-	y.put(L"", point.get<1>());
+	x.put(L"", point.x());
+	y.put(L"", point.y());
 
 	auto& pointNode = tree.add_child(path, wptree());
 	pointNode.push_back(std::make_pair(L"", x));
@@ -73,7 +73,7 @@ void addPoint(wptree& tree, const std::wstring& path, const MapPoint& point)
 
 }
 
-Auxiliary::Auxiliary(const MapBox& boundingBox, int epsg, SectionInfos sectionInfos)
+Auxiliary::Auxiliary(const Rectangle& boundingBox, int epsg, SectionInfos sectionInfos)
 	: boundingBox(boundingBox)
 	, epsg(epsg)
 	, sectionInfos(std::move(sectionInfos))

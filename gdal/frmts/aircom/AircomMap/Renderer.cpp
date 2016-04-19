@@ -7,11 +7,11 @@
 namespace aircom { namespace map {
 
 Renderer::Renderer(const Blocks& blocks, PixelType* data, DataOrientation dataOrientation, int widthInPixels,
-	int heightInPixels, int resolution, MapPoint bottomLeftCornerInMeters,
+	int heightInPixels, int resolution, Point bottomLeftCornerInMeters,
 	GDALRIOResampleAlg downsamplingAlgorithm, GDALRIOResampleAlg upsamplingAlgorithm,
 	Warnings& warnings)
 	: blocks(blocks)
-	, bounds(bottomLeftCornerInMeters, bottomLeftCornerInMeters + MapPoint(widthInPixels * resolution, heightInPixels * resolution))
+	, bounds(bottomLeftCornerInMeters, bottomLeftCornerInMeters + Point(widthInPixels * resolution, heightInPixels * resolution))
 	, data(data)
 	, dataOrientation(dataOrientation)
 	, widthInPixels(widthInPixels)
@@ -31,7 +31,7 @@ void Renderer::render()
 	{
 		// TODO: skip unnecessarily fine blocks?
 
-		MapBox srcRegion;
+		Rectangle srcRegion;
 		auto& blockBounds = block.getBoundingBox();
 		boost::geometry::intersection(bounds, blockBounds, srcRegion);
 
@@ -47,8 +47,8 @@ void Renderer::render()
 		catch (const std::exception& e)
 		{
 			warnings.add("Rendering block from (%d, %d) to (%d, %d) (index %d) failed: '%s', skipping",
-				blockBounds.min_corner().get<0>(), blockBounds.min_corner().get<1>(),
-				blockBounds.max_corner().get<0>(), blockBounds.max_corner().get<1>(),
+				blockBounds.min_corner().x(), blockBounds.min_corner().y(),
+				blockBounds.max_corner().x(), blockBounds.max_corner().y(),
 				block.getIndex(), e.what());
 		}
 	}
@@ -80,22 +80,22 @@ void Renderer::fillWithNoDataValue()
 		data[i] = noDataValue;
 }
 
-Renderer::UniqueDataPtr Renderer::readBlock(const Block& block, MapBox& region) const
+Renderer::UniqueDataPtr Renderer::readBlock(const Block& block, Rectangle& region) const
 {
 	auto stream = block.getData(warnings);
 	if (!stream)
 	{
-		region = makeBox(0, 0, 0, 0);
+		region = makeRectangle(0, 0, 0, 0);
 		return nullptr;
 	}
 
 	const auto& blockBounds = block.getBoundingBox();
-	const MapPoint blockTopLeft = upper_left(blockBounds);
-	const MapPoint regionTopLeft = upper_left(region);
+	const Point blockTopLeft = upper_left(blockBounds);
+	const Point regionTopLeft = upper_left(region);
 
 	// in meters:
-	const int leftOffset = regionTopLeft.get<0>() - blockTopLeft.get<0>();
-	const int topOffset = blockTopLeft.get<1>() - regionTopLeft.get<1>(); // blocks store rows top-down
+	const int leftOffset = regionTopLeft.x() - blockTopLeft.x();
+	const int topOffset = blockTopLeft.y() - regionTopLeft.y(); // blocks store rows top-down
 	const int rightOffset = leftOffset + width(region);
 	const int bottomOffset = topOffset + height(region);
 	assert(leftOffset >= 0 && rightOffset <= width(blockBounds)
@@ -133,14 +133,14 @@ Renderer::UniqueDataPtr Renderer::readBlock(const Block& block, MapBox& region) 
 
 	// inform the caller about the actually covered region (in meters)
 	region.min_corner() = blockBounds.min_corner() +
-		MapPoint(leftPixelOffset * blockRes, (block.getHeightInPixels() - bottomPixelOffset) * blockRes);
+		Point(leftPixelOffset * blockRes, (block.getHeightInPixels() - bottomPixelOffset) * blockRes);
 	region.max_corner() = blockBounds.min_corner() +
-		MapPoint(rightPixelOffset * blockRes, (block.getHeightInPixels() - topPixelOffset) * blockRes);
+		Point(rightPixelOffset * blockRes, (block.getHeightInPixels() - topPixelOffset) * blockRes);
 
 	return result;
 }
 
-Renderer::UniqueDataPtr Renderer::resample(const PixelType* data, MapBox& region, int srcResolution) const
+Renderer::UniqueDataPtr Renderer::resample(const PixelType* data, Rectangle& region, int srcResolution) const
 {
 	const int srcWidth = width(region) / srcResolution;
 	const int srcHeight = height(region) / srcResolution;
@@ -152,7 +152,7 @@ Renderer::UniqueDataPtr Renderer::resample(const PixelType* data, MapBox& region
 	const size_t numNewPixels = static_cast<size_t>(newWidth) * newHeight;
 	if (numNewPixels == 0)
 	{
-		region = makeBox(0, 0, 0, 0);
+		region = makeRectangle(0, 0, 0, 0);
 		return nullptr;
 	}
 
@@ -161,12 +161,12 @@ Renderer::UniqueDataPtr Renderer::resample(const PixelType* data, MapBox& region
 	const auto algorithm = (scalingFactor < 1 ? downsamplingAlgorithm : upsamplingAlgorithm);
 	aircom::map::resample(data, srcWidth, srcHeight, newData.get(), newWidth, newHeight, GDALDataType::GDT_Int16, algorithm, noDataValue);
 
-	region.max_corner() = region.min_corner() + MapPoint(newWidth * resolution, newHeight * resolution);
+	region.max_corner() = region.min_corner() + Point(newWidth * resolution, newHeight * resolution);
 
 	return newData;
 }
 
-void Renderer::renderRegion(const PixelType* data, const MapBox& region)
+void Renderer::renderRegion(const PixelType* data, const Rectangle& region)
 {
 	const int res = this->resolution;
 
@@ -185,8 +185,8 @@ void Renderer::renderRegion(const PixelType* data, const MapBox& region)
 	};
 
 	// compute the offset of the source in the global bitmap, in pixels:
-	const int leftPixelOffset = round(bottomLeftOffset.get<0>(), res);
-	const int bottomPixelOffset = round(bottomLeftOffset.get<1>(), res);
+	const int leftPixelOffset = round(bottomLeftOffset.x(), res);
+	const int bottomPixelOffset = round(bottomLeftOffset.y(), res);
 
 	// clip the source region, in pixels, to be rendered into the global bitmap
 	const int srcPixelMinX = (leftPixelOffset < 0 ? -leftPixelOffset : 0);

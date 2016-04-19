@@ -9,7 +9,7 @@ class RasterBand : public GDALRasterBand
 public:
 	struct RowSegment { int start, end; };
 
-	RasterBand(Dataset* owningDataSet, MapPoint sizeInPixels,
+	RasterBand(Dataset* owningDataSet, Point sizeInPixels,
 		int bandIndex, std::shared_ptr<ApiWrapper> apiWrapper,
 		unsigned long sectionNum, const SectionInfo& sectionInfo);
 
@@ -20,8 +20,8 @@ public:
 
 	virtual double GetScale(int* pbSuccess = nullptr) override;
 
-	bool readBlock(IPredRasterTileIteratorPtr tileIterator, MapPoint blockIndex, void* data) const;
-	void postProcessBlock(MapPoint blockIndex, void* data);
+	bool readBlock(IPredRasterTileIteratorPtr tileIterator, Point blockIndex, void* data) const;
+	void postProcessBlock(Point blockIndex, void* data);
 
 protected:
 	virtual CPLErr IReadBlock(int nXBlockOff, int nYBlockOff, void* pImage) override;

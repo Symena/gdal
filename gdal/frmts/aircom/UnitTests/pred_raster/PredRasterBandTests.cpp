@@ -125,17 +125,18 @@ TEST_F(PredRasterBandTest, maskValuesOutsideRadius_withMultipleBlocks)
 
 	MockTile tile;
 	std::vector<float> filledTile(4 * 6);
-	filledTile.assign(filledTile.size(), 1);
+	const auto numTilePixels = unsigned long(filledTile.size());
+	filledTile.assign(numTilePixels, 1);
 
 	EXPECT_CALL(tileIterator, raw_GetTile(_, _, _))
 		.WillRepeatedly(DoAll(SetArgPointee<2>(&tile), Return(S_OK)));
 
 	EXPECT_CALL(tile, raw_GetPixelCount(_))
-		.WillRepeatedly(DoAll(SetArgPointee<0>(filledTile.size()), Return(S_OK)));
+		.WillRepeatedly(DoAll(SetArgPointee<0>(numTilePixels), Return(S_OK)));
 
-	EXPECT_CALL(tile, raw_GetFloatData(filledTile.size(), _))
+	EXPECT_CALL(tile, raw_GetFloatData(numTilePixels, _))
 		.WillRepeatedly(Invoke([&](auto numElements, auto* rasterData) { 
-		for (auto i = 0; i < numElements; ++i)
+		for (unsigned long i = 0; i < numElements; ++i)
 			rasterData[i] = filledTile[i];
 		return S_OK; 
 	}));
@@ -147,7 +148,7 @@ TEST_F(PredRasterBandTest, maskValuesOutsideRadius_withMultipleBlocks)
 	// Then
 	auto noDataValue = band.GetNoDataValue();
 	EXPECT_EQ(-9999, noDataValue);
-	const float O = noDataValue;
+	const float O = float(noDataValue);
 	const float expected[] = {
 		O,O,O,O,O,O,O,O,O,O,O,O,
 		O,O,O,O,O,O,1,O,O,O,O,O,

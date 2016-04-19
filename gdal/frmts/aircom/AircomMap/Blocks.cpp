@@ -5,7 +5,7 @@
 
 namespace aircom { namespace map {
 
-Block::Block(const MapBox& boundingBox, int resolution, std::shared_ptr<StreamSource> dataStream, int index)
+Block::Block(const Rectangle& boundingBox, int resolution, std::shared_ptr<StreamSource> dataStream, int index)
 	: boundingBox(boundingBox)
 	, widthInPixels(width(boundingBox) / resolution)
 	, heightInPixels(height(boundingBox) / resolution)
@@ -19,7 +19,7 @@ Block::Block(const MapBox& boundingBox, int resolution, std::shared_ptr<StreamSo
 }
 
 Block::Block(const Line& line, int index)
-	: Block(makeBox(line.getTileEastMin(), line.getTileNorthMin(), line.getTileEastMax(), line.getTileNorthMax()),
+	: Block(makeRectangle(line.getTileEastMin(), line.getTileNorthMin(), line.getTileEastMax(), line.getTileNorthMax()),
 	             line.getResolution(), line.getTileDataSource(), index)
 {}
 
@@ -36,14 +36,21 @@ Blocks::Blocks(const std::vector<Line>& lines)
 		resolutions.insert(line.getResolution());
 	}
 
-	boundingBox = (!blocksTree.empty() ? blocksTree.bounds() : makeBox(0, 0, 0, 0));
+	if (!blocksTree.empty())
+	{
+		const auto bounds = blocksTree.bounds();
+		boundingBox = makeRectangle(bounds.min_corner().get<0>(), bounds.min_corner().get<1>(),
+			bounds.max_corner().get<0>(), bounds.max_corner().get<1>());
+	}
+	else
+		boundingBox = makeRectangle(0, 0, 0, 0);
 }
 
-std::vector<Block> Blocks::getIntersectingBlocks(const MapBox& box) const
+std::vector<Block> Blocks::getIntersectingBlocks(const Rectangle& box) const
 {
 	auto isNotOnlyBorderMatch = [&box](const TreeEntry& entry)
 	{
-		MapBox intersectionBox;
+		Rectangle intersectionBox;
 		boost::geometry::intersection(entry.first, box, intersectionBox);
 
 		auto intersectionArea = boost::geometry::area(intersectionBox);

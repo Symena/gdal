@@ -71,7 +71,7 @@ TEST(ApiWrapper, getAuxiliary)
 
 	const auto actual = apiWrapper.getAuxiliary();
 
-	const auto expectedBounds = makeBox(int(r.m_eastMin) / 100, int(r.m_northMax - r.m_height * r.m_resolution) / 100,
+	const auto expectedBounds = makeRectangle(int(r.m_eastMin) / 100, int(r.m_northMax - r.m_height * r.m_resolution) / 100,
 	                                    int(r.m_eastMin + r.m_width * r.m_resolution) / 100, int(r.m_northMax) / 100);
 	Auxiliary expected(expectedBounds, r.m_EPSG, {
 		{ 1, {GDT_Float64, {512, 256}} },

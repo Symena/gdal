@@ -17,7 +17,7 @@ protected:
 	BlocksBuilder builder;
 	Warnings warnings;
 
-	Renderer createRenderer(const MapBox& region, int resolution = 1,
+	Renderer createRenderer(const Rectangle& region, int resolution = 1,
 		GDALRIOResampleAlg downsamplingAlgorithm = GDALRIOResampleAlg::GRIORA_NearestNeighbour,
 		GDALRIOResampleAlg upsamplingAlgorithm = GDALRIOResampleAlg::GRIORA_NearestNeighbour)
 	{
@@ -63,7 +63,7 @@ protected:
 
 TEST_F(RendererTest, fillWithNoDataValue)
 {
-	auto renderer = createRenderer(makeBox(0, 0, 4, 2), 2); // 2x1 pixels
+	auto renderer = createRenderer(makeRectangle(0, 0, 4, 2), 2); // 2x1 pixels
 	EXPECT_EQ(2, renderer.getNumPixels());
 
 	renderer.fillWithNoDataValue();
@@ -76,7 +76,7 @@ TEST_F(RendererTest, fillWithNoDataValue)
 
 TEST_F(RendererTest, readBlock_full)
 {
-	auto renderer = createRenderer(MapBox());
+	auto renderer = createRenderer(Rectangle());
 
 	auto block = makeBlock(0, 0, 4, 4, 2,
 		{ 0, 1,
@@ -93,18 +93,18 @@ TEST_F(RendererTest, readBlock_full)
 
 TEST_F(RendererTest, readBlock_partial)
 {
-	auto renderer = createRenderer(MapBox());
+	auto renderer = createRenderer(Rectangle());
 
 	auto block = makeBlock(0, 0, 8, 8, 2,
 		{  0,  1,  2,  3,
 		   4,  5,  6,  7,
 		   8,  9, 10, 11,
 		  12, 13, 14, 15 });
-	auto region = makeBox(4, 1, 7, 6);
+	auto region = makeRectangle(4, 1, 7, 6);
 
 	auto actual = renderer.readBlock(block, region);
 
-	ASSERT_TRUE(region == makeBox(4, 0, 8, 6)); // expanded
+	ASSERT_TRUE(region == makeRectangle(4, 0, 8, 6)); // expanded
 	checkPixels(actual,
 		{ 14, 15,
 		  10, 11,
@@ -113,20 +113,20 @@ TEST_F(RendererTest, readBlock_partial)
 
 TEST_F(RendererTest, readBlock_returnsNullForNoBlockData)
 {
-	auto renderer = createRenderer(MapBox());
+	auto renderer = createRenderer(Rectangle());
 
-	Block block(makeBox(0, 0, 1, 1), 1, nullptr, 0);
+	Block block(makeRectangle(0, 0, 1, 1), 1, nullptr, 0);
 	auto region = block.getBoundingBox();
 
 	auto actual = renderer.readBlock(block, region);
 
 	EXPECT_EQ(nullptr, actual);
-	EXPECT_EQ(makeBox(0, 0, 0, 0), region);
+	EXPECT_EQ(makeRectangle(0, 0, 0, 0), region);
 }
 
 TEST_F(RendererTest, readBlock_throwsForIncompleteStream)
 {
-	auto renderer = createRenderer(MapBox());
+	auto renderer = createRenderer(Rectangle());
 
 	auto block = makeBlock(0, 0, 2, 2, 1, { 0, 1, 2 });
 	auto region = block.getBoundingBox();
@@ -140,16 +140,16 @@ TEST_F(RendererTest, readBlock_throwsForIncompleteStream)
 TEST_F(RendererTest, resample_downsampling)
 {
 	// coarse target resolution = 5
-	auto renderer = createRenderer(MapBox(), 5, GRIORA_Bilinear, GRIORA_NearestNeighbour);
+	auto renderer = createRenderer(Rectangle(), 5, GRIORA_Bilinear, GRIORA_NearestNeighbour);
 
-	auto region = makeBox(0, 0, 9, 9); // 3x3 pixels, finer resolution = 3
+	auto region = makeRectangle(0, 0, 9, 9); // 3x3 pixels, finer resolution = 3
 	int16_t srcPixels[] =
 		{   0, 100, 200,
 		  300, 400, 500,
 		  600, 700, 800 };
 	auto actual = renderer.resample(srcPixels, region, 3);
 
-	ASSERT_TRUE(region == makeBox(0, 0, 10, 10)); // 2x2 pixels
+	ASSERT_TRUE(region == makeRectangle(0, 0, 10, 10)); // 2x2 pixels
 	checkPixels(actual,
 		{ 150, 275,
 		  525, 650 });
@@ -158,15 +158,15 @@ TEST_F(RendererTest, resample_downsampling)
 TEST_F(RendererTest, resample_upsampling)
 {
 	// fine target resolution = 3
-	auto renderer = createRenderer(MapBox(), 3, GRIORA_NearestNeighbour, GRIORA_Bilinear);
+	auto renderer = createRenderer(Rectangle(), 3, GRIORA_NearestNeighbour, GRIORA_Bilinear);
 
-	auto region = makeBox(0, 0, 8, 8); // 2x2 pixels, coarser resolution = 4
+	auto region = makeRectangle(0, 0, 8, 8); // 2x2 pixels, coarser resolution = 4
 	int16_t srcPixels[] =
 		{   0, 100,
 		  500, 600 };
 	auto actual = renderer.resample(srcPixels, region, 4);
 
-	ASSERT_TRUE(region == makeBox(0, 0, 9, 9)); // 3x3 pixels
+	ASSERT_TRUE(region == makeRectangle(0, 0, 9, 9)); // 3x3 pixels
 	checkPixels(actual,
 		{   0,  50, 100,
 		  250, 300, 350,
@@ -176,13 +176,13 @@ TEST_F(RendererTest, resample_upsampling)
 TEST_F(RendererTest, resample_regionIsCeiled)
 {
 	// coarse target resolution = 4
-	auto renderer = createRenderer(MapBox(), 4);
+	auto renderer = createRenderer(Rectangle(), 4);
 
-	auto region = makeBox(0, 0, 1, 1); // single pixel, finer resolution = 1
+	auto region = makeRectangle(0, 0, 1, 1); // single pixel, finer resolution = 1
 	int16_t srcPixel = 666;
 	auto actual = renderer.resample(&srcPixel, region, 1);
 
-	EXPECT_EQ(makeBox(0, 0, 4, 4), region); // expanded
+	EXPECT_EQ(makeRectangle(0, 0, 4, 4), region); // expanded
 	checkPixels(actual, { 666 });
 }
 
@@ -191,17 +191,17 @@ TEST_F(RendererTest, resample_regionIsCeiled)
 
 TEST_F(RendererTest, renderRegion_supportsEmptyRegion)
 {
-	auto renderer = createRenderer(makeBox(0, 0, 2, 2), 2); // 1x1 pixels
+	auto renderer = createRenderer(makeRectangle(0, 0, 2, 2), 2); // 1x1 pixels
 
 	renderer.fillWithNoDataValue();
-	renderer.renderRegion(nullptr, makeBox(0, 0, 0, 0));
+	renderer.renderRegion(nullptr, makeRectangle(0, 0, 0, 0));
 
 	checkPixels(renderer, { -9999 });
 }
 
 TEST_F(RendererTest, renderRegion_doesNotCopyNoDataPixels)
 {
-	auto renderer = createRenderer(makeBox(0, 0, 6, 2), 2); // 3x1 pixels
+	auto renderer = createRenderer(makeRectangle(0, 0, 6, 2), 2); // 3x1 pixels
 
 	int16_t src1[] = { 0, -9999,     1 };
 	int16_t src2[] = { 2, -9999, -9999 };
@@ -215,13 +215,13 @@ TEST_F(RendererTest, renderRegion_doesNotCopyNoDataPixels)
 
 TEST_F(RendererTest, renderRegion_realignsSourceCorrectly)
 {
-	auto renderer = createRenderer(makeBox(0, 0, 12, 8), 4); // 3x2 pixels
+	auto renderer = createRenderer(makeRectangle(0, 0, 12, 8), 4); // 3x2 pixels
 
 	int16_t src1[] = { 0, 1, 2 };
-	auto region1 = makeBox(-2, -1, 10, 3); // offset: (-0.5, -0.25) pixels
+	auto region1 = makeRectangle(-2, -1, 10, 3); // offset: (-0.5, -0.25) pixels
 
 	int16_t src2[] = { 3, 4, 5 };
-	auto region2 = makeBox(1, 2, 13, 6);   // offset: (0.25, 0.5) pixels
+	auto region2 = makeRectangle(1, 2, 13, 6);   // offset: (0.25, 0.5) pixels
 
 	renderer.fillWithNoDataValue();
 	renderer.renderRegion(src1, region1);
@@ -234,18 +234,18 @@ TEST_F(RendererTest, renderRegion_realignsSourceCorrectly)
 
 TEST_F(RendererTest, renderRegion_sourceIsClipped)
 {
-	auto renderer = createRenderer(makeBox(0, 0, 12, 8), 4); // 3x2 pixels
+	auto renderer = createRenderer(makeRectangle(0, 0, 12, 8), 4); // 3x2 pixels
 
 	int16_t src1[] = { 0, 1, 2, 3, 4, 5 };
-	auto region1 = makeBox(-7, 0, 17, 4);    // offset: (-1.75, 0) pixels
+	auto region1 = makeRectangle(-7, 0, 17, 4);    // offset: (-1.75, 0) pixels
 
 	int16_t src2[] = { 6, 7, 8, 9, 10, 11 }; // vertical
-	auto region2 = makeBox(8, -13, 12, 11);  // offset: (2, -3.25) pixels
+	auto region2 = makeRectangle(8, -13, 12, 11);  // offset: (2, -3.25) pixels
 
 	int16_t src3[] =
 		{ 666, 667,
 		  668, 669 };
-	auto region3 = makeBox(1000, -1000, 1008, -992); // completely outside
+	auto region3 = makeRectangle(1000, -1000, 1008, -992); // completely outside
 
 	renderer.fillWithNoDataValue();
 	renderer.renderRegion(src1, region1);
@@ -262,7 +262,7 @@ TEST_F(RendererTest, renderRegion_sourceIsClipped)
 
 TEST_F(RendererTest, render_noResampling)
 {
-	const auto region = makeBox(0, 0, 8, 6); // 4x3 pixels
+	const auto region = makeRectangle(0, 0, 8, 6); // 4x3 pixels
 
 	builder.addBlock().from(2, 0).to(8, 4).resolution(2).withData(
 		{ 0, 1, 2, // top-down!
@@ -283,7 +283,7 @@ TEST_F(RendererTest, render_noResampling)
 
 TEST_F(RendererTest, render_withResampling)
 {
-	const auto region = makeBox(0, 0, 8, 6); // 4x3 pixels
+	const auto region = makeRectangle(0, 0, 8, 6); // 4x3 pixels
 
 	builder.addBlock().from(0, 0).to(4, 8).resolution(4).withData(
 		{ 0,

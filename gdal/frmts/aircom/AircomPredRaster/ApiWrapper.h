@@ -24,8 +24,8 @@ public:
 private:
 	std::vector<unsigned long> getSectionNums();
 	GDALDataType getDataType(unsigned long sectionNum);
-	MapPoint getTileSizeInPixels(unsigned long sectionNum);
-	MapBox getBounds(unsigned long sectionNum, int& epsg);
+	Point getTileSizeInPixels(unsigned long sectionNum);
+	Rectangle getBounds(unsigned long sectionNum, int& epsg);
 	SectionInfos getSectionInfos();
 };
 

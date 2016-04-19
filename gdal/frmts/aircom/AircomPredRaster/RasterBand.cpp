@@ -42,7 +42,7 @@ void postProcessBlockRow(void* const data, const int widthInPixels,
 
 }
 
-RasterBand::RasterBand(Dataset* owningDataSet, MapPoint sizeInPixels,
+RasterBand::RasterBand(Dataset* owningDataSet, Point sizeInPixels,
 	int bandIndex, std::shared_ptr<ApiWrapper> tmpApiWrapper,
 	unsigned long sectionNum, const SectionInfo& sectionInfo)
 	: apiWrapper(std::move(tmpApiWrapper))
@@ -53,11 +53,11 @@ RasterBand::RasterBand(Dataset* owningDataSet, MapPoint sizeInPixels,
 	nBand = bandIndex;
 	eDataType = sectionInfo.dataType;
 
-	nRasterXSize = sizeInPixels.get<0>();
-	nRasterYSize = sizeInPixels.get<1>();
+	nRasterXSize = sizeInPixels.x();
+	nRasterYSize = sizeInPixels.y();
 
-	nBlockXSize = sectionInfo.tileSizeInPixels.get<0>();
-	nBlockYSize = sectionInfo.tileSizeInPixels.get<1>();
+	nBlockXSize = sectionInfo.tileSizeInPixels.x();
+	nBlockYSize = sectionInfo.tileSizeInPixels.y();
 
 	nBlocksPerRow = DIV_ROUND_UP(nRasterXSize, nBlockXSize);
 	nBlocksPerColumn = DIV_ROUND_UP(nRasterYSize, nBlockYSize);
@@ -98,7 +98,7 @@ CPLErr RasterBand::IReadBlock(int nXBlockOff, int nYBlockOff, void* pImage)
 {
 	try
 	{
-		const MapPoint blockIndex = { nXBlockOff, nYBlockOff };
+		const Point blockIndex = { nXBlockOff, nYBlockOff };
 		auto tileIterator = getPredRaster()->CreateTileIterator(sectionNum);
 
 		if (readBlock(tileIterator, blockIndex, pImage))
@@ -114,10 +114,10 @@ CPLErr RasterBand::IReadBlock(int nXBlockOff, int nYBlockOff, void* pImage)
 }
 
 // Returns false if there's no tile for this block, i.e., if it only contains no-data values.
-bool RasterBand::readBlock(IPredRasterTileIteratorPtr tileIterator, MapPoint blockIndex, void* data) const
+bool RasterBand::readBlock(IPredRasterTileIteratorPtr tileIterator, Point blockIndex, void* data) const
 {
 	IRasterTilePtr tile;
-	if (FAILED(tileIterator->raw_GetTile(blockIndex.get<0>(), blockIndex.get<1>(), &tile)))
+	if (FAILED(tileIterator->raw_GetTile(blockIndex.x(), blockIndex.y(), &tile)))
 	{
 		// missing tile
 		fillNoDataBlock(data);
@@ -228,7 +228,7 @@ void RasterBand::fillPartialBlock(IRasterTilePtr tile, void* blockData) const
 	}
 }
 
-void RasterBand::postProcessBlock(MapPoint blockIndex, void* data)
+void RasterBand::postProcessBlock(Point blockIndex, void* data)
 {
 	if (!noDataValue)
 		return;
@@ -236,8 +236,8 @@ void RasterBand::postProcessBlock(MapPoint blockIndex, void* data)
 	if (rowSegmentsInsidePredictionRadius.empty())
 		computeRowSegmentsInsidePredictionRadius();
 
-	const int startColumnIndex = blockIndex.get<0>() * nBlockXSize;
-	const int startRowIndex = blockIndex.get<1>() * nBlockYSize;
+	const int startColumnIndex = blockIndex.x() * nBlockXSize;
+	const int startRowIndex = blockIndex.y() * nBlockYSize;
 
 	char* const charData = static_cast<char*>(data);
 	const size_t blockRowSize = size_t(nBlockXSize) * (GDALGetDataTypeSize(eDataType) / 8);
@@ -301,8 +301,8 @@ void RasterBand::computeRowSegmentsInsidePredictionRadius()
 	const double txX = predData.nX_cm / 100.0;
 	const double txY = predData.nY_cm / 100.0;
 
-	const double leftmostPixelCenter = boundingBox.min_corner().get<0>() + 0.5 * res;
-	const double topmostPixelCenter = boundingBox.max_corner().get<1>() - 0.5 * res;
+	const double leftmostPixelCenter = boundingBox.min_corner().x() + 0.5 * res;
+	const double topmostPixelCenter = boundingBox.max_corner().y() - 0.5 * res;
 
 	rowSegmentsInsidePredictionRadius.resize(nRasterYSize);
 	for (int rowIndex = 0; rowIndex < nRasterYSize; ++rowIndex)

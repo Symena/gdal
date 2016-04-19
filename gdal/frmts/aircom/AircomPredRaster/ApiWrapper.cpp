@@ -53,7 +53,7 @@ GDALDataType ApiWrapper::getDataType(unsigned long sectionNum)
 	}
 }
 
-MapPoint ApiWrapper::getTileSizeInPixels(unsigned long sectionNum)
+Point ApiWrapper::getTileSizeInPixels(unsigned long sectionNum)
 {
 	auto firstTile = getPredRaster()->CreateTileIterator(sectionNum)->GetNextTile();
 
@@ -63,16 +63,16 @@ MapPoint ApiWrapper::getTileSizeInPixels(unsigned long sectionNum)
 	return { tileRegion.m_width, tileRegion.m_height };
 }
 
-MapBox ApiWrapper::getBounds(unsigned long sectionNum, int& epsg)
+Rectangle ApiWrapper::getBounds(unsigned long sectionNum, int& epsg)
 {
 	_REGIONEX region;
 	getPredRaster()->GetRegionEx(sectionNum, &region);
 
-	const MapPoint topLeft(int(region.m_eastMin / 100), int(region.m_northMax / 100));
+	const Point topLeft(int(region.m_eastMin / 100), int(region.m_northMax / 100));
 
 	const int res = region.m_resolution / 100;
-	const MapPoint bottomLeft(topLeft.get<0>(), topLeft.get<1>() - region.m_height * res);
-	const MapPoint topRight(topLeft.get<0>() + region.m_width * res, topLeft.get<1>());
+	const Point bottomLeft(topLeft.x(), topLeft.y() - region.m_height * res);
+	const Point topRight(topLeft.x() + region.m_width * res, topLeft.y());
 
 	epsg = region.m_EPSG;
 	return { bottomLeft, topRight };
