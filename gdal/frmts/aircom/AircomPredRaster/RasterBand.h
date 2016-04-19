@@ -20,6 +20,8 @@ public:
 	virtual CPLErr SetNoDataValue(double value) override;
 	virtual double GetNoDataValue(int* pbSuccess = nullptr) override;
 
+	virtual double GetScale(int* pbSuccess = nullptr) override;
+
 	bool readBlock(IPredRasterTileIteratorPtr tileIterator, MapPoint blockIndex, void* data) const;
 	void postProcessBlock(MapPoint blockIndex, void* data);
 

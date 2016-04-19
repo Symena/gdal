@@ -83,6 +83,18 @@ double RasterBand::GetNoDataValue(int* pbSuccess)
 	return noDataValue.get_value_or(std::numeric_limits<double>::quiet_NaN());
 }
 
+double RasterBand::GetScale(int* pbSuccess)
+{
+	if (sectionNum == 1) // angles, stored in 1/100th degrees
+	{
+		if (pbSuccess)
+			*pbSuccess = TRUE;
+		return 0.01;
+	}
+
+	return GDALRasterBand::GetScale(pbSuccess);
+}
+
 CPLErr RasterBand::IReadBlock(int nXBlockOff, int nYBlockOff, void* pImage)
 {
 	try
