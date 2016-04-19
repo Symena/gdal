@@ -178,7 +178,7 @@ TEST_F(PredRasterDatasetTests, AutoCompleteAuxiliaryInGapFile)
 				throw std::runtime_error(format("Could not create tmp file '%s': %s", path.string(), strerror(errno)));
 			fclose(fp);
 		}
-		~SelfDeletingFile() { remove(path.string().c_str()); }
+		~SelfDeletingFile() { bfs::remove(path); }
 	};
 	SelfDeletingFile gapFile("PredRasterTest-%%%%%%%%%.gap");
 
