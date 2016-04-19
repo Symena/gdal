@@ -23,6 +23,16 @@ task :prepare_build_environment => :clean_directory do
   ENV['GDAL_LINK_BOOST_MAJOR_MINOR'] = boost_major_minor
 end
 
+task :build_32_debug => :prepare_build_environment do
+  FileUtils.copy_entry 'gdal', 'gdal_32_debug'
+  Symenabuild.launch_checked("build_32_debug.bat")
+end
+
+task :build_32_release => :prepare_build_environment do
+  FileUtils.copy_entry 'gdal', 'gdal_32_release'
+  Symenabuild.launch_checked("build_32_release.bat")
+end
+
 task :build_64_debug => :prepare_build_environment do
   FileUtils.copy_entry 'gdal', 'gdal_64_debug'
   Symenabuild.launch_checked("build_64_debug.bat")
@@ -33,7 +43,7 @@ task :build_64_release => :prepare_build_environment do
   Symenabuild.launch_checked("build_64_release.bat")
 end
 
-multitask :build => [:build_64_debug, :build_64_release]
+multitask :build => [:build_32_debug, :build_32_release, :build_64_debug, :build_64_release]
 
 task :process_executables => :build do
   Symenabuild.post_process_executables(*Dir.glob('build*/bin/gdal200.dll'))
@@ -59,9 +69,13 @@ task :publish_package => :test_package do #here we build again, and then publish
 end
 
 task :upload_artifacts => :test_package do
+  result_artifact('buildd32/bin/gdal200.dll', 'x86/debug/gdal200.dll')
+  result_artifact('buildo32/bin/gdal200.dll', 'x86/gdal200.dll')
   result_artifact('buildd64/bin/gdal200.dll', 'debug/gdal200.dll')
   result_artifact('buildo64/bin/gdal200.dll', 'gdal200.dll')
   
+  result_artifact('buildd32/lib/gdal_i.lib',  'x86/debug/gdal_i.lib')
+  result_artifact('buildo32/lib/gdal_i.lib',  'x86/gdal_i.lib')
   result_artifact('buildd64/lib/gdal_i.lib',  'debug/gdal_i.lib')
   result_artifact('buildo64/lib/gdal_i.lib',  'gdal_i.lib')
   
