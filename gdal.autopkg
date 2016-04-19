@@ -40,19 +40,7 @@ information formats. This NuGet package is created by Symena.";
       bin: buildo64\bin\gdal200.dll;
     };
 
-    [x86,debug] {
-      lib: buildd32\lib\gdal_i.lib;
-      symbols: buildd32\bin\gdal200.pdb;
-      bin: buildd32\bin\gdal200.dll;
-    };
-
-    [x86,release] {
-      lib: buildo32\lib\gdal_i.lib;
-      symbols: buildo32\bin\gdal200.pdb;
-      bin: buildo32\bin\gdal200.dll;
-    };
-    
-	net += {
+    net += {
       #output { package = redist; };
       #destination: { \build\net };
       "net\gdal-symena.redist.targets";
@@ -65,8 +53,5 @@ information formats. This NuGet package is created by Symena.";
     // define GDAL_LIB as absolute path to the .lib file (using forward slashes instead of backslashes)
     [x64,debug]   { Defines += @"GDAL_LIB=""$(MSBuildThisFileDirectory.Replace('\', '/'))lib/x64/Debug/gdal_i.lib"""; };
     [x64,release] { Defines += @"GDAL_LIB=""$(MSBuildThisFileDirectory.Replace('\', '/'))lib/x64/Release/gdal_i.lib"""; };
-
-    [x86,debug]   { Defines += @"GDAL_LIB=""$(MSBuildThisFileDirectory.Replace('\', '/'))lib/Win32/Debug/gdal_i.lib"""; };
-    [x86,release] { Defines += @"GDAL_LIB=""$(MSBuildThisFileDirectory.Replace('\', '/'))lib/Win32/Release/gdal_i.lib"""; };
   };
 }
