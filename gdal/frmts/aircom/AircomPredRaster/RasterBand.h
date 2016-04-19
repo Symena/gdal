@@ -1,7 +1,5 @@
 #pragma once
 
-#include "gdal_pam.h"
-
 #include "Dataset.h"
 
 namespace aircom { namespace pred_raster {

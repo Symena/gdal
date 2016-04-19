@@ -19,10 +19,13 @@ Ptr createComInstance(const CLSID& classID, const char* interfaceName)
 		return ptr;
 
 	LPOLESTR classIDString = L"";
-	StringFromCLSID(classID, &classIDString);
+	const auto hr = StringFromCLSID(classID, &classIDString);
 
 	const auto msg = format("Failed to create COM interface %s using COM class ID %s",
 		interfaceName, classIDString);
+
+	if (hr == S_OK)
+		CoTaskMemFree(classIDString);
 
 	throw std::runtime_error(msg);
 }
@@ -92,7 +95,7 @@ IAircomPredAccess4Ptr PredRasterFactory::createPredAccess(const PredAccessKey& k
 	const _bstr_t predictionsFolder(key.predictionsFolder.wstring().c_str());
 
 	constexpr unsigned short retryCount = 2;
-	unsigned short statusCode = 0;
+	unsigned short statusCode = 0; // must be preinitialized - the API doesn't set it on success!
 	predAccess->Initialise(predictionsFolder, _bstr_t(), retryCount, &statusCode);
 
 	if (statusCode != 0)
@@ -112,10 +115,10 @@ IPredRaster5Ptr PredRasterFactory::createPredRaster(const ApiParams& params)
 	static std::mutex mutex;
 	std::lock_guard<std::mutex> lock(mutex);
 
-	auto paramsCopy = params;
+	auto mutablePredData = params.predData;
 	unsigned long rasterHandle;
 	unsigned short statusCode = 0;
-	predAccess->ExtractPathlossPredictionRaster(&paramsCopy.predData, &rasterHandle, &statusCode);
+	predAccess->ExtractPathlossPredictionRaster(&mutablePredData, &rasterHandle, &statusCode);
 
 	if (statusCode != 0)
 	{

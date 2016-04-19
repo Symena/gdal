@@ -30,15 +30,14 @@ void fillWithNoDataValue(const T noDataValue, void* const data, const size_t num
 template <typename T>
 void postProcessBlockRow(void* const data, const int widthInPixels,
 	const RasterBand::RowSegment blockRowSegmentInsidePredictionRadius,
-	const double noDataValue)
+	const T noDataValue)
 {
 	T* const typedData = static_cast<T*>(data);
-	const T typedNoDataValue = static_cast<T>(noDataValue);
 
 	for (int x = 0; x < blockRowSegmentInsidePredictionRadius.start; ++x)
-		typedData[x] = typedNoDataValue;
+		typedData[x] = noDataValue;
 	for (int x = blockRowSegmentInsidePredictionRadius.end; x < widthInPixels; ++x)
-		typedData[x] = typedNoDataValue;
+		typedData[x] = noDataValue;
 }
 
 }
@@ -243,7 +242,7 @@ void RasterBand::postProcessBlock(MapPoint blockIndex, void* data)
 	char* const charData = static_cast<char*>(data);
 	const size_t blockRowSize = size_t(nBlockXSize) * (GDALGetDataTypeSize(eDataType) / 8);
 
-	const auto computeBlockRowSegment = [&, this](int y) -> RowSegment
+	const auto computeBlockRowSegment = [this, startColumnIndex, startRowIndex](int y) -> RowSegment
 	{
 		const auto rowIndex = startRowIndex + y;
 		if (rowIndex >= rowSegmentsInsidePredictionRadius.size())
@@ -258,35 +257,34 @@ void RasterBand::postProcessBlock(MapPoint blockIndex, void* data)
 		};
 	};
 
+	const auto processRows = [=](auto typedNoDataValue)
+	{
+		for (int y = 0; y < nBlockYSize; ++y)
+			postProcessBlockRow<decltype(typedNoDataValue)>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), typedNoDataValue);
+	};
+
 	switch (eDataType)
 	{
 	case GDT_Byte:
-		for (int y = 0; y < nBlockYSize; ++y)
-			postProcessBlockRow<std::uint8_t>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), *noDataValue);
+		processRows(static_cast<std::uint8_t>(*noDataValue));
 		break;
 	case GDT_Int16:
-		for (int y = 0; y < nBlockYSize; ++y)
-			postProcessBlockRow<std::int16_t>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), *noDataValue);
+		processRows(static_cast<std::int16_t>(*noDataValue));
 		break;
 	case GDT_UInt16:
-		for (int y = 0; y < nBlockYSize; ++y)
-			postProcessBlockRow<std::uint16_t>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), *noDataValue);
+		processRows(static_cast<std::uint16_t>(*noDataValue));
 		break;
 	case GDT_Int32:
-		for (int y = 0; y < nBlockYSize; ++y)
-			postProcessBlockRow<std::int32_t>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), *noDataValue);
+		processRows(static_cast<std::int32_t>(*noDataValue));
 		break;
 	case GDT_UInt32:
-		for (int y = 0; y < nBlockYSize; ++y)
-			postProcessBlockRow<std::uint32_t>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), *noDataValue);
+		processRows(static_cast<std::uint32_t>(*noDataValue));
 		break;
 	case GDT_Float32:
-		for (int y = 0; y < nBlockYSize; ++y)
-			postProcessBlockRow<float>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), *noDataValue);
+		processRows(static_cast<float>(*noDataValue));
 		break;
 	case GDT_Float64:
-		for (int y = 0; y < nBlockYSize; ++y)
-			postProcessBlockRow<double>(charData + y * blockRowSize, nBlockXSize, computeBlockRowSegment(y), *noDataValue);
+		processRows(static_cast<double>(*noDataValue));
 		break;
 	}
 }

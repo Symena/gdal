@@ -60,16 +60,15 @@ SectionInfos parseSectionInfos(const wptree& sectionsNode)
 	return result;
 }
 
-void addMapPointChild(wptree& tree, const std::wstring& path, const MapPoint& mapPoint)
+void addPoint(wptree& tree, const std::wstring& path, const MapPoint& point)
 {
-	wptree x, y, values;
-	x.put(L"", mapPoint.get<0>());
-	y.put(L"", mapPoint.get<1>());
+	wptree x, y;
+	x.put(L"", point.get<0>());
+	y.put(L"", point.get<1>());
 
-	values.push_back(std::make_pair(L"", x));
-	values.push_back(std::make_pair(L"", y));
-
-	tree.add_child(path, values);
+	auto& pointNode = tree.add_child(path, wptree());
+	pointNode.push_back(std::make_pair(L"", x));
+	pointNode.push_back(std::make_pair(L"", y));
 }
 
 }
@@ -80,19 +79,19 @@ Auxiliary::Auxiliary(const MapBox& boundingBox, int epsg, SectionInfos sectionIn
 	, sectionInfos(std::move(sectionInfos))
 {}
 
-Auxiliary::Auxiliary(const wptree& auxiliaryNode)
-	: boundingBox(parseBoundingBox(auxiliaryNode.get_child(L"BoundingBox")))
-	, epsg(auxiliaryNode.get<int>(L"EPSG"))
-	, sectionInfos(parseSectionInfos(auxiliaryNode.get_child(L"Sections")))
+Auxiliary::Auxiliary(const wptree& auxiliaryNode) : Auxiliary
+	( parseBoundingBox(auxiliaryNode.get_child(L"BoundingBox"))
+	, auxiliaryNode.get<int>(L"EPSG")
+	, parseSectionInfos(auxiliaryNode.get_child(L"Sections")))
 {}
 
-boost::property_tree::wptree Auxiliary::asPropertyTree() const
+wptree Auxiliary::asPropertyTree() const
 {
 	wptree auxiliaryNode;
 
 	auto& boundingBoxNode = auxiliaryNode.add_child(L"BoundingBox", wptree());
-	addMapPointChild(boundingBoxNode, L"BottomLeft", boundingBox.min_corner());
-	addMapPointChild(boundingBoxNode, L"TopRight", boundingBox.max_corner());
+	addPoint(boundingBoxNode, L"BottomLeft", boundingBox.min_corner());
+	addPoint(boundingBoxNode, L"TopRight", boundingBox.max_corner());
 
 	auxiliaryNode.add(L"EPSG", epsg);
 
@@ -101,22 +100,14 @@ boost::property_tree::wptree Auxiliary::asPropertyTree() const
 	{
 		const auto dataType = sectionPair.second.dataType;
 
-		std::wstring dataTypeString;
-		for (const auto& kv : dataTypesMap)
-		{
-			if (kv.second == dataType)
-			{
-				dataTypeString = kv.first;
-				break;
-			}
-		}
-
-		if (dataTypeString.empty())
+		const auto it = std::find_if(dataTypesMap.begin(), dataTypesMap.end(),
+			[=](auto& kv) { return kv.second == dataType; });
+		if (it == dataTypesMap.end())
 			throw std::runtime_error(format("No string representation found for GDALDataType %d", dataType));
 
 		auto& sectionNode = sectionsNode.add_child(std::to_wstring(sectionPair.first), wptree());
-		sectionNode.add(L"DataType", dataTypeString);
-		addMapPointChild(sectionNode, L"TileSizeInPixels", sectionPair.second.tileSizeInPixels);
+		sectionNode.add(L"DataType", it->first);
+		addPoint(sectionNode, L"TileSizeInPixels", sectionPair.second.tileSizeInPixels);
 	}
 
 	return auxiliaryNode;
@@ -146,15 +137,13 @@ std::ostream& operator<<(std::ostream& stream, const SectionInfos& sectionInfos)
 
 std::ostream& operator<<(std::ostream& stream, const Auxiliary& auxiliary)
 {
-	stream << "{"
+	stream << "{ "
 		<< auxiliary.boundingBox
 		<< ", EPSG: " << auxiliary.epsg
 		<< ", sections: " << auxiliary.sectionInfos
-		<< "}";
+		<< " }";
 
 	return stream;
 }
-
-
 
 }}

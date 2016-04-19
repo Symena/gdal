@@ -3,8 +3,7 @@
 #include "StringUtils.h"
 
 #include <boost/algorithm/string/case_conv.hpp>
-#include <boost/format.hpp>
-#include <stdint.h>
+#include <cstdint>
 
 using boost::property_tree::wptree;
 

@@ -7,7 +7,7 @@ namespace aircom { namespace pred_raster {
 
 ApiWrapper::ApiWrapper(ApiParams apiParams, IPredRaster5Ptr predRaster)
 	: params(std::move(apiParams)) 
-	, predRaster(predRaster)
+	, predRaster(std::move(predRaster))
 {}
 
 IPredRaster5Ptr ApiWrapper::getPredRaster()
@@ -20,7 +20,7 @@ IPredRaster5Ptr ApiWrapper::getPredRaster()
 
 std::vector<unsigned long> ApiWrapper::getSectionNums()
 {
-	auto numSections = getPredRaster()->GetNumSections();
+	const auto numSections = getPredRaster()->GetNumSections();
 
 	std::vector<unsigned long> sections(numSections);
 	getPredRaster()->GetSectionNumList(numSections, sections.data());

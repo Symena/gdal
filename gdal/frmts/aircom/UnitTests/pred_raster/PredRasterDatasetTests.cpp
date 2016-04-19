@@ -79,11 +79,6 @@ struct PredRasterDatasetTests : public Test
 	}
 };
 
-TEST(PredRasterDataset, CreateApiwrapper_ExceptionOnIncompleteData)
-{
-	EXPECT_THROW(Dataset::CreateApiWrapper(wptree()), boost::property_tree::ptree_bad_path);
-}
-
 TEST_F(PredRasterDatasetTests, ParsesGapSuccessful)
 {
 	Dataset dataset(sampleGapTree, apiWrapper, warnings);
@@ -188,7 +183,7 @@ TEST_F(PredRasterDatasetTests, AutoCompleteAuxiliaryInGapFile)
 	SelfDeletingFile gapFile("PredRasterTest-%%%%%%%%%.gap");
 
 	// When
-	Dataset::AutoCompleteAuxiliary(actualGapTree, gapFile.path, *apiWrapper);
+	Dataset::autoCompleteAuxiliary(actualGapTree, gapFile.path, *apiWrapper);
 	
 	// Then
 	wptree writtenGapTree;

@@ -4,13 +4,12 @@
 #include <mutex>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
 #include "ogr_spatialref.h"
 
-#include "WarningsReporter.h"
 #include "RasterBand.h"
+#include "WarningsReporter.h"
 
 using namespace boost::property_tree;
 namespace bfs = boost::filesystem;
@@ -21,9 +20,9 @@ namespace {
 
 wptree loadJson(const bfs::path& path)
 {
-	std::wifstream jsonStream(path.string());
+	std::wifstream jsonStream(path.wstring());
 	wptree tree;
-	json_parser::read_json(jsonStream, tree);
+	read_json(jsonStream, tree);
 	return tree;
 }
 
@@ -36,10 +35,9 @@ Auxiliary parseOrLoadAuxiliary(const wptree& gapTree, ApiWrapper& wrapper, Warni
 		{
 			return Auxiliary(auxiliaryNode.get());
 		}
-		catch (const std::runtime_error& e)
+		catch (const std::exception& e)
 		{
-			std::string warning = format("Failed to load auxiliary info from json. Falling back to API. (%s)", e.what());
-			warnings.add(warning);
+			warnings.add("Failed to load auxiliary info from json. Falling back to API. (%s)", e.what());
 		}
 
 	return wrapper.getAuxiliary();
@@ -64,14 +62,17 @@ GDALDataset* Dataset::Open(GDALOpenInfo* openInfo)
 	try
 	{
 		auto gapTree = loadJson(path);
-		
-		auto apiWrapper = CreateApiWrapper(gapTree);
+
+		const auto apiParams = ApiParams(gapTree.get_child(L"EnterprisePredRasterApi"));
+		auto apiWrapper = std::make_shared<ApiWrapper>(apiParams);
+
 		if (openInfo->eAccess != GA_ReadOnly)
 		{
 			CPLError(CE_Failure, CPLE_NotSupported, "The Aircom ENTERPRISE Prediction driver only supports readonly access to existing datasets.\n");
 			return nullptr;
 		}
-		AutoCompleteAuxiliary(gapTree, path, *apiWrapper);
+
+		autoCompleteAuxiliary(gapTree, path, *apiWrapper);
 
 		auto ds = std::make_unique<Dataset>(gapTree, std::move(apiWrapper), warnings);
 		ds->SetDescription(openInfo->pszFilename);
@@ -90,19 +91,13 @@ GDALDataset* Dataset::Open(GDALOpenInfo* openInfo)
 	return nullptr;
 }
 
-std::shared_ptr<ApiWrapper> Dataset::CreateApiWrapper(const wptree& gapTree)
-{
-	auto apiParams = ApiParams(gapTree.get_child(L"EnterprisePredRasterApi"));
-	return std::make_shared<ApiWrapper>(apiParams);
-}
-
-void Dataset::AutoCompleteAuxiliary(wptree& gapTree, const bfs::path& path, ApiWrapper& apiWrapper)
+void Dataset::autoCompleteAuxiliary(wptree& gapTree, const bfs::path& path, ApiWrapper& apiWrapper)
 {
 	auto& auxiliaryNode = gapTree.get_child_optional(L"Auxiliary");
 	if (auxiliaryNode && boost::to_lower_copy(auxiliaryNode->data()) == L"autocomplete")
 	{
 		auxiliaryNode.get().swap(apiWrapper.getAuxiliary().asPropertyTree());
-		boost::property_tree::write_json(path.string(), gapTree);
+		write_json(path.string(), gapTree);
 	}
 }
 
@@ -112,8 +107,7 @@ Dataset::Dataset(const wptree& gapTree, std::shared_ptr<ApiWrapper> tmpApiWrappe
 {
 	setBoundingBox();
 
-	auto meta = gapTree.get_child_optional(L"Meta");
-	if (meta)
+	if (auto meta = gapTree.get_child_optional(L"Meta"))
 	{
 		for (auto& metaDomain : meta.get())
 		{
@@ -139,11 +133,6 @@ Dataset::Dataset(const wptree& gapTree, std::shared_ptr<ApiWrapper> tmpApiWrappe
 	}
 }
 
-CPLErr Dataset::SetGeoTransform(double* padfTransform)
-{
-	return CPLErr::CE_Failure;
-}
-
 CPLErr Dataset::GetGeoTransform(double* padfTransform)
 {
 	if (!padfTransform)
@@ -164,6 +153,7 @@ CPLErr Dataset::GetGeoTransform(double* padfTransform)
 
 const char* Dataset::GetProjectionRef()
 {
+	// getting the projection based on EPSG codes is expensive, so cache them
 	static std::mutex mutex;
 	static std::map<int, std::string> cachedProjections;
 
@@ -193,8 +183,8 @@ const char* Dataset::GetProjectionRef()
 void Dataset::setBoundingBox()
 {
 	const double res = getResolution();
-	nRasterXSize = static_cast<int>(std::round(width(getBoundingBox()) / res));
-	nRasterYSize = static_cast<int>(std::round(height(getBoundingBox()) / res));
+	nRasterXSize = static_cast<int>(std::ceil(width(getBoundingBox()) / res));
+	nRasterYSize = static_cast<int>(std::ceil(height(getBoundingBox()) / res));
 
 	if (nRasterXSize <= 0 || nRasterYSize <= 0)
 		throw std::runtime_error(format("Invalid dimensions: %d x %d", nRasterXSize, nRasterYSize));
