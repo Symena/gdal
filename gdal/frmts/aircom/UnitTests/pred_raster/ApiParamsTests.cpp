@@ -2,9 +2,6 @@
 
 #include <gmock/gmock.h>
 
-#include <boost/property_tree/ptree.hpp>
-#include <sstream>
-
 namespace aircom { namespace pred_raster {
 
 using boost::property_tree::wptree;
@@ -75,23 +72,22 @@ TEST_F(ApiParamsTests, ParamsParsedCorrectly)
 	EXPECT_EQ(L"123-456-789", apiParams.predAccessClassID);
 	EXPECT_EQ(L"123-456", apiParams.predRasterClassID);
 
-	PredData expectedPredData;
-	expectedPredData.nX_cm = 1;
-	expectedPredData.nY_cm = 2;
-	expectedPredData.nAntennaHeight_cm = 3;
-	expectedPredData.nGroundHeight_cm = 4;
-	expectedPredData.nResolution_cm = 5;
-	expectedPredData.nRadius_cm = 6;
-	expectedPredData.fFrequency_MHz = 7.1f;
-	expectedPredData.nModelCRC = 8;
-	expectedPredData.nPredFlags = 9;
-	expectedPredData.nAntennaCRC = 10;
-	expectedPredData.fAntennaMechanicalTilt_deg = 11.1;
-	expectedPredData.fAntennaAzimuth_deg = 12.1;
-	expectedPredData.nCwWeight = 13;
-	expectedPredData.fCwRolloff = 14.1f;
+	const auto& pd = apiParams.predData;
 
-	EXPECT_TRUE( 0 == std::memcmp( &expectedPredData, &apiParams.predData, sizeof(PredData) ) ) << "PredData mismatch";
+	EXPECT_EQ( 1,    pd.nX_cm);
+	EXPECT_EQ( 2,    pd.nY_cm);
+	EXPECT_EQ( 3,    pd.nAntennaHeight_cm);
+	EXPECT_EQ( 4,    pd.nGroundHeight_cm);
+	EXPECT_EQ( 5,    pd.nResolution_cm);
+	EXPECT_EQ( 6,    pd.nRadius_cm);
+	EXPECT_EQ( 7.1f, pd.fFrequency_MHz);
+	EXPECT_EQ( 8,    pd.nModelCRC);
+	EXPECT_EQ( 9,    pd.nPredFlags);
+	EXPECT_EQ(10,    pd.nAntennaCRC);
+	EXPECT_EQ(11.1,  pd.fAntennaMechanicalTilt_deg);
+	EXPECT_EQ(12.1,  pd.fAntennaAzimuth_deg);
+	EXPECT_EQ(13,    pd.nCwWeight);
+	EXPECT_EQ(14.1f, pd.fCwRolloff);
 }
 
 }}
