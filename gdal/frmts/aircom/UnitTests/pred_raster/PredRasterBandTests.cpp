@@ -14,7 +14,7 @@ namespace aircom { namespace pred_raster {
 struct PredRasterBandTest : public Test
 {
 	MockTileIterator tileIterator;
-	ApiParams apiParams = ApiParams(L"", PredData(), L"", L"", Section::Unspecified);
+	ApiParams apiParams = ApiParams({}, L"", PredData(), L"", L"", Section::Unspecified);
 };
 
 TEST_F(PredRasterBandTest, readBlock_fillsBlocksWithoutTileWithNoDataValue)

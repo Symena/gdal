@@ -6,6 +6,7 @@
 #include <cstdint>
 
 using boost::property_tree::wptree;
+using boost::filesystem::path;
 
 namespace aircom { namespace pred_raster {
 
@@ -49,19 +50,28 @@ Section parseSection(const boost::optional<std::wstring>& optionalSection)
 	throw std::runtime_error(ws2ns(format(L"Unknown section '%1%'", section)));
 }
 
+path getPredictionFolder(const path& predictionFolder, const path& gapFilePath)
+{
+	if (predictionFolder.is_absolute())
+		return predictionFolder;
+
+	return gapFilePath.parent_path() / predictionFolder;
 }
 
-ApiParams::ApiParams(boost::filesystem::path predictionFolder, PredData predData, std::wstring predAccessClassID, 
-					 std::wstring predRasterClassID, Section section)
-	: predictionFolder(std::move(predictionFolder))
+}
+
+ApiParams::ApiParams(const path& gapFilePath, const path& predictionFolder, PredData predData,
+					 std::wstring predAccessClassID, std::wstring predRasterClassID, Section section)
+	: predictionFolder(getPredictionFolder(predictionFolder, gapFilePath))
 	, predData(std::move(predData))
 	, predAccessClassID(std::move(predAccessClassID))
 	, predRasterClassID(std::move(predRasterClassID))
 	, section(section)
 {}
 
-ApiParams::ApiParams(const wptree& apiNode) : ApiParams
-	( apiNode.get<std::wstring>(L"PredictionFolder")
+ApiParams::ApiParams(const wptree& apiNode, const path& gapFilePath) : ApiParams
+	( gapFilePath
+	, apiNode.get<std::wstring>(L"PredictionFolder")
 	, parsePredData(apiNode.get_child(L"PredData"))
 	, apiNode.get<std::wstring>(L"PredAccessClassID")
 	, apiNode.get<std::wstring>(L"PredRasterClassID")

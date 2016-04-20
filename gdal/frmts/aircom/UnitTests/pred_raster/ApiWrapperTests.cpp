@@ -11,7 +11,7 @@ namespace aircom { namespace pred_raster {
 
 TEST(ApiWrapper, getAuxiliary)
 {
-	ApiParams params("z:/ombie", PredData(), L"123-456", L"567-890", Section::Unspecified);
+	ApiParams params("z:/o/m/b/i.gap", "z:/ombie", PredData(), L"123-456", L"567-890", Section::Unspecified);
 	MockPredRaster predRaster;
 	ApiWrapper apiWrapper(params, &predRaster);
 

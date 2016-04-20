@@ -41,32 +41,32 @@ struct ApiParamsTests : public testing::Test
 
 TEST_F(ApiParamsTests, NoSectionSpecified)
 {	
-	ApiParams apiParams(apiNode);
+	ApiParams apiParams(apiNode, {});
 	EXPECT_EQ(Section::Unspecified, apiParams.section);
 }
 
 TEST_F(ApiParamsTests, ExceptionOnInvalidSection)
 {
 	apiNode.add(L"Section", L"invalid");
-	EXPECT_THROW(ApiParams{apiNode}, std::runtime_error);
+	EXPECT_THROW(ApiParams(apiNode, {}), std::runtime_error);
 }
 
 TEST_F(ApiParamsTests, WithSpecifiedSection)
 {
 	apiNode.add(L"Section", L"pathloss");
-	ApiParams apiParams1(apiNode);
+	ApiParams apiParams1(apiNode, {});
 
 	EXPECT_EQ(Section::PathlossOnly, apiParams1.section);
 
 	apiNode.put(L"Section", L"inclination");
-	ApiParams apiParams2(apiNode);
+	ApiParams apiParams2(apiNode, {});
 
 	EXPECT_EQ(Section::InclinationOnly, apiParams2.section);
 }
 
 TEST_F(ApiParamsTests, ParamsParsedCorrectly)
 {
-	ApiParams apiParams(apiNode);
+	ApiParams apiParams(apiNode, {});
 
 	EXPECT_EQ(boost::filesystem::path(L"c:/pred"), apiParams.predictionFolder);
 	EXPECT_EQ(L"123-456-789", apiParams.predAccessClassID);
@@ -88,6 +88,14 @@ TEST_F(ApiParamsTests, ParamsParsedCorrectly)
 	EXPECT_EQ(12.1,  pd.fAntennaAzimuth_deg);
 	EXPECT_EQ(13,    pd.nCwWeight);
 	EXPECT_EQ(14.1f, pd.fCwRolloff);
+}
+
+TEST_F(ApiParamsTests, predictionFolder_relativeToGapFile)
+{
+	apiNode.get_child(L"PredictionFolder").put_value(L"../../n/e");
+	ApiParams apiParams(apiNode, "z:/o/m/b/i.gap");
+
+	EXPECT_EQ(boost::filesystem::path(L"z:/o/m/b/../../n/e"), apiParams.predictionFolder);
 }
 
 }}

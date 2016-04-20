@@ -63,7 +63,7 @@ GDALDataset* Dataset::Open(GDALOpenInfo* openInfo)
 	{
 		auto gapTree = loadJson(path);
 
-		const auto apiParams = ApiParams(gapTree.get_child(L"EnterprisePredRasterApi"));
+		const auto apiParams = ApiParams(gapTree.get_child(L"EnterprisePredRasterApi"), path);
 		auto apiWrapper = std::make_shared<ApiWrapper>(apiParams);
 
 		if (openInfo->eAccess != GA_ReadOnly)

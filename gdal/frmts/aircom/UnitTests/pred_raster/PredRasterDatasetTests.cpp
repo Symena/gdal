@@ -27,7 +27,7 @@ struct PredRasterDatasetTests : public Test
 	PredRasterDatasetTests()
 		: sampleGapTree(createSampleGapTree())
 		, apiNode(sampleGapTree.get_child(L"EnterprisePredRasterApi"))
-		, apiWrapper(std::make_shared<MockApiWrapper>(ApiParams(apiNode)))
+		, apiWrapper(std::make_shared<MockApiWrapper>(ApiParams(apiNode, "z:/o/m/b/i.gap")))
 	{}
 
 	static wptree createSampleGapTree()

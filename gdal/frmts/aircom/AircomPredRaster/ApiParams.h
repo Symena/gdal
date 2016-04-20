@@ -25,9 +25,9 @@ struct ApiParams
 	// optional params
 	Section section;
 
-	ApiParams(boost::filesystem::path predictionFolder, PredData predData, std::wstring predAccessClassID, 
-			  std::wstring predRasterClassID, Section section);
-	explicit ApiParams(const boost::property_tree::wptree& apiNode);
+	ApiParams(const boost::filesystem::path& gapFilePath, const boost::filesystem::path& predictionFolder,
+			  PredData predData, std::wstring predAccessClassID, std::wstring predRasterClassID, Section section);
+	ApiParams(const boost::property_tree::wptree& apiNode, const boost::filesystem::path& gapFilePath);
 };
 
 }}
