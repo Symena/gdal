@@ -8,6 +8,8 @@
 #include <thread>
 #include <unordered_set>
 
+using namespace boost::filesystem;
+
 namespace aircom { namespace pred_raster {
 
 namespace {
@@ -44,14 +46,16 @@ std::map<PredRasterFactory::PredAccessKey, IAircomPredAccess4Ptr> predAccessMap;
 
 }
 
+PredRasterFactory::PredAccessKey::PredAccessKey(CLSID classID, const path& predictionsFolder)
+	: classID(std::move(classID))
+	, predictionsFolder(canonical(predictionsFolder))
+{}
+
 bool PredRasterFactory::PredAccessKey::operator<(const PredAccessKey& r) const
 {
 	const auto classIDResult = memcmp(&classID, &r.classID, sizeof(CLSID));
 	if (classIDResult != 0)
 		return classIDResult < 0;
-
-	if (boost::filesystem::equivalent(predictionsFolder, r.predictionsFolder))
-		return false;
 
 	return predictionsFolder < r.predictionsFolder;
 }

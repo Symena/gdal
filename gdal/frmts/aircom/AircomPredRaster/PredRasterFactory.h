@@ -15,6 +15,8 @@ public:
 		CLSID classID;
 		boost::filesystem::path predictionsFolder;
 
+		PredAccessKey(CLSID classID, const boost::filesystem::path& predictionsFolder);
+
 		bool operator<(const PredAccessKey& r) const;
 	};
 
