@@ -2,6 +2,7 @@
 
 #include "StringUtils.h"
 
+#include <boost/filesystem/operations.hpp>
 #include <map>
 #include <mutex>
 #include <thread>
@@ -48,6 +49,9 @@ bool PredRasterFactory::PredAccessKey::operator<(const PredAccessKey& r) const
 	const auto classIDResult = memcmp(&classID, &r.classID, sizeof(CLSID));
 	if (classIDResult != 0)
 		return classIDResult < 0;
+
+	if (boost::filesystem::equivalent(predictionsFolder, r.predictionsFolder))
+		return false;
 
 	return predictionsFolder < r.predictionsFolder;
 }
